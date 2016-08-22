@@ -3,7 +3,7 @@ package com.dotcms.plugin.saml.v3;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.UtilMethods;
+import static com.dotmarketing.util.UtilMethods.*;
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.resolver.Criterion;
 import net.shibboleth.utilities.java.support.resolver.ResolverException;
@@ -14,14 +14,22 @@ import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.Marshaller;
+import org.opensaml.core.xml.io.MarshallerFactory;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.common.SignableSAMLObject;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.*;
+import org.opensaml.saml.saml2.encryption.Decrypter;
 import org.opensaml.saml.saml2.metadata.Endpoint;
 import org.opensaml.saml.saml2.metadata.SingleSignOnService;
+import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.impl.KeyStoreCredentialResolver;
+import org.opensaml.xmlsec.encryption.support.DecryptionException;
+import org.opensaml.xmlsec.encryption.support.InlineEncryptedKeyResolver;
+import org.opensaml.xmlsec.keyinfo.impl.StaticKeyInfoCredentialResolver;
+import org.opensaml.xmlsec.signature.support.SignatureException;
+import org.opensaml.xmlsec.signature.support.SignatureValidator;
 import org.w3c.dom.Element;
 
 import javax.servlet.http.HttpServletRequest;
@@ -47,9 +55,13 @@ public class SamlUtils {
     private final static XMLObjectBuilderFactory builderFactory =
             XMLObjectProviderRegistrySupport.getBuilderFactory();
 
+    private final static MarshallerFactory marshallerFactory =
+            XMLObjectProviderRegistrySupport.getMarshallerFactory();
+
+
     private static final String DEFAULT_ELEMENT_NAME = "DEFAULT_ELEMENT_NAME";
 
-    private static Credential credential;
+    private static volatile Credential credential;
 
     /**
      * Build a SAML Object
@@ -94,7 +106,7 @@ public class SamlUtils {
         authnRequest.setIssueInstant(new DateTime());
 
         // IDP url
-        if (!UtilMethods.isSet(ipDSSODestination)) {
+        if (!isSet(ipDSSODestination)) {
 
             throw new DotSamlException ("The property: " + DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL +
                 " must be set on the dotmarketing-config.properties");
@@ -230,7 +242,7 @@ public class SamlUtils {
         final String enumName = Config.getStringProperty
                 (DotSamlConstants.DOTCMS_SAML_AUTHN_COMPARISON_TYPE, null);
 
-        if (UtilMethods.isSet(enumName)) {
+        if (isSet(enumName)) {
 
             if (AuthnContextComparisonTypeEnumeration.BETTER.toString().equalsIgnoreCase(enumName)) {
 
@@ -261,6 +273,112 @@ public class SamlUtils {
 
         return endpoint;
     } // getIdentityProviderDestinationEndpoint.
+
+    /**
+     * Builds the artifact resolver using the resolution service url from the
+     * dotmarketing-config.properties, if it is not set will throw an exception.
+     *
+     * @param artifact {@link Artifact}
+     * @return ArtifactResolve
+     */
+    public static ArtifactResolve buildArtifactResolve(final Artifact artifact) {
+
+        final ArtifactResolve artifactResolve = buildSAMLObject(ArtifactResolve.class);
+        final String artifactResolutionService = Config.getStringProperty(
+                DotSamlConstants.DOT_SAML_ARTIFACT_RESOLUTION_SERVICE_URL, null);
+
+        if (!isSet(artifactResolutionService)) {
+
+            throw new DotSamlException ("The property: " + DotSamlConstants.DOT_SAML_ARTIFACT_RESOLUTION_SERVICE_URL +
+                    " must be set on the dotmarketing-config.properties");
+        }
+
+        artifactResolve.setIssuer(buildIssuer());
+        artifactResolve.setIssueInstant(new DateTime());
+        artifactResolve.setID(generateSecureRandomId());
+        artifactResolve.setDestination(artifactResolutionService);
+        artifactResolve.setArtifact(artifact);
+
+        return artifactResolve;
+    } // buildArtifactResolve
+
+    /**
+     * Get the Assertion decrypted
+     * @param artifactResponse {@link ArtifactResponse}
+     * @return Assertion
+     */
+    public static Assertion getAssertion(final ArtifactResponse artifactResponse) {
+
+        final EncryptedAssertion encryptedAssertion = getEncryptedAssertion(artifactResponse);
+        final Assertion assertion = decryptAssertion(encryptedAssertion); /// this is the user message itself
+
+        return assertion;
+    } // getAssertion.
+
+    /**
+     * Just get the Encrypted assertion from the {@link ArtifactResponse}
+     * @param artifactResponse {@link ArtifactResponse}
+     * @return EncryptedAssertion
+     */
+    public static EncryptedAssertion getEncryptedAssertion(final ArtifactResponse artifactResponse) {
+
+        final Response response = (Response)artifactResponse.getMessage();
+        return response.getEncryptedAssertions().get(0);
+    } // getEncryptedAssertion.
+
+    /**
+     * Decrypt an {@link EncryptedAssertion}
+     * @param encryptedAssertion {@link EncryptedAssertion}
+     * @return Assertion
+     */
+    public static Assertion decryptAssertion(final EncryptedAssertion encryptedAssertion) {
+
+        Assertion assertion = null;
+        final StaticKeyInfoCredentialResolver keyInfoCredentialResolver =
+                new StaticKeyInfoCredentialResolver(getCredential());
+
+        final Decrypter decrypter = new Decrypter(null,
+                keyInfoCredentialResolver, new InlineEncryptedKeyResolver());
+
+        try {
+
+            decrypter.setRootInNewDocument(true);
+            assertion = decrypter.decrypt(encryptedAssertion);
+        } catch (DecryptionException e) {
+
+            Logger.error(SamlUtils.class, e.getMessage(), e);
+            throw new DotSamlException(e.getMessage(), e);
+        }
+
+        return assertion;
+    } // decryptAssertion.
+
+    /**
+     * Does the verification of the assertiong
+     * @param assertion {@link Assertion}
+     */
+    public static void verifyAssertionSignature(final Assertion assertion) {
+
+        final SAMLSignatureProfileValidator profileValidator;
+
+        if (!assertion.isSigned()) {
+
+            throw new DotSamlException("The SAML Assertion was not signed");
+        }
+
+        try {
+
+            profileValidator = new SAMLSignatureProfileValidator();
+            profileValidator.validate(assertion.getSignature());
+
+            SignatureValidator.validate(assertion.getSignature(), getCredential());
+            Logger.info(SamlUtils.class, "SAML Assertion signature verified");
+        } catch (SignatureException e) {
+
+            Logger.error(SamlUtils.class, e.getMessage(), e);
+            throw new DotSamlException(e.getMessage(), e);
+        }
+    } // verifyAssertionSignature.
 
     private static final String KEY_STORE_PASSWORD = "password";
     private static final String KEY_STORE_ENTRY_PASSWORD = "password";
@@ -361,7 +479,7 @@ public class SamlUtils {
      * @param object {@link XMLObject}
      * @return String
      */
-    public static String toString(final XMLObject object) {
+    public static String toXMLObjectString(final XMLObject object) {
 
         final Element element =
                 (object instanceof SignableSAMLObject &&
@@ -369,7 +487,7 @@ public class SamlUtils {
                 object.getDOM() != null)?
                         object.getDOM(): toElement(object);
 
-        return toString(element);
+        return toElementString(element);
     } // toString
 
     /**
@@ -377,7 +495,7 @@ public class SamlUtils {
      * @param element {@link Element}
      * @return String
      */
-    public static String toString (final Element element) {
+    public static String toElementString (final Element element) {
 
         final Transformer transformer;
         final StreamResult result;
@@ -393,10 +511,7 @@ public class SamlUtils {
 
             transformer.transform(source, result);
             xmlString = result.getWriter().toString();
-        } catch (TransformerConfigurationException e) {
-
-            Logger.error(SamlUtils.class, e.getMessage(), e);
-        } catch (TransformerException e) {
+        } catch (TransformerException  e) {
 
             Logger.error(SamlUtils.class, e.getMessage(), e);
         }
@@ -407,8 +522,9 @@ public class SamlUtils {
 
     public static Element toElement (final XMLObject object)  {
 
-        final Marshaller out = XMLObjectProviderRegistrySupport.
-                getMarshallerFactory().getMarshaller(object);
+        final Marshaller out =
+                marshallerFactory.getMarshaller(object);
+
         try {
 
             out.marshall(object);
