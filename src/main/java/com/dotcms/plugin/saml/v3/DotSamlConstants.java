@@ -18,19 +18,19 @@ public final class DotSamlConstants {
      * Key for dotmarketing-config.properties
      * This is a mandatory property, if you do not set it will got an exception
      */
-    public static final String DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL = "dotms.saml.identity.provider.destinationsso.url";
+    public static final String DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL = "dotcms.saml.identity.provider.destinationsso.url";
 
     /**
      * Key for dotmarketing-config.properties
      * This is a mandatory property, if you do not set it will got an exception
      */
-    public static final String DOT_SAML_ARTIFACT_RESOLUTION_SERVICE_URL  = "dotms.saml.artifact.resolution.service.url";
+    public static final String DOT_SAML_ARTIFACT_RESOLUTION_SERVICE_URL  = "dotcms.saml.artifact.resolution.service.url";
 
     /**
      * Key for dotmarketing-config.properties
      * For the provider issue which is the identifier for the sender, by default is: DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER_DEFAULT_VALUE
      */
-    public static final String DOTCMS_SAML_SERVICE_PROVIDER_ISSUER = "dotms.saml.service.provider.issuer";
+    public static final String DOTCMS_SAML_SERVICE_PROVIDER_ISSUER = "dotcms.saml.service.provider.issuer";
 
     /**
      * Default value for the DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER

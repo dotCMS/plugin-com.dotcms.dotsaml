@@ -146,8 +146,15 @@ public class SamlUtils {
 
     public static  String getAssertionConsumerEndpoint(final HttpServletRequest request) {
         // this is the same original request. Consequently where should be redirected when the authentication is done.
-        return new StringBuilder(request.getRequestURI()).append('?')
-                .append(request.getQueryString()).toString();
+        final StringBuilder builder = new StringBuilder(request.getRequestURI());
+
+        if (null != request.getQueryString()) {
+
+            builder.append('?')
+                    .append(request.getQueryString());
+        }
+
+        return builder.toString();
     } // getAssertionConsumerEndpoint/
 
     /**
