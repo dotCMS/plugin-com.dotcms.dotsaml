@@ -13,7 +13,7 @@ import java.io.Serializable;
  */
 public interface SamlAuthenticationService extends Serializable {
 
-    public static final String SAM_LART_PARAM_KEY = "SAMLart";
+    public static final String SAML_ART_PARAM_KEY = "SAMLart";
 
     /**
      * Authentication with SAML

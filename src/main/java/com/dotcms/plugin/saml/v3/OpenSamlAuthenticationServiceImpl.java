@@ -303,14 +303,14 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     private Artifact buildArtifactFromRequest(final HttpServletRequest req) {
 
         final Artifact artifact = buildSAMLObject(Artifact.class);
-        artifact.setArtifact(req.getParameter(SAM_LART_PARAM_KEY));
+        artifact.setArtifact(req.getParameter(SAML_ART_PARAM_KEY));
         return artifact;
     } // buildArtifactFromRequest.
 
-    // if the SAM_LART_PARAM_KEY parameter is in the request, it is a valid SAML request
+    // if the SAML_ART_PARAM_KEY parameter is in the request, it is a valid SAML request
     private boolean isValidSamlRequest(final HttpServletRequest request) {
 
-        return isSet(request.getParameter(SAM_LART_PARAM_KEY));
+        return isSet(request.getParameter(SAML_ART_PARAM_KEY));
     } // isValidSamlRequest.
 
     private void validateDestinationAndLifetime(final ArtifactResponse artifactResponse,
@@ -428,7 +428,6 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                 DotSamlConstants.DOTCMS_SAML_SIGNATURE_CANONICALIZATION_ALGORITHM,
                     SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
         ArtifactResponse artifactResponse = null;
-
 
         if (!isSet(artifactResolutionService)) {
 
