@@ -269,7 +269,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         return user;
     } // createNewUser.
 
-    private Assertion resolveAssertion(final HttpServletRequest request,
+    protected Assertion resolveAssertion(final HttpServletRequest request,
                         final HttpServletResponse response) {
 
         final Artifact artifact;

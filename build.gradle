@@ -1,4 +1,5 @@
 apply plugin: 'application'
+apply plugin: 'java'
 apply plugin: 'war'
 apply plugin: 'eclipse'
 
@@ -6,6 +7,7 @@ sourceCompatibility = '1.8'
 version = '0.1'
 
 repositories {
+
     mavenCentral()
 
     maven {
@@ -45,14 +47,18 @@ dependencies {
     }
 
     testCompile group: 'junit', name: 'junit', version: '4.+'
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '1.+'
 
     providedCompile "javax.servlet:servlet-api:2.5"
 }
 
-tasks.withType(Test) {
-    scanForTestClasses = false
-    include "**/*Test.class" // whatever Ant pattern matches your test class files
+
+task copyTestResources(type: Copy) {
+    from "${projectDir}/src/test/resources"
+    into "${buildDir}/classes/test"
 }
+
+processTestResources.dependsOn copyTestResources
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.14'

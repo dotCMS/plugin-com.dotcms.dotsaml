@@ -3,8 +3,8 @@ package com.dotcms.plugin.saml.v3.filter;
 import com.dotcms.plugin.saml.v3.DotSamlException;
 import com.dotcms.plugin.saml.v3.OpenSamlAuthenticationServiceImpl;
 import com.dotcms.plugin.saml.v3.SamlAuthenticationService;
-import com.dotcms.plugin.saml.v3.SamlUtils;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
+import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
 import com.dotmarketing.cms.factories.PublicEncryptionFactory;
 import com.dotmarketing.cms.login.factories.LoginFactory;
 import com.dotmarketing.util.Logger;
@@ -79,21 +79,32 @@ public class SamlAccessFilter implements Filter {
         final HttpServletResponse response = (HttpServletResponse) res;
         final HttpServletRequest  request  = (HttpServletRequest) req;
         final HttpSession         session  = request.getSession(false);
+        String redirectAfterLogin = null;
 
-        this.autoLogin(request, response, session);
+        if (!request.getRequestURI().contains("saml3/metadata/dotcms_metadata.xml")) {
 
-        if (null == session || null == session.getAttribute(WebKeys.CMS_USER)) {
+            this.autoLogin(request, response, session);
+
+            if (null == session || null == session.getAttribute(WebKeys.CMS_USER)) {
+
+                redirectAfterLogin = request.getRequestURI() +
+                        ((null != request.getQueryString())? "?" + request.getQueryString():
+                                     StringUtils.EMPTY);
 
                 Logger.warn(this.getClass(),
                         "Doing Saml Login Redirection when request: " +
-                                request.getRequestURI() + "?" + request.getQueryString());
+                                redirectAfterLogin);
 
                 //if we don't have a redirect yet
-                session.setAttribute(WebKeys.REDIRECT_AFTER_LOGIN,
-                        SamlUtils.getAssertionConsumerEndpoint(request));
+                if (null != session) {
+
+                    session.setAttribute(WebKeys.REDIRECT_AFTER_LOGIN,
+                            redirectAfterLogin);
+                }
 
                 this.samlAuthenticationService.authentication(request, response);
                 return;
+            }
         }
 
         chain.doFilter(request, response);
@@ -107,7 +118,7 @@ public class SamlAccessFilter implements Filter {
                 this.samlAuthenticationService.getUser(request, response);
 
         if (null != session && null != user) {
-
+            // todo: 3.7 this should be changed to LoginService
             LoginFactory.doCookieLogin(PublicEncryptionFactory.encryptString
                     (user.getUserId()), request, response);
         }
