@@ -1,7 +1,6 @@
 package com.dotcms.plugin.saml.v3;
 
-import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
-import com.dotmarketing.util.Config;
+import com.dotcms.plugin.saml.v3.init.DefaultInitializer;
 
 /**
  * Encapsulates constant for the dot SAML SP
@@ -25,6 +24,13 @@ public final class DotSamlConstants {
      * This is a mandatory property, if you do not set it will got an exception
      */
     public static final String DOT_SAML_ARTIFACT_RESOLUTION_SERVICE_URL  = "dotcms.saml.artifact.resolution.service.url";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * This is an optional property, by default the assertion customer endpoint will be the original request url, however if you want to get back
+     * to a fixed url, feel free to set the value.
+     */
+    public static final String DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL  = "dotcms.saml.assertion.customer.endpoint.url";
 
     /**
      * Key for dotmarketing-config.properties
@@ -83,6 +89,18 @@ public final class DotSamlConstants {
 
     /**
      * Key for dotmarketing-config.properties
+     * By default dotcms use: "SPKey", but if you want to use a different key store password you can override it on the properties file.
+     */
+    public static final String DOTCMS_SAML_KEY_ENTRY_ID = "dotcms.saml.keyentryid";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * By default dotcms use: "password", but if you want to use a different key store password you can override it on the properties file.
+     */
+    public static final String DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD = "dotcms.saml.keystore.entry.password";
+
+    /**
+     * Key for dotmarketing-config.properties
      * By default dotcms use: <code>KeyStore.getDefaultType()</code>, but if you want to use a different key type password you can override it on the properties file.
      */
     public static final String DOTCMS_SAML_KEY_STORE_TYPE = "dotcms.saml.keystore.type";
@@ -135,4 +153,85 @@ public final class DotSamlConstants {
      * By default dotcms use: "authorisations", but you can override it just adding the roles attribute name you want.
      */
     public static final String DOT_SAML_ROLES_ATTRIBUTE = "dotcms.saml.roles.attribute";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * By default dotcms use: {@link DefaultInitializer} but you can override by addding a full class name to this property.
+     */
+    public static final String DOT_SAML_INITIALIZER_CLASS_NAME = "dotcms.saml.initializer.classname";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * By default dotcms use: {@link DefaultInitializer} but you can override by addding a full class name to this property.
+     */
+    public static final String DOT_SAML_CONFIGURATION_CLASS_NAME = "dotcms.saml.configuration.classname";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * In case you have a idp-metadata.xml you can get it from the classpath or file system.
+     * For the classpath you overrides the property with the right path in your class path.
+     * If you want to get the XML from the file system use the prefix; file://
+     */
+    public static final String DOTCMS_SAML_IDP_METADATA_PATH = "dotcms.saml.idp.metadata.path";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * By default dot cms use DOT_SAML_IDP_METADATA_PROTOCOL_DEFAULT_VALUE, in case you need to use a differente
+     * feel free to override this property.
+     */
+    public static final String DOT_SAML_IDP_METADATA_PROTOCOL = "dotcms.saml.idp.metadata.protocol";
+
+    /**
+     * Default value for the metadata protocol
+     */
+    public static final String DOT_SAML_IDP_METADATA_PROTOCOL_DEFAULT_VALUE = "urn:oasis:names:tc:SAML:2.0:protocol";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * By default {@link com.dotcms.plugin.saml.v3.meta.DefaultMetaDescriptorParserImpl} is what we use to parser the idp metadata XML file
+     * however if you have you own implementation of {@link com.dotcms.plugin.saml.v3.meta.MetaDescriptorParser} you can override it.
+     */
+    public static final String DOT_SAML_IDP_METADATA_PARSER_CLASS_NAME = "dotcms.saml.idp.metadata.parser.classname";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * By default we do not filter anything, but if there is some special cases (url's) you want to avoid the authentication check,
+     * add here the values comma separated.
+     */
+    public static final String DOT_SAML_ACCESS_FILTER_VALUES = "dotcms.saml.access.filter.values";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * By default the system will do the verification of the assertion signature, if for some reason you want to avoid it
+     * feel free to set it to false.
+     */
+    public static final String DOT_SAML_VERIFY_ASSERTION_SIGNATURE = "dotcms.saml.verify.assertion.signature";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * By default the system will do the verification of the profile signature, if for some reason you want to avoid it
+     * feel free to set it to false.
+     */
+    public static final String DOT_SAML_VERIFY_SIGNATURE_PROFILE = "dotcms.saml.verify.signature.profile";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * By default the system will do the verification of the signature credentials, if for some reason you want to avoid it
+     * feel free to set it to false.
+     */
+    public static final String DOT_SAML_VERIFY_SIGNATURE_CREDENTIALS = "dotcms.saml.verify.signature.credentials";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * In case you need a custom credentials for the Service Provider (DotCMS) overrides the
+     * implementation class on the configuration properties.
+     */
+    public static final String DOT_SAML_SERVICE_PROVIDER_CUSTOM_CREDENTIAL_PROVIDER_CLASSNAME = "dotcms.saml.service.provider.custom.credential.provider.classname";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * In case you need a custom credentials for the ID Provider (DotCMS) overrides the
+     * implementation class on the configuration properties.
+     */
+    public static final String DOT_SAML_ID_PROVIDER_CUSTOM_CREDENTIAL_PROVIDER_CLASSNAME = "dotcms.saml.id.provider.custom.credential.provider.classname";
 } // E:O:F:DotSamlConstants.

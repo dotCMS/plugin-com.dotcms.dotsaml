@@ -1,5 +1,6 @@
 package com.dotcms.plugin.saml.v3;
 
+import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
 import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
 import com.dotmarketing.business.APILocator;
@@ -12,6 +13,7 @@ import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UUIDGenerator;
 import com.liferay.portal.model.User;
+import com.liferay.util.InstancePool;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.messaging.context.InOutOperationContext;
@@ -269,9 +271,12 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         return user;
     } // createNewUser.
 
-    protected Assertion resolveAssertion(final HttpServletRequest request,
+    @Override
+    public Assertion resolveAssertion(final HttpServletRequest request,
                         final HttpServletResponse response) {
 
+        final Configuration configuration =
+                (Configuration) InstancePool.get(Configuration.class.getName());
         final Artifact artifact;
         final ArtifactResolve artifactResolve;
         final ArtifactResponse artifactResponse;
@@ -293,7 +298,15 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         this.validateDestinationAndLifetime(artifactResponse, request);
 
         assertion = getAssertion(artifactResponse);
-        verifyAssertionSignature(assertion);
+
+        if (configuration.isVerifyAssertionSignatureNeeded()) {
+
+            Logger.info(this, "Doing the verification assertion signature.");
+            verifyAssertionSignature(assertion);
+        } else {
+
+            Logger.info(this, "The verification assertion signature was skipped.");
+        }
 
         Logger.info(this, "Decrypted Assertion: " + toXMLObjectString(artifact));
 

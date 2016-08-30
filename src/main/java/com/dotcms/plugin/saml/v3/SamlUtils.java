@@ -1,9 +1,12 @@
 package com.dotcms.plugin.saml.v3;
 
+import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
 import static com.dotmarketing.util.UtilMethods.*;
+
+import com.liferay.util.InstancePool;
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.resolver.Criterion;
 import net.shibboleth.utilities.java.support.resolver.ResolverException;
@@ -24,7 +27,11 @@ import org.opensaml.saml.saml2.metadata.Endpoint;
 import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator;
 import org.opensaml.security.credential.Credential;
+import org.opensaml.security.credential.CredentialSupport;
 import org.opensaml.security.credential.impl.KeyStoreCredentialResolver;
+import org.opensaml.security.crypto.KeySupport;
+import org.opensaml.xml.signature.Signature;
+import org.opensaml.xml.validation.ValidationException;
 import org.opensaml.xmlsec.encryption.support.DecryptionException;
 import org.opensaml.xmlsec.encryption.support.InlineEncryptedKeyResolver;
 import org.opensaml.xmlsec.keyinfo.impl.StaticKeyInfoCredentialResolver;
@@ -39,7 +46,11 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.security.KeyPair;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,6 +73,8 @@ public class SamlUtils {
     private static final String DEFAULT_ELEMENT_NAME = "DEFAULT_ELEMENT_NAME";
 
     private static volatile Credential credential;
+
+    private static volatile Credential idpCredential;
 
     /**
      * Build a SAML Object
@@ -99,6 +112,8 @@ public class SamlUtils {
      */
     public static AuthnRequest buildAuthnRequest(final HttpServletRequest request) {
 
+        final Configuration configuration =
+                (Configuration) InstancePool.get(Configuration.class.getName());
         final String ipDSSODestination = getIPDSSODestination();
         final AuthnRequest authnRequest = buildSAMLObject(AuthnRequest.class);
 
@@ -116,7 +131,7 @@ public class SamlUtils {
 
         // Get the protocol from the user, or use a default one: SAMLConstants.SAML2_ARTIFACT_BINDING_URI
         authnRequest.setProtocolBinding
-                (Config.getStringProperty(DotSamlConstants.DOTCMS_SAML_PROTOCOL_BINDING,
+                (configuration.getStringProperty(DotSamlConstants.DOTCMS_SAML_PROTOCOL_BINDING,
                         SAMLConstants.SAML2_ARTIFACT_BINDING_URI));
 
         // this is the address that receives the SAML Assertion, after a successful authentication on the IdP.
@@ -140,11 +155,27 @@ public class SamlUtils {
      */
     public static String getIPDSSODestination() {
 
-        return Config.getStringProperty(
-                DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL, null);
+        final Configuration configuration =
+                (Configuration) InstancePool.get(Configuration.class.getName());
+
+        final String redirectIdentityProviderDestinationSSOURL =
+                    configuration.getRedirectIdentityProviderDestinationSSOURL();
+
+        // first check the meta data info., secondly the configuration
+        return (null != redirectIdentityProviderDestinationSSOURL)?
+                redirectIdentityProviderDestinationSSOURL:
+                configuration.getStringProperty(
+                    DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL, null);
     } // getIPDSSODestination.
 
     public static  String getAssertionConsumerEndpoint(final HttpServletRequest request) {
+
+        final Configuration configuration =
+                (Configuration) InstancePool.get(Configuration.class.getName());
+
+        final String assertionConsumerEndpoint =
+                configuration.getAssertionConsumerEndpoint();
+
         // this is the same original request. Consequently where should be redirected when the authentication is done.
         final StringBuilder builder = new StringBuilder(request.getRequestURI());
 
@@ -154,8 +185,10 @@ public class SamlUtils {
                     .append(request.getQueryString());
         }
 
-        return builder.toString();
-    } // getAssertionConsumerEndpoint/
+        return (null != assertionConsumerEndpoint)?
+                assertionConsumerEndpoint:
+                builder.toString();
+    } // getAssertionConsumerEndpoint.
 
     /**
      * Generate the Random id
@@ -185,7 +218,10 @@ public class SamlUtils {
      */
     public static String getSPIssuerValue() {
 
-        return Config.getStringProperty(
+        final Configuration configuration =
+                (Configuration) InstancePool.get(Configuration.class.getName());
+
+        return configuration.getStringProperty(
                 DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER,
                     DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER_DEFAULT_VALUE);
     } // getSPIssuerValue.
@@ -196,13 +232,15 @@ public class SamlUtils {
      */
     public static NameIDPolicy buildNameIdPolicy() {
 
+        final Configuration configuration =
+                (Configuration) InstancePool.get(Configuration.class.getName());
         final NameIDPolicy nameIDPolicy = buildSAMLObject(NameIDPolicy.class);
 
         // True if you want that when the  user does not exists, allows to create
-        nameIDPolicy.setAllowCreate(Config.getBooleanProperty(DotSamlConstants.DOTCMS_SAML_POLICY_ALLOW_CREATE, true));
+        nameIDPolicy.setAllowCreate(configuration.getBooleanProperty(DotSamlConstants.DOTCMS_SAML_POLICY_ALLOW_CREATE, true));
 
         // it supports several formats, such as Kerberos, email, Windows Domain Qualified Name, etc.
-        nameIDPolicy.setFormat(Config.getStringProperty(
+        nameIDPolicy.setFormat(configuration.getStringProperty(
                 DotSamlConstants.DOTCMS_SAML_POLICY_FORMAT,
                 // “The transient identifier is a random identifier that does not have any connection to the user. A transient identifier will be different for every time the user signs in.”
                 NameIDType.TRANSIENT));
@@ -218,6 +256,8 @@ public class SamlUtils {
      */
     public static RequestedAuthnContext buildRequestedAuthnContext() {
 
+        final Configuration configuration =
+                (Configuration) InstancePool.get(Configuration.class.getName());
         final RequestedAuthnContext requestedAuthnContext =
                 buildSAMLObject(RequestedAuthnContext.class);
 
@@ -228,7 +268,7 @@ public class SamlUtils {
                 buildSAMLObject(AuthnContextClassRef.class);
 
         passwordAuthnContextClassRef.setAuthnContextClassRef
-                (Config.getStringProperty(DotSamlConstants.DOTCMS_SAML_AUTHN_CONTEXT_CLASS_REF,
+                (configuration.getStringProperty(DotSamlConstants.DOTCMS_SAML_AUTHN_CONTEXT_CLASS_REF,
                         AuthnContext.PASSWORD_AUTHN_CTX));
 
         requestedAuthnContext.getAuthnContextClassRefs().
@@ -243,10 +283,12 @@ public class SamlUtils {
      */
     public static AuthnContextComparisonTypeEnumeration getAuthnContextComparisonTypeEnumeration() {
 
+        final Configuration configuration =
+                (Configuration) InstancePool.get(Configuration.class.getName());
         AuthnContextComparisonTypeEnumeration comparisonTypeEnumeration =
                 AuthnContextComparisonTypeEnumeration.MINIMUM;
 
-        final String enumName = Config.getStringProperty
+        final String enumName = configuration.getStringProperty
                 (DotSamlConstants.DOTCMS_SAML_AUTHN_COMPARISON_TYPE, null);
 
         if (isSet(enumName)) {
@@ -290,8 +332,10 @@ public class SamlUtils {
      */
     public static ArtifactResolve buildArtifactResolve(final Artifact artifact) {
 
+        final Configuration configuration =
+                (Configuration) InstancePool.get(Configuration.class.getName());
         final ArtifactResolve artifactResolve = buildSAMLObject(ArtifactResolve.class);
-        final String artifactResolutionService = Config.getStringProperty(
+        final String artifactResolutionService = configuration.getStringProperty(
                 DotSamlConstants.DOT_SAML_ARTIFACT_RESOLUTION_SERVICE_URL, null);
 
         if (!isSet(artifactResolutionService)) {
@@ -360,12 +404,31 @@ public class SamlUtils {
         return assertion;
     } // decryptAssertion.
 
+    private static void validateSignature(final Assertion assertion,
+                                          final Collection<Credential> credentials) throws SignatureException {
+
+        for (Credential credential : credentials) {
+            try {
+
+                SignatureValidator.validate(assertion.getSignature(), credential);
+                return;
+            } catch (SignatureException ignore) {
+
+                Logger.error(SamlUtils.class, "Validation failed with credential", ignore);
+            }
+        }
+
+        throw new SignatureException("Signature cannot be validated");
+    } // validateSignature.
+
     /**
      * Does the verification of the assertiong
      * @param assertion {@link Assertion}
      */
     public static void verifyAssertionSignature(final Assertion assertion) {
 
+        final Configuration configuration =
+                (Configuration) InstancePool.get(Configuration.class.getName());
         final SAMLSignatureProfileValidator profileValidator;
 
         if (!assertion.isSigned()) {
@@ -375,11 +438,26 @@ public class SamlUtils {
 
         try {
 
-            profileValidator = new SAMLSignatureProfileValidator();
-            profileValidator.validate(assertion.getSignature());
+            if (configuration.isVerifySignatureProfileNeeded()) {
 
-            SignatureValidator.validate(assertion.getSignature(), getCredential());
+                profileValidator = new SAMLSignatureProfileValidator();
+                profileValidator.validate(assertion.getSignature());
+            }
+
+            // Ask on the config if the app wants signature validator
+            if (configuration.isVerifySignatureCredentialsNeeded()) {
+
+                if (null != configuration.getSigningCredentials ()) {
+
+                    validateSignature(assertion, configuration.getSigningCredentials ());
+                } else {
+
+                    SignatureValidator.validate(assertion.getSignature(), getIdPCredentials());
+                }
+            }
+
             Logger.info(SamlUtils.class, "SAML Assertion signature verified");
+
         } catch (SignatureException e) {
 
             Logger.error(SamlUtils.class, e.getMessage(), e);
@@ -403,14 +481,16 @@ public class SamlUtils {
 
         final KeyStore keystore;
         final String keyStoreType;
+        final Configuration configuration =
+                (Configuration) InstancePool.get(Configuration.class.getName());
         InputStream inputStream = null;
 
         try {
 
-            keyStoreType = Config.getStringProperty(
+            keyStoreType = configuration.getStringProperty(
                     DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
             keystore = KeyStore.getInstance(keyStoreType);
-            inputStream = SamlUtils.class.getResourceAsStream(pathToKeyStore);
+            inputStream = InputStreamUtils.getInputStream(pathToKeyStore);
             keystore.load(inputStream, keyStorePassword.toCharArray());
         } catch (Exception e) {
 
@@ -426,34 +506,50 @@ public class SamlUtils {
 
     private static void createCredential () {
 
+        final Configuration configuration =
+                (Configuration) InstancePool.get(Configuration.class.getName());
         final Map<String, String> passwordMap = new HashMap<String, String>();
         final KeyStoreCredentialResolver resolver;
         final KeyStore keystore;
         final Criterion criterion;
         final String password;
         final String keyStorePath;
+        final String keyEntryId;
+        final String keyStoreEntryPassword;
         final CriteriaSet criteriaSet;
+        final CredentialProvider customCredentialProvider =
+                configuration.getServiceProviderCustomCredentialProvider();
 
         try {
 
-            keyStorePath = Config.getStringProperty(
-                    DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH, KEY_STORE_PATH);
-            password = Config.getStringProperty(
-                    DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD, KEY_STORE_PASSWORD);
+            if (null != customCredentialProvider) {
 
-            Logger.info(SamlUtils.class, "Creating the credentials, using: " + password +
-                    ", key store path: " + keyStorePath);
+                credential = customCredentialProvider.createCredential();
+            } else {
 
-            keystore = readKeyStoreFromFile
-                         (keyStorePath, password);
+                keyStorePath = configuration.getStringProperty(
+                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH, KEY_STORE_PATH);
+                password = configuration.getStringProperty(
+                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD, KEY_STORE_PASSWORD);
+                keyEntryId = configuration.getStringProperty(
+                        DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID, KEY_ENTRY_ID);
+                keyStoreEntryPassword = configuration.getStringProperty(
+                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD, KEY_STORE_ENTRY_PASSWORD);
 
-            passwordMap.put(KEY_ENTRY_ID, KEY_STORE_ENTRY_PASSWORD);
-            resolver = new KeyStoreCredentialResolver(keystore, passwordMap);
+                Logger.info(SamlUtils.class, "Creating the credentials, using: " + password +
+                        ", key store path: " + keyStorePath);
 
-            criterion = new EntityIdCriterion(KEY_ENTRY_ID);
-            criteriaSet = new CriteriaSet();
-            criteriaSet.add(criterion);
-            credential = resolver.resolveSingle(criteriaSet);
+                keystore = readKeyStoreFromFile
+                        (keyStorePath, password);
+
+                passwordMap.put(keyEntryId, keyStoreEntryPassword);
+                resolver = new KeyStoreCredentialResolver(keystore, passwordMap);
+
+                criterion = new EntityIdCriterion(keyEntryId);
+                criteriaSet = new CriteriaSet();
+                criteriaSet.add(criterion);
+                credential = resolver.resolveSingle(criteriaSet);
+            }
         } catch (ResolverException e) {
 
             Logger.error(SamlUtils.class, e.getMessage(), e);
@@ -462,7 +558,7 @@ public class SamlUtils {
     } // createCredential.
 
     /**
-     * Get the credential
+     * Get the SP credential
      * @return Credential
      */
     public static Credential getCredential() {
@@ -480,6 +576,48 @@ public class SamlUtils {
 
         return credential;
     } // getCredential.
+
+    private static void createIdpCredential () {
+
+        final Configuration configuration =
+                (Configuration) InstancePool.get(Configuration.class.getName());
+        KeyPair keyPair = null;
+        final CredentialProvider customCredentialProvider =
+                configuration.getIdProviderCustomCredentialProvider();
+
+        try {
+
+            if (null != customCredentialProvider) {
+
+                idpCredential = customCredentialProvider.createCredential();
+            } else {
+                // this fallback generates just a random keypair not very useful to validate the signature.
+                keyPair = KeySupport.generateKeyPair("RSA", 1024, null);
+                idpCredential =
+                        CredentialSupport.getSimpleCredential(keyPair.getPublic(), keyPair.getPrivate());
+            }
+        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+
+            Logger.error(SamlUtils.class, e.getMessage(), e);
+            throw new DotSamlException(e.getMessage(), e);
+        }
+    } // createIdpCredential.
+
+    public static Credential getIdPCredentials () {
+
+        if (null == idpCredential) {
+
+            synchronized (SamlUtils.class) {
+
+                if (null == idpCredential) {
+
+                    createIdpCredential();
+                }
+            }
+        }
+
+        return idpCredential;
+    } // getIdPCredentials.
 
     /**
      * Convert to String an {@link XMLObject}

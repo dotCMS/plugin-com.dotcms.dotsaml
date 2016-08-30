@@ -1,28 +1,24 @@
 package com.dotcms.plugin.saml.v3;
 
-import com.dotcms.repackage.org.hibernate.validator.constraints.Email;
 import com.dotmarketing.business.Role;
 import com.dotmarketing.business.RoleAPI;
 import com.dotmarketing.business.UserAPI;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.liferay.portal.model.User;
-import org.joda.time.DateTime;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.opensaml.core.xml.XMLObject;
-import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
-import org.opensaml.core.xml.schema.XSString;
-import org.opensaml.core.xml.schema.impl.XSStringBuilder;
-import org.opensaml.saml.saml2.core.*;
+import org.opensaml.saml.saml2.core.Assertion;
+import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.AttributeStatement;
 import org.opensaml.saml.saml2.core.impl.AttributeStatementImpl;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -147,7 +143,7 @@ public class OpenSamlAuthenticationServiceImplTest {
                 new OpenSamlAuthenticationServiceImpl(httpClient, userAPI, roleAPI) {
 
                     @Override
-                    protected Assertion resolveAssertion(HttpServletRequest request, HttpServletResponse response) {
+                    public Assertion resolveAssertion(HttpServletRequest request, HttpServletResponse response) {
                         return OpenSamlAuthenticationServiceImplTest.this.buildAssertion();
                     }
                 };

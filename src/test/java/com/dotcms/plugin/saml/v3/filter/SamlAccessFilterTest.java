@@ -1,8 +1,11 @@
 package com.dotcms.plugin.saml.v3.filter;
 
 import com.dotcms.plugin.saml.v3.SamlAuthenticationService;
+import com.dotcms.plugin.saml.v3.config.Configuration;
+import com.dotcms.plugin.saml.v3.init.Initializer;
 import com.dotmarketing.util.WebKeys;
 import com.liferay.portal.model.User;
+import com.liferay.util.InstancePool;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -29,6 +32,10 @@ public class SamlAccessFilterTest {
     public void initTest(){
 
         filterChainCalled = false;
+        final Configuration configuration =
+                mock(Configuration.class);
+        InstancePool.put(Configuration.class.getName(), configuration);
+        when(configuration.getAccessFilterArray()).thenReturn(new String [] {"saml3/metadata/dotcms_metadata.xml"});
     }
 
     @Test
@@ -36,8 +43,9 @@ public class SamlAccessFilterTest {
 
         final SamlAuthenticationService authenticationService =
                 mock(SamlAuthenticationService.class);
+        final Initializer initializer = mock(Initializer.class);
         final SamlAccessFilter accessFilter =
-                new SamlAccessFilter(authenticationService);
+                new SamlAccessFilter(authenticationService, initializer);
         final HttpServletRequest request  = mock(HttpServletRequest.class);
         final HttpServletResponse response = mock(HttpServletResponse.class);
         final HttpSession session  = mock(HttpSession.class);
@@ -63,8 +71,9 @@ public class SamlAccessFilterTest {
 
         final SamlAuthenticationService authenticationService =
                 mock(SamlAuthenticationService.class);
+        final Initializer initializer = mock(Initializer.class);
         final SamlAccessFilter accessFilter =
-                new SamlAccessFilter(authenticationService);
+                new SamlAccessFilter(authenticationService, initializer);
         final HttpServletRequest request  = mock(HttpServletRequest.class);
         final HttpServletResponse response = mock(HttpServletResponse.class);
         final HttpSession session  = mock(HttpSession.class);
@@ -91,8 +100,9 @@ public class SamlAccessFilterTest {
 
         final SamlAuthenticationService authenticationService =
                 mock(SamlAuthenticationService.class);
+        final Initializer initializer = mock(Initializer.class);
         final SamlAccessFilter accessFilter =
-                new SamlAccessFilter(authenticationService);
+                new SamlAccessFilter(authenticationService, initializer);
         final HttpServletRequest request  = mock(HttpServletRequest.class);
         final HttpServletResponse response = mock(HttpServletResponse.class);
         final HttpSession session  = mock(HttpSession.class);
@@ -119,8 +129,9 @@ public class SamlAccessFilterTest {
 
         final SamlAuthenticationService authenticationService =
                 mock(SamlAuthenticationService.class);
+        final Initializer initializer = mock(Initializer.class);
         final SamlAccessFilter accessFilter =
-                new SamlAccessFilter(authenticationService);
+                new SamlAccessFilter(authenticationService, initializer);
         final HttpServletRequest request  = mock(HttpServletRequest.class);
         final HttpServletResponse response = mock(HttpServletResponse.class);
         final HttpSession session  = mock(HttpSession.class);
