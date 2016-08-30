@@ -14,8 +14,6 @@ import org.opensaml.saml.saml2.metadata.IDPSSODescriptor;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.UsageType;
 import org.opensaml.security.x509.BasicX509Credential;
-import org.opensaml.xml.parse.BasicParserPool;
-import org.opensaml.xml.parse.XMLParserException;
 import org.opensaml.xml.util.Base64;
 import org.w3c.dom.Element;
 
@@ -34,11 +32,18 @@ import java.util.stream.Collectors;
  */
 public class DefaultMetaDescriptorParserImpl implements MetaDescriptorParser {
 
-    private final ParserPool parserPool =
-            XMLObjectProviderRegistrySupport.getParserPool();
+    private final ParserPool parserPool;
 
-    private final static UnmarshallerFactory unmarshallerFactory =
-            XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
+    private final UnmarshallerFactory unmarshallerFactory;
+
+    public DefaultMetaDescriptorParserImpl () {
+
+        this.parserPool =
+                XMLObjectProviderRegistrySupport.getParserPool();
+
+        this.unmarshallerFactory =
+                XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
+    }
 
     @Override
     public MetadataBean parse(final InputStream inputStream) throws Exception {

@@ -127,8 +127,18 @@ public class SamlAccessFilter implements Filter {
 
         if (null != session && null != user) {
             // todo: 3.7 this should be changed to LoginService
-            LoginFactory.doCookieLogin(PublicEncryptionFactory.encryptString
+
+            final boolean doCookieLogin = LoginFactory.doCookieLogin(PublicEncryptionFactory.encryptString
                     (user.getUserId()), request, response);
+
+            if (doCookieLogin) {
+
+                if (null != session && null != user.getUserId()) {
+                    // this is what the PortalRequestProcessor needs to check the login.
+                    session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
+                } //
+            }
+
         }
     } // autoLogin.
 
