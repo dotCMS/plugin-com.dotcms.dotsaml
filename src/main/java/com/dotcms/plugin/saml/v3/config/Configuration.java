@@ -4,9 +4,7 @@ import com.dotcms.plugin.saml.v3.CredentialProvider;
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.InstanceUtil;
 import com.dotmarketing.util.Config;
-import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
-import org.opensaml.core.xml.schema.XSBooleanValue;
 import org.opensaml.security.credential.Credential;
 
 import java.io.Serializable;

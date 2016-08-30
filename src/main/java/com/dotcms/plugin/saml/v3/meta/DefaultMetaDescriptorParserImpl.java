@@ -5,13 +5,15 @@ import com.dotcms.plugin.saml.v3.DotSamlException;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
+import net.shibboleth.utilities.java.support.xml.ParserPool;
+import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
+import org.opensaml.core.xml.io.Unmarshaller;
+import org.opensaml.core.xml.io.UnmarshallerFactory;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.opensaml.saml.saml2.metadata.IDPSSODescriptor;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.UsageType;
 import org.opensaml.security.x509.BasicX509Credential;
-import org.opensaml.xml.Configuration;
-import org.opensaml.xml.io.Unmarshaller;
 import org.opensaml.xml.parse.BasicParserPool;
 import org.opensaml.xml.parse.XMLParserException;
 import org.opensaml.xml.util.Base64;
@@ -32,7 +34,11 @@ import java.util.stream.Collectors;
  */
 public class DefaultMetaDescriptorParserImpl implements MetaDescriptorParser {
 
-    private final BasicParserPool parserPool = new BasicParserPool();
+    private final ParserPool parserPool =
+            XMLObjectProviderRegistrySupport.getParserPool();
+
+    private final static UnmarshallerFactory unmarshallerFactory =
+            XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
 
     @Override
     public MetadataBean parse(final InputStream inputStream) throws Exception {
@@ -115,18 +121,21 @@ public class DefaultMetaDescriptorParserImpl implements MetaDescriptorParser {
 
     private EntityDescriptor unmarshall(final InputStream is) throws Exception {
 
-        try{
+        EntityDescriptor descriptor = null;
+
+        try {
             // Parse metadata file
-            final Element metadata = parserPool.parse(is).getDocumentElement();
+            final Element metadata = this.parserPool.parse(is).getDocumentElement();
             // Get apropriate unmarshaller
-            final Unmarshaller unmarshaller = Configuration.getUnmarshallerFactory()
-                    .getUnmarshaller(metadata);
+            final Unmarshaller unmarshaller = this.unmarshallerFactory.getUnmarshaller(metadata);
             // Unmarshall using the document root element, an EntitiesDescriptor in this case
-            return EntityDescriptor.class.cast(unmarshaller.unmarshall(metadata));
-        }catch(XMLParserException e){
+            descriptor = EntityDescriptor.class.cast(unmarshaller.unmarshall(metadata));
+        } catch(Exception e) {
 
             Logger.error(this, e.getMessage(),e);
             throw new DotSamlException(e.getMessage(), e);
         }
+
+        return descriptor;
     } // unmarshall.
 } // E:O:F:DefaultMetaDescriptorParserImpl.
