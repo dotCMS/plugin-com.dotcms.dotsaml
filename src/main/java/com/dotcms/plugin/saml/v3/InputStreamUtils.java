@@ -14,7 +14,7 @@ import java.io.InputStream;
  */
 public class InputStreamUtils {
 
-    private final static String PREFIX_FILE = "file:////"; // file://
+    private final static String PREFIX_FILE = "file://"; // file://
 
     public static InputStream getInputStream (final String resourceName) throws IOException {
 
@@ -33,5 +33,12 @@ public class InputStreamUtils {
 
         return inputStream;
     } // getInputStream.
+
+    public static void main(String [] args) throws IOException {
+        InputStream inputStream =
+                getInputStream("file:///Users/jsanca/gitsources/3.6/plugin-dotcms-openSAML3/src/test/resources/idp-metadata.xml");
+
+        System.out.print(inputStream);
+    }
 
 } // E:O:F:InputStreamUtils.
