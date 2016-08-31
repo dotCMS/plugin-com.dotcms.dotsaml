@@ -34,11 +34,4 @@ public class InputStreamUtils {
         return inputStream;
     } // getInputStream.
 
-    public static void main(String [] args) throws IOException {
-        InputStream inputStream =
-                getInputStream("file:///Users/jsanca/gitsources/3.6/plugin-dotcms-openSAML3/src/test/resources/idp-metadata.xml");
-
-        System.out.print(inputStream);
-    }
-
 } // E:O:F:InputStreamUtils.
