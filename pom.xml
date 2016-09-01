@@ -129,12 +129,12 @@
             <artifactId>opensaml-xmlsec-api</artifactId>
             <version>${opensaml.version}</version>
         </dependency>
-        <dependency>
+        <!--dependency>
             <groupId>org.opensaml</groupId>
             <artifactId>opensaml-xmlsec-impl</artifactId>
             <version>${opensaml.version}</version>
-        </dependency>
-        <!--dependency>
+        </dependency-->
+        <dependency>
             <groupId>org.opensaml</groupId>
             <artifactId>xmltooling</artifactId>
             <version>1.4.6</version>
@@ -144,7 +144,7 @@
                     <groupId>jcl-over-slf4j</groupId>
                 </exclusion>
             </exclusions>
-        </dependency-->
+        </dependency>
 
         <dependency>
             <groupId>javax.servlet</groupId>

@@ -2,10 +2,7 @@ package com.dotcms.plugin.saml.v3;
 
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
-import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
-import static com.dotmarketing.util.UtilMethods.*;
-
 import com.liferay.util.InstancePool;
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.resolver.Criterion;
@@ -30,8 +27,6 @@ import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.CredentialSupport;
 import org.opensaml.security.credential.impl.KeyStoreCredentialResolver;
 import org.opensaml.security.crypto.KeySupport;
-import org.opensaml.xml.signature.Signature;
-import org.opensaml.xml.validation.ValidationException;
 import org.opensaml.xmlsec.encryption.support.DecryptionException;
 import org.opensaml.xmlsec.encryption.support.InlineEncryptedKeyResolver;
 import org.opensaml.xmlsec.keyinfo.impl.StaticKeyInfoCredentialResolver;
@@ -41,7 +36,10 @@ import org.w3c.dom.Element;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.namespace.QName;
-import javax.xml.transform.*;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.InputStream;
@@ -53,6 +51,8 @@ import java.security.NoSuchProviderException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.dotmarketing.util.UtilMethods.isSet;
 
 /**
  * Provides utils method for the Saml
