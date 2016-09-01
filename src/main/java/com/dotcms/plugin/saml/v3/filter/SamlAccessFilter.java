@@ -142,7 +142,7 @@ public class SamlAccessFilter implements Filter {
 
         try {
 
-            response.setContentType();
+            response.setContentType("text/xml");
             writer = response.getWriter();
             this.metaDataXMLPrinter.print(descriptor, writer);
             response.setStatus(HttpServletResponse.SC_OK);
