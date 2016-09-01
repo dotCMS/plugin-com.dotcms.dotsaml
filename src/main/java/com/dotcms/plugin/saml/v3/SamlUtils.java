@@ -247,6 +247,16 @@ public class SamlUtils {
 
         return nameIDPolicy;
     } // buildNameIdPolicy.
+    /**
+     * if(Properties.getBoolean(Constants.ADD_AUTHN_POLICYNAME,true)){
+     final NameIDPolicyBuilder nameIdPolicyBuilder = new NameIDPolicyBuilder();
+     NameIDPolicy nameIdPolicy = nameIdPolicyBuilder.buildObject();
+     nameIdPolicy.setFormat(Properties.getString(Constants.POLICYNAME_FORMAT,Constants.NAMEID_TRASIENT_FORMAT));
+     nameIdPolicy.setSPNameQualifier(Properties.getString(Constants.POLICYNAME_SPNAMEQUALIFIER,Constants.ISSUER));
+     nameIdPolicy.setAllowCreate(true);
+     authRequest.setNameIDPolicy(nameIdPolicy);
+     }
+     */
 
     // todo: keep in mind more than one authentication can be defined
 
@@ -317,6 +327,7 @@ public class SamlUtils {
 
         final SingleSignOnService endpoint = buildSAMLObject(SingleSignOnService.class);
 
+        // todo: based on the configuration use redirect or post
         endpoint.setBinding(SAMLConstants.SAML2_REDIRECT_BINDING_URI);
         endpoint.setLocation(getIPDSSODestination());
 
@@ -510,7 +521,7 @@ public class SamlUtils {
         return keystore;
     } // readKeystoreFromFile.
 
-    private static void createCredential () {
+    public static void createCredential () {
 
         final Configuration configuration =
                 (Configuration) InstancePool.get(Configuration.class.getName());

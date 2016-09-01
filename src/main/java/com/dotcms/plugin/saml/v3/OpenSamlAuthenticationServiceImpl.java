@@ -28,8 +28,10 @@ import org.opensaml.saml.common.binding.security.impl.ReceivedEndpointSecurityHa
 import org.opensaml.saml.common.messaging.context.SAMLEndpointContext;
 import org.opensaml.saml.common.messaging.context.SAMLMessageInfoContext;
 import org.opensaml.saml.common.messaging.context.SAMLPeerEntityContext;
+import org.opensaml.saml.saml2.binding.encoding.impl.HTTPPostEncoder;
 import org.opensaml.saml.saml2.binding.encoding.impl.HTTPRedirectDeflateEncoder;
 import org.opensaml.saml.saml2.core.*;
+import org.opensaml.security.credential.Credential;
 import org.opensaml.xmlsec.SignatureSigningParameters;
 import org.opensaml.xmlsec.context.SecurityParametersContext;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
@@ -398,6 +400,34 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         }
     } // doRedirect.
 
+    // this makes the redirect to the IdP
+    private void doPost (final MessageContext context,
+                             final HttpServletResponse response,
+                             final AuthnRequest authnRequest) {
+
+        final HTTPPostEncoder encoder;
+
+        try {
+
+            encoder =
+                    new HTTPPostEncoder();
+
+            encoder.setMessageContext(context);
+            encoder.setHttpServletResponse(response);
+
+            encoder.initialize();
+
+            Logger.info(this, "AuthnRequest: " + toXMLObjectString(authnRequest));
+            Logger.info(this, "Redirecting to IDP");
+
+            encoder.encode();
+        } catch (ComponentInitializationException | MessageEncodingException e) {
+
+            Logger.error(this, e.getMessage(), e);
+            throw new DotSamlException(e.getMessage(), e);
+        }
+    } // doRedirect.
+
     private void setSignatureSigningParams(final MessageContext context) {
 
         final SignatureSigningParameters signatureSigningParameters =
@@ -418,13 +448,21 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         final SignatureSigningParameters signatureSigningParameters =
                 new SignatureSigningParameters();
 
+        final Credential credential = getCredential();
+
+        Logger.info(this, "context: " + context);
+        Logger.info(this, "Credential: " + credential);
+        Logger.info(this, "canonicalizationAlgorithm: " + canonicalizationAlgorithm);
+
         signatureSigningParameters.setSigningCredential
-                (getCredential());
+                (credential);
         signatureSigningParameters.setSignatureAlgorithm
                 (SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
 
         signatureSigningParameters.setSignatureCanonicalizationAlgorithm
                 (canonicalizationAlgorithm);
+
+        Logger.info(this, "signatureSigningParameters: " + signatureSigningParameters);
 
         context.getSubcontext(SecurityParametersContext.class, true)
                 .setSignatureSigningParameters(signatureSigningParameters);

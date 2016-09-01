@@ -8,6 +8,7 @@ import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
 import com.liferay.util.InstancePool;
+import com.sun.tools.doclets.internal.toolkit.builders.MethodBuilder;
 import net.shibboleth.utilities.java.support.xml.ParserPool;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
@@ -15,7 +16,9 @@ import org.opensaml.core.xml.io.Unmarshaller;
 import org.opensaml.core.xml.io.UnmarshallerFactory;
 import org.opensaml.saml.common.SAMLObjectBuilder;
 import org.opensaml.saml.common.xml.SAMLConstants;
+import org.opensaml.saml.saml2.core.NameIDType;
 import org.opensaml.saml.saml2.metadata.*;
+import org.opensaml.saml.saml2.metadata.impl.EncryptionMethodBuilder;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.UsageType;
 import org.opensaml.security.x509.BasicX509Credential;
@@ -23,6 +26,7 @@ import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
 import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.signature.KeyInfo;
 import org.opensaml.xml.util.Base64;
+import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.w3c.dom.Element;
 
 import java.io.ByteArrayInputStream;
@@ -94,7 +98,6 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         final EntityDescriptor descriptor      = entityDescriptorBuilder.buildObject();
         final SPSSODescriptor  spssoDescriptor = spssoDescriptorBuilder.buildObject();
 
-        // todo: check if it is my our the idp entityid.
         descriptor.setEntityID(SamlUtils.getSPIssuerValue());
 
         Logger.info(this, "Generating the Entity Provider Descriptor for: " +
@@ -104,6 +107,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                 (DotSamlConstants.DOTCMS_SAML_WANT_ASSERTIONS_SIGNED, true));
         spssoDescriptor.setAuthnRequestsSigned(configuration.getBooleanProperty
                 (DotSamlConstants.DOTCMS_SAML_AUTHN_REQUESTS_SIGNED, true));
+        spssoDescriptor.addSupportedProtocol(SAMLConstants.SAML20_NS);
 
         Logger.info(this, "Setting the key descriptors for: " +
                 descriptor.getEntityID());
@@ -152,7 +156,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                         (NameIDFormat.DEFAULT_ELEMENT_NAME);
 
         final String [] formats = configuration.getStringArray (DotSamlConstants.DOTCMS_SAML_NAME_ID_FORMATS,
-                new String[] { "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent" });
+                new String[] { NameIDType.TRANSIENT, NameIDType.PERSISTENT });
 
         for (String format : formats) {
 
@@ -179,16 +183,30 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                 (SAMLObjectBuilder<KeyDescriptor>) this.xmlObjectBuilderFactory.
                         getBuilder(KeyDescriptor.DEFAULT_ELEMENT_NAME);
         final KeyDescriptor signKeyDescriptor;
+        final KeyDescriptor encryptedKeyDescriptor;
+        final Credential credential = getCredential();
+        final EncryptionMethodBuilder encryptionMethodBuilder = new EncryptionMethodBuilder();
+        final EncryptionMethod encryptionMethod;
 
         try {
 
             signKeyDescriptor = keyDescriptorBuilder.buildObject();
+            encryptedKeyDescriptor = keyDescriptorBuilder.buildObject();
+
             signKeyDescriptor.setUse(UsageType.SIGNING);
+            encryptedKeyDescriptor.setUse(UsageType.ENCRYPTION);
 
             try {
 
-                signKeyDescriptor.setKeyInfo(getKeyInfo());
+                signKeyDescriptor.setKeyInfo(getKeyInfo(credential));
+                encryptedKeyDescriptor.setKeyInfo(getKeyInfo(credential));
+
+                encryptionMethod = encryptionMethodBuilder.buildObject();
+                encryptionMethod.setAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
+                signKeyDescriptor.getEncryptionMethods().add(encryptionMethod);
+
                 spssoDescriptor.getKeyDescriptors().add(signKeyDescriptor);
+                spssoDescriptor.getKeyDescriptors().add(encryptedKeyDescriptor);
             } catch (org.opensaml.xml.security.SecurityException e) {
 
                 Logger.error(this, "Error generating credentials", e);
@@ -204,14 +222,16 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         }
     } // setKeyDescriptors.
 
-    protected KeyInfo getKeyInfo() throws Exception {
+    protected KeyInfo getKeyInfo(final Credential credential) throws Exception {
 
         final X509KeyInfoGeneratorFactory keyInfoGeneratorFactory = new X509KeyInfoGeneratorFactory();
 
         keyInfoGeneratorFactory.setEmitEntityCertificate(true);
         final KeyInfoGenerator keyInfoGenerator = keyInfoGeneratorFactory.newInstance();
 
-        return keyInfoGenerator.generate(getCredential());
+        Logger.info(this, "Meta Data Credential: " + credential);
+
+        return keyInfoGenerator.generate(credential);
     }
 
     protected List<Credential> getCredentialSigningList(final String entityId, final IDPSSODescriptor idpDescriptor) {

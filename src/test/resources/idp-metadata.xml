@@ -117,6 +117,7 @@ QxBcHDsR5+jFVST03cwmC0GkAvc=
         <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
         <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
 
+        <!-- https://idp.localhost/idp/profile/SAML2/Redirect/SSO?execution=e1s1 -->
         <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://localhost.localdomain/idp/profile/Shibboleth/SSO"/>
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://localhost.localdomain/idp/profile/SAML2/POST/SSO"/>
         <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://localhost.localdomain/idp/profile/SAML2/POST-SimpleSign/SSO"/>
