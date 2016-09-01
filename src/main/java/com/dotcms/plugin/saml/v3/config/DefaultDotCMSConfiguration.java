@@ -4,8 +4,8 @@ import com.dotcms.plugin.saml.v3.BindingType;
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.InputStreamUtils;
 import com.dotcms.plugin.saml.v3.InstanceUtil;
-import com.dotcms.plugin.saml.v3.meta.DefaultMetaDescriptorParserImpl;
-import com.dotcms.plugin.saml.v3.meta.MetaDescriptorParser;
+import com.dotcms.plugin.saml.v3.meta.DefaultMetaDescriptorServiceImpl;
+import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
 import com.dotcms.plugin.saml.v3.meta.MetadataBean;
 import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
@@ -24,9 +24,13 @@ import java.util.Collection;
 public class DefaultDotCMSConfiguration implements Configuration {
 
     private final MetadataBean metadataBean;
+    private final MetaDescriptorService descriptorParser;
 
     public DefaultDotCMSConfiguration() {
 
+        this.descriptorParser = InstanceUtil.newInstance(
+                Config.getStringProperty(DotSamlConstants.DOT_SAML_IDP_METADATA_PARSER_CLASS_NAME,
+                        null), DefaultMetaDescriptorServiceImpl.class);
         final String metaDescriptorResourcePath =
                 this.getStringProperty(DotSamlConstants.DOTCMS_SAML_IDP_METADATA_PATH, null);
 
@@ -42,15 +46,12 @@ public class DefaultDotCMSConfiguration implements Configuration {
     protected MetadataBean getMetaData (final String metaDescriptorResourcePath) {
 
         MetadataBean metadataBean = null;
-        final MetaDescriptorParser descriptorParser = InstanceUtil.newInstance(
-                Config.getStringProperty(DotSamlConstants.DOT_SAML_IDP_METADATA_PARSER_CLASS_NAME,
-                        null), DefaultMetaDescriptorParserImpl.class);
 
         try (InputStream inputStream =
                      InputStreamUtils.getInputStream(metaDescriptorResourcePath)) {
 
             Logger.info(this, "Parsing the meta data: " + metaDescriptorResourcePath);
-            metadataBean = descriptorParser.parse (inputStream);
+            metadataBean = this.descriptorParser.parse (inputStream);
         } catch (Exception e) {
 
             Logger.error(this, e.getMessage(), e);
@@ -58,6 +59,11 @@ public class DefaultDotCMSConfiguration implements Configuration {
 
         return metadataBean;
     } // initMetaData.
+
+    @Override
+    public MetaDescriptorService getMetaDescriptorService() {
+        return this.descriptorParser;
+    }
 
     @Override
     public String[] getAccessFilterArray() {

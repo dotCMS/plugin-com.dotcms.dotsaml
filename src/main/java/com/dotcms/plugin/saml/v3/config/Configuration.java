@@ -3,6 +3,7 @@ package com.dotcms.plugin.saml.v3.config;
 import com.dotcms.plugin.saml.v3.CredentialProvider;
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.InstanceUtil;
+import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
 import com.dotmarketing.util.Config;
 import com.dotmarketing.util.UtilMethods;
 import org.opensaml.security.credential.Credential;
@@ -15,6 +16,8 @@ import java.util.Collection;
  * @author jsanca
  */
 public interface Configuration extends Serializable {
+
+    MetaDescriptorService getMetaDescriptorService();
 
     /**
      * Gets a single property, defaultValue if the property does not exists in the configuration file
@@ -37,6 +40,29 @@ public interface Configuration extends Serializable {
 
         return Config.getBooleanProperty(propertyKey, defaultValue);
     } // getBooleanProperty.
+
+    /**
+     * Gets an array string, defaultStringArray if does not exists
+     * @param propertyKey {@link String}
+     * @param defaultStringArray {@link String} array
+     * @return String []
+     */
+    public default String[] getStringArray(final String propertyKey, final String[] defaultStringArray) {
+
+        final String [] array = Config.getStringArrayProperty(propertyKey);
+        return (null != array && array.length > 0)? array:defaultStringArray;
+    } // getStringArray.
+
+    /**
+     * Return the path to mapping the metadata.xml info for SP (dotcms)
+     * @return
+     */
+    public default String getServiceProviderCustomMetadataPath() {
+
+        return Config.getStringProperty(
+                    DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH,
+                        DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH_DEFAULT_VALUE);
+    } // getServiceProviderCustomMetadataPath.
 
     /**
      * Get's the access filter array, which are the exceptional cases to avoid to evaluate the {@link com.dotcms.plugin.saml.v3.filter.SamlAccessFilter}
@@ -133,5 +159,6 @@ public interface Configuration extends Serializable {
      * @return String
      */
     String getRedirectIdentityProviderDestinationSSOURL();
+
 
 } // E:O:F:Configuration.

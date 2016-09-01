@@ -1,6 +1,8 @@
 package com.dotcms.plugin.saml.v3;
 
 import com.dotcms.plugin.saml.v3.init.DefaultInitializer;
+import com.dotcms.plugin.saml.v3.meta.DefaultMetaDescriptorServiceImpl;
+import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
 
 /**
  * Encapsulates constant for the dot SAML SP
@@ -9,13 +11,14 @@ import com.dotcms.plugin.saml.v3.init.DefaultInitializer;
 public final class DotSamlConstants {
 
     /**
-     * Key for dotmarketing-config.properties to get the Saml protocol binding, by default use SAMLConstants.SAML2_ARTIFACT_BINDING_URI
+     * Key for dotmarketing-config.properties to get the Saml protocol binding, by default use {@link org.opensaml.saml.common.xml.SAMLConstants}.SAML2_ARTIFACT_BINDING_URI
      */
     public static final String DOTCMS_SAML_PROTOCOL_BINDING = "dotcms.saml.protocol.binding";
 
     /**
      * Key for dotmarketing-config.properties
      * This is a mandatory property, if you do not set it will got an exception
+     * It will be taken from the idp-metadata descriptor if it exists.
      */
     public static final String DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL = "dotcms.saml.identity.provider.destinationsso.url";
 
@@ -188,8 +191,8 @@ public final class DotSamlConstants {
 
     /**
      * Key for dotmarketing-config.properties
-     * By default {@link com.dotcms.plugin.saml.v3.meta.DefaultMetaDescriptorParserImpl} is what we use to parser the idp metadata XML file
-     * however if you have you own implementation of {@link com.dotcms.plugin.saml.v3.meta.MetaDescriptorParser} you can override it.
+     * By default {@link DefaultMetaDescriptorServiceImpl} is what we use to parser the idp metadata XML file
+     * however if you have you own implementation of {@link MetaDescriptorService} you can override it.
      */
     public static final String DOT_SAML_IDP_METADATA_PARSER_CLASS_NAME = "dotcms.saml.idp.metadata.parser.classname";
 
@@ -234,4 +237,33 @@ public final class DotSamlConstants {
      * implementation class on the configuration properties.
      */
     public static final String DOT_SAML_ID_PROVIDER_CUSTOM_CREDENTIAL_PROVIDER_CLASSNAME = "dotcms.saml.id.provider.custom.credential.provider.classname";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * By default true, overrides if you want the assertions signed.
+     */
+    public static final String DOTCMS_SAML_WANT_ASSERTIONS_SIGNED = "dotcms.saml.want.assertions.signed";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * By default true, overrides if you want the authorization requests signed.
+     */
+    public static final String DOTCMS_SAML_AUTHN_REQUESTS_SIGNED = "dotcms.saml.authn.requests.signed";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * By default we use: "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent", you can overrides if need others by comma separated.
+     */
+    public static final String DOTCMS_SAML_NAME_ID_FORMATS = "dotcms.saml.name.id.formats";
+
+    /**
+     * Key for dotmarketing-config.properties
+     * By default we use: "{@link DotSamlConstants}.DOT_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH_DEFAULT_VALUE", you can override the path to mapping the metadata with whatever value you need.
+     */
+    public static final String DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH = "dotcms.saml.sevice.provider.custom.metadata.path";
+
+    /**
+     * Default value "/dotsaml3sp/metadata.xml" for the {@link DotSamlConstants}.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH
+     */
+    public static final String DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH_DEFAULT_VALUE = "/dotsaml3sp/metadata.xml";
 } // E:O:F:DotSamlConstants.

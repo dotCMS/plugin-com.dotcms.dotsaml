@@ -5,6 +5,7 @@ import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.init.DefaultInitializer;
 import com.dotcms.plugin.saml.v3.init.Initializer;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
+import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
 import com.dotmarketing.cms.factories.PublicEncryptionFactory;
 import com.dotmarketing.cms.login.factories.LoginFactory;
@@ -13,12 +14,17 @@ import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.WebKeys;
 import com.liferay.portal.model.User;
 import com.liferay.util.InstancePool;
+import org.opensaml.core.xml.io.MarshallingException;
+import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.Collections;
 
 /**
@@ -30,6 +36,7 @@ public class SamlAccessFilter implements Filter {
 
     private final SamlAuthenticationService samlAuthenticationService;
     private final Initializer initializer;
+    private final MetaDataXMLPrinter metaDataXMLPrinter;
 
     public SamlAccessFilter() {
 
@@ -47,6 +54,7 @@ public class SamlAccessFilter implements Filter {
         this.initializer               = (null == initializer)?
                 new DefaultInitializer():
                 initializer;
+        this.metaDataXMLPrinter = new MetaDataXMLPrinter();
     }
 
     @Override
@@ -89,6 +97,12 @@ public class SamlAccessFilter implements Filter {
         final Configuration configuration  = (Configuration) InstancePool.get(Configuration.class.getName());
         String redirectAfterLogin = null;
 
+        if (request.getRequestURI().contains(configuration.getServiceProviderCustomMetadataPath())) {
+
+            this.printMetaData(request, response, configuration);
+            return;
+        }
+
         if (!this.checkAccessFilters(request.getRequestURI(), configuration.getAccessFilterArray())) {
 
             this.autoLogin(request, response, session);
@@ -117,6 +131,32 @@ public class SamlAccessFilter implements Filter {
 
         chain.doFilter(request, response);
     }
+
+    private void printMetaData(final HttpServletRequest request,
+                               final HttpServletResponse response,
+                               final Configuration configuration) throws ServletException {
+
+        final EntityDescriptor descriptor =
+                configuration.getMetaDescriptorService().getServiceProviderEntityDescriptor();
+        Writer writer = null;
+
+        try {
+
+            response.setContentType();
+            writer = response.getWriter();
+            this.metaDataXMLPrinter.print(descriptor, writer);
+            response.setStatus(HttpServletResponse.SC_OK);
+        } catch (ParserConfigurationException | TransformerException | IOException | MarshallingException e) {
+
+            Logger.error(this.getClass(),
+                    e.getMessage(), e);
+            throw new ServletException(e);
+        } finally {
+
+            IOUtils.closeQuietly(writer);
+        }
+
+    } // printMetaData.
 
     private void autoLogin (final HttpServletRequest request,
                             final HttpServletResponse response,

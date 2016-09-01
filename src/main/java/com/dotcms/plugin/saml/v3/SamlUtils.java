@@ -220,7 +220,7 @@ public class SamlUtils {
 
         final Configuration configuration =
                 (Configuration) InstancePool.get(Configuration.class.getName());
-        // todo: should be the metadata entity id
+
         return configuration.getStringProperty(
                 DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER,
                     DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER_DEFAULT_VALUE);

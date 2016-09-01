@@ -38,7 +38,7 @@ dependencies {
     compile (group: 'org.opensaml', name: 'opensaml-soap-api',        version: '3.2.0')
     compile (group: 'org.opensaml', name: 'opensaml-soap-impl',       version: '3.2.0')
     compile (group: 'org.opensaml', name: 'opensaml-xmlsec-api',      version: '3.2.0')
-    compile (group: 'org.opensaml', name: 'opensaml-xmlsec-impl',     version: '3.2.0')
+   // compile (group: 'org.opensaml', name: 'opensaml-xmlsec-impl',     version: '3.2.0')
 
     compile (group: 'org.opensaml', name: 'xmltooling',               version: '1.4.6') {
         exclude group: 'org.slf4j'
