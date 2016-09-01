@@ -455,6 +455,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             context = new ProfileRequestContext<ArtifactResponse, ArtifactResolve>();
             context.setOutboundMessageContext(messageContext);
 
+            Logger.info(this, "Sending the Artifact resolve");
             this.httpClient.send(artifactResolutionService, context);
 
             artifactResponse = context.getInboundMessageContext().getMessage();
