@@ -293,7 +293,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         artifactResponse = this.sendAndReceiveArtifactResolve(artifactResolve, response);
 
         Logger.info(this, "ArtifactResponse received");
-        Logger.info(this, "ArtifactResponse: " + toXMLObjectString(artifactResolve));
+        Logger.info(this, "ArtifactResponse: " + toXMLObjectString(artifactResponse));
 
         this.validateDestinationAndLifetime(artifactResponse, request);
 
