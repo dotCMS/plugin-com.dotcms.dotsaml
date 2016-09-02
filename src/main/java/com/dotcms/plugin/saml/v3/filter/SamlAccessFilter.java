@@ -181,23 +181,26 @@ public class SamlAccessFilter implements Filter {
 
     private boolean autoLogin (final HttpServletRequest request,
                             final HttpServletResponse response,
-                            final HttpSession         session) {
+                            HttpSession         session) {
 
         final User user =
                 this.samlAuthenticationService.getUser(request, response);
 
-        try {
+        if (null != user) {
 
-            Logger.info(this, "User returned by SAML Service, id " + user.getUserId() +
-                            ", user Map: " + user.toMap());
-        } catch (Exception e) {
+            // we are going to do the autologin, so if the session is null, create it!
+            session = (null == session)? request.getSession():session;
 
-            Logger.error(this, e.getMessage(), e);
-        }
+            try {
 
-        if (null != session && null != user) {
+                Logger.info(this, "User returned by SAML Service, id " + user.getUserId() +
+                        ", user Map: " + user.toMap());
+            } catch (Exception e) {
+
+                Logger.error(this, e.getMessage(), e);
+            }
+
             // todo: 3.7 this should be changed to LoginService
-
             final boolean doCookieLogin = LoginFactory.doCookieLogin(PublicEncryptionFactory.encryptString
                     (user.getUserId()), request, response);
 
