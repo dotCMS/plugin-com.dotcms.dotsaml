@@ -102,8 +102,8 @@ public class SamlAccessFilter implements Filter {
 
         final HttpServletResponse response = (HttpServletResponse) res;
         final HttpServletRequest  request  = (HttpServletRequest) req;
-        final HttpSession         session  = request.getSession(false);
         final Configuration configuration  = (Configuration) InstancePool.get(Configuration.class.getName());
+        HttpSession         session        = request.getSession(false);
         String redirectAfterLogin = null;
 
         // First, check if the current request is the SP metadata xml.
@@ -123,6 +123,9 @@ public class SamlAccessFilter implements Filter {
 
                 return; // no continue. Usually no continue when there is a sendRedirect done.
             }
+
+            // check if the autologin creates the session.
+            session = request.getSession(false);
 
             // if the auto login couldn't loggged the user, then send it to the IdP login page.
             if (null == session || null == session.getAttribute(WebKeys.CMS_USER)) {
