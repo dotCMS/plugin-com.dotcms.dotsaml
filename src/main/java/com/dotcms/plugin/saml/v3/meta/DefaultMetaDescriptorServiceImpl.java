@@ -61,6 +61,15 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                 XMLObjectProviderRegistrySupport.getBuilderFactory();
     }
 
+    /**
+     * By default the pivot to get the {@link IDPSSODescriptor} by using {@link DotSamlConstants}.DOT_SAML_IDP_METADATA_PROTOCOL_DEFAULT_VALUE
+     * However if there is any different protocol you want to use, please change the {@link DotSamlConstants}.DOT_SAML_IDP_METADATA_PROTOCOL
+     * to override the value on the dotmarketing-config.properties
+     * @param inputStream {@link InputStream} this is the stream of the Idp-metadata.xml
+     *                                       (get it from the IdP, for instance the idp-metadata.xml from the shibboleth installation.
+     * @return MetadataBean
+     * @throws Exception
+     */
     @Override
     public MetadataBean parse(final InputStream inputStream) throws Exception {
 
@@ -79,6 +88,17 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                 this.getCredentialSigningList(descriptor.getEntityID(), idpDescriptor));
     } // parse.
 
+    /**
+     * This creates from the runtime configuration, the {@link EntityDescriptor} for dotCMS Service Provider.
+     *
+     * Things to keep in mind:
+     * 1) By default WantAssertionsSigned is true, if you want to overrides it please use {@link DotSamlConstants}.DOTCMS_SAML_WANT_ASSERTIONS_SIGNED on the dotmarketing-config.properties
+     * 2) By default AuthnRequestsSigned is true,  if you want to overrides it please use {@link DotSamlConstants}.DOTCMS_SAML_AUTHN_REQUESTS_SIGNED on the dotmarketing-config.properties
+     * 3) All Assertion Consumer Services use the url returned by: {@link DotSamlConstants}.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL, this value usually will be the dotCMS landing page.
+     * 4) By default as a formats we return: {@link NameIDType}.TRANSIENT, {@link NameIDType}.PERSISTENT
+     *          however if you want to override it change the {@link DotSamlConstants}.DOTCMS_SAML_NAME_ID_FORMATS on the dotmarketing-config.properties (comma separated)
+     * @return EntityDescriptor
+     */
     @Override
     public EntityDescriptor getServiceProviderEntityDescriptor() {
 
@@ -97,7 +117,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         final EntityDescriptor descriptor      = entityDescriptorBuilder.buildObject();
         final SPSSODescriptor  spssoDescriptor = spssoDescriptorBuilder.buildObject();
 
-        descriptor.setEntityID(SamlUtils.getSPIssuerValue());
+        descriptor.setEntityID(SamlUtils.getSPIssuerValue()); // this get from the dotmarketing-config.properties.
 
         Logger.info(this, "Generating the Entity Provider Descriptor for: " +
                 descriptor.getEntityID());
@@ -110,9 +130,14 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 
         Logger.info(this, "Setting the key descriptors for: " +
                 descriptor.getEntityID());
+
+        // set's the SIGNING and ENCRYPTION keyinfo.
         this.setKeyDescriptors (spssoDescriptor);
+
+        // set's the messages format.
         this.setFormat(configuration, spssoDescriptor);
 
+        // set's the assertion customer services, this will be a fixed url on dotCMS.
         spssoDescriptor.getAssertionConsumerServices().add
                 (this.createAssertionConsumerService(0, SAMLConstants.SAML2_ARTIFACT_BINDING_URI,
                         configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));
@@ -131,6 +156,14 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         return descriptor;
     } // getServiceProviderEntityDescriptor.
 
+    /**
+     * Template method to create a assertion consumer service
+     * @param index {@link Integer}
+     * @param binding {@link String}
+     * @param location {@link String}
+     * @param assertionConsumerServiceBuilder {@link SAMLObjectBuilder}
+     * @return AssertionConsumerService
+     */
     protected AssertionConsumerService createAssertionConsumerService(final int    index,
                                                                       final String binding,
                                                                       final String location,
@@ -145,8 +178,12 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         return assertionConsumerServiceArtifact;
     } // createAssertionConsumerService.
 
-
-
+    /**
+     * Sets the format's supported for the messages.
+     *
+     * @param configuration {@link Configuration}
+     * @param spssoDescriptor {@link SPSSODescriptor}
+     */
     protected void setFormat(final Configuration configuration,
                              final SPSSODescriptor spssoDescriptor) {
 
@@ -166,16 +203,24 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 
     protected NameIDFormat createFormat(final String format, final SAMLObjectBuilder<NameIDFormat> nameIDFormatBuilder) {
 
-        NameIDFormat nameIDFormat = nameIDFormatBuilder.buildObject();
+        final NameIDFormat nameIDFormat = nameIDFormatBuilder.buildObject();
         nameIDFormat.setFormat(format);
         return nameIDFormat;
-    }
+    } // createFormat.
 
+    /**
+     * This method is created in this way, just in case some subclass would like to override it.
+     * @return Credential
+     */
     protected Credential getCredential () {
 
         return SamlUtils.getCredential();
     } // getCredential.
 
+    /**
+     * Set the Key Descriptors, SIGNING and ENCRYPTION.
+     * @param spssoDescriptor
+     */
     protected void setKeyDescriptors(final SPSSODescriptor spssoDescriptor) {
 
         final SAMLObjectBuilder<KeyDescriptor> keyDescriptorBuilder =

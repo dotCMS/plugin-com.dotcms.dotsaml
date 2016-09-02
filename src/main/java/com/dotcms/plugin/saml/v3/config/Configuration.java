@@ -17,6 +17,11 @@ import java.util.Collection;
  */
 public interface Configuration extends Serializable {
 
+    /**
+     * The meta descriptor service is created on the configuration, so we take advance and return the instance from it.
+     * @return MetaDescriptorService
+     */
+    // Todo: this could be in the InstancePool
     MetaDescriptorService getMetaDescriptorService();
 
     /**
@@ -54,8 +59,8 @@ public interface Configuration extends Serializable {
     } // getStringArray.
 
     /**
-     * Return the path to mapping the metadata.xml info for SP (dotcms)
-     * @return
+     * Returns the path to mapping the metadata.xml info for SP (Service Provider), in our case the SP is  dotCMS.
+     * @return String
      */
     public default String getServiceProviderCustomMetadataPath() {
 
@@ -65,14 +70,16 @@ public interface Configuration extends Serializable {
     } // getServiceProviderCustomMetadataPath.
 
     /**
-     * Get's the access filter array, which are the exceptional cases to avoid to evaluate the {@link com.dotcms.plugin.saml.v3.filter.SamlAccessFilter}
-     * For instance if you include a file that shouldn't need any mapping, you can use it
+     * Get's the access filter array, which are the exceptional cases to avoid to evaluate on the {@link com.dotcms.plugin.saml.v3.filter.SamlAccessFilter}
+     * For instance if you include a file that shouldn't need any mapping, you can use it.
      * @return String []
      */
     String [] getAccessFilterArray();
 
     /**
      * If the user wants to do a verifyAssertionSignature, by default true.
+     * There are some testing or diagnostic scenarios where you want to avoid the validation to identified issues, but in general on production this must be true.
+     *
      * @return boolean
      */
     public default boolean isVerifyAssertionSignatureNeeded () {
@@ -83,6 +90,9 @@ public interface Configuration extends Serializable {
 
     /**
      * If the user wants to do a verifySignatureProfile, by default true
+     * There are some testing or diagnostic scenarios where you want to avoid the validation to identified issues, but in general on production this must be true.
+     *
+     * Note: if isVerifyAssertionSignatureNeeded is true, this is also skipped.
      * @return boolean
      */
     public default boolean isVerifySignatureProfileNeeded() {
@@ -93,6 +103,10 @@ public interface Configuration extends Serializable {
 
     /**
      * If the user wants to do a verifySignatureCredentials, by default true
+     *
+     * There are some testing or diagnostic scenarios where you want to avoid the validation to identified issues, but in general on production this must be true.
+     *
+     * Note: if isVerifyAssertionSignatureNeeded is true, this is also skipped.
      * @return boolean
      */
     public default boolean isVerifySignatureCredentialsNeeded() {
@@ -102,13 +116,14 @@ public interface Configuration extends Serializable {
     } // isVerifySignatureCredentialsNeeded.
 
     /**
-     * Gets the signing credentials, usually they are pull from the idp metadata xml.
+     * Gets the signing credentials, usually they are pull from the idp metadata xml, the idp metadata is generated from shibboleth, for instance or any other Idp.
      * @return Credential array
      */
     Collection<Credential> getSigningCredentials();
 
     /**
      * In case the user wants some specific customer url, otherwise null.
+     * This URL is used on the metadata to fill out the AssertionConsumerService's
      * @return String
      */
     public default String getAssertionConsumerEndpoint() {
@@ -123,7 +138,7 @@ public interface Configuration extends Serializable {
     /**
      * In case you need a custom credentials for the Service Provider (DotCMS) overrides the
      * implementation class on the configuration.
-     *
+     * By default it uses a Trust Storage to get the keys and creates the credential.
      * @return CredentialProvider
      */
     public default CredentialProvider getServiceProviderCustomCredentialProvider() {
@@ -140,6 +155,8 @@ public interface Configuration extends Serializable {
     /**
      * In case you need a custom credentials for the ID Provider (DotCMS) overrides the
      * implementation class on the configuration.
+     *
+     * By default it uses the Idp metadata credentials info, from the XML to figure out this info.
      *
      * @return CredentialProvider
      */

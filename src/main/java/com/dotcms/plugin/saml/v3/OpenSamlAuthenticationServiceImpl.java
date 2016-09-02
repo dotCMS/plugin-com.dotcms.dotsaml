@@ -122,7 +122,12 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         if (this.isValidSamlRequest (request)) {
 
             assertion = this.resolveAssertion(request, response);
+
+            Logger.info (this, "Resolved assertion: " + assertion);
+
             user      = this.resolveUser(assertion);
+
+            Logger.info (this, "Resolved user: " + user);
         }
 
         return user;

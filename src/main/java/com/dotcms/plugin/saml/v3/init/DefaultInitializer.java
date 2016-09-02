@@ -19,6 +19,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Default initializer
+ * Responsibilities:
+ *
+ * - Init the Java Crypto.
+ * - Init Saml Services.
+ * - Init Plugin Configuration and meta data.
+ *
+ *
  * @author jsanca
  */
 public class DefaultInitializer implements Initializer {
@@ -45,6 +52,13 @@ public class DefaultInitializer implements Initializer {
         this.initDone.set(true);
     } // init.
 
+    /**
+     * Inits the app configuration.
+     * The configuration By default is executed by {@link DefaultDotCMSConfiguration}
+     * however you can override the implementation by your own implementation by implementing {@link Configuration}
+     * and setting the classpath on the property {@link DotSamlConstants}.DOT_SAML_CONFIGURATION_CLASS_NAME
+     * on the dotmarketing-config.properties
+     */
     protected void initConfiguration() {
 
         final String configInstance = Config.getStringProperty(
@@ -57,6 +71,9 @@ public class DefaultInitializer implements Initializer {
         InstancePool.put(Configuration.class.getName(), configuration);
     } // initConfiguration.
 
+    /**
+     * Inits the OpenSaml service.
+     */
     protected void initService() {
 
         try {
@@ -68,8 +85,11 @@ public class DefaultInitializer implements Initializer {
             Logger.error(this, e.getMessage(), e);
             throw new DotSamlException("Initialization failed");
         }
-    }
+    } // initService.
 
+    /**
+     * Init Java Crypto stuff.
+     */
     protected void initJavaCrypto() {
 
         final JavaCryptoValidationInitializer javaCryptoValidationInitializer
@@ -81,7 +101,7 @@ public class DefaultInitializer implements Initializer {
 
             Logger.error(this, e.getMessage(), e);
         }
-    }
+    } // initJavaCrypto.
 
     @Override
     public boolean isInitializationDone() {

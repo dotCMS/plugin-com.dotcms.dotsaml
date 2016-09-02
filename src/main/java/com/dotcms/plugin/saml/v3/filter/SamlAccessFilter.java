@@ -25,11 +25,13 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 
 /**
  * Access filter for SAML plugin, it does the autologin and also redirect to the
  * IDP if the user is not logged in.
+ * In addition prints out the metadata.xml information for the dotCMS SP.
  * @author jsanca
  */
 public class SamlAccessFilter implements Filter {
@@ -71,6 +73,13 @@ public class SamlAccessFilter implements Filter {
         }
     } // init.
 
+    /**
+     * This method checks if some path does not wants to be treatment by the {@link SamlAccessFilter}
+     * An example of exception might be the destroy.jsp, so on.
+     * @param uri {@link String}
+     * @param filterPaths {@link String} array
+     * @return boolean
+     */
     private boolean checkAccessFilters (String uri, final String [] filterPaths) {
 
         boolean filter = false;
@@ -97,18 +106,28 @@ public class SamlAccessFilter implements Filter {
         final Configuration configuration  = (Configuration) InstancePool.get(Configuration.class.getName());
         String redirectAfterLogin = null;
 
+        // First, check if the current request is the SP metadata xml.
         if (request.getRequestURI().contains(configuration.getServiceProviderCustomMetadataPath())) {
 
+            // if its, so print it out in the response and return.
             this.printMetaData(request, response, configuration);
             return;
         }
 
+        // check if there is any exception filter path, to avoid to apply all the logic.
         if (!this.checkAccessFilters(request.getRequestURI(), configuration.getAccessFilterArray())) {
 
-            this.autoLogin(request, response, session);
+            // if it is an url to apply the Saml access logic, determine if the autoLogin is possible
+            // the autologin will works if the SAMLArt (Saml artifact id) is in the request query string.
+            if (!this.autoLogin(request, response, session)) {
 
+                return; // no continue. Usually no continue when there is a sendRedirect done.
+            }
+
+            // if the auto login couldn't loggged the user, then send it to the IdP login page.
             if (null == session || null == session.getAttribute(WebKeys.CMS_USER)) {
 
+                // this is safe, just to make a redirection when the user get's logged.
                 redirectAfterLogin = request.getRequestURI() +
                         ((null != request.getQueryString())? "?" + request.getQueryString():
                                      StringUtils.EMPTY);
@@ -124,24 +143,27 @@ public class SamlAccessFilter implements Filter {
                             redirectAfterLogin);
                 }
 
+                // this will redirect the user to the IdP Login Page.
                 this.samlAuthenticationService.authentication(request, response);
                 return;
             }
         }
 
         chain.doFilter(request, response);
-    }
+    } // doFilter.
 
     private void printMetaData(final HttpServletRequest request,
                                final HttpServletResponse response,
                                final Configuration configuration) throws ServletException {
 
+        // First, get the Entity descriptor.
         final EntityDescriptor descriptor =
                 configuration.getMetaDescriptorService().getServiceProviderEntityDescriptor();
         Writer writer = null;
 
         try {
 
+            // get ready to convert it to XML.
             response.setContentType("text/xml");
             writer = response.getWriter();
             this.metaDataXMLPrinter.print(descriptor, writer);
@@ -155,15 +177,23 @@ public class SamlAccessFilter implements Filter {
 
             IOUtils.closeQuietly(writer);
         }
-
     } // printMetaData.
 
-    private void autoLogin (final HttpServletRequest request,
+    private boolean autoLogin (final HttpServletRequest request,
                             final HttpServletResponse response,
                             final HttpSession         session) {
 
         final User user =
                 this.samlAuthenticationService.getUser(request, response);
+
+        try {
+
+            Logger.info(this, "User returned by SAML Service, id " + user.getUserId() +
+                            ", user Map: " + user.toMap());
+        } catch (Exception e) {
+
+            Logger.error(this, e.getMessage(), e);
+        }
 
         if (null != session && null != user) {
             // todo: 3.7 this should be changed to LoginService
@@ -171,16 +201,53 @@ public class SamlAccessFilter implements Filter {
             final boolean doCookieLogin = LoginFactory.doCookieLogin(PublicEncryptionFactory.encryptString
                     (user.getUserId()), request, response);
 
+            Logger.info(this, "Login result by LoginFactory: " + doCookieLogin);
+
             if (doCookieLogin) {
 
                 if (null != session && null != user.getUserId()) {
                     // this is what the PortalRequestProcessor needs to check the login.
+                    Logger.info(this, "Setting the user id on the session: " + user.getUserId());
                     session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
-                } //
-            }
 
+                    return this.checkRedirection(request, response, session);
+                }
+            }
         }
+
+        return true;
     } // autoLogin.
+
+    private boolean checkRedirection(final HttpServletRequest request,
+                                  final HttpServletResponse response,
+                                  final HttpSession session) {
+
+        final String redirectAfterLogin = (String) session.
+                getAttribute(WebKeys.REDIRECT_AFTER_LOGIN);
+
+        if (null != redirectAfterLogin) {
+
+            session.removeAttribute(WebKeys.REDIRECT_AFTER_LOGIN);
+            final String currentRequest = request.getRequestURI() +
+                    ((null != request.getQueryString())? "?" + request.getQueryString():
+                            StringUtils.EMPTY);
+            // if it is not the same request.
+            if (!currentRequest.equals(redirectAfterLogin)) {
+
+                try {
+
+                    Logger.info(this, "Redirecting to: " + redirectAfterLogin);
+                    response.sendRedirect(redirectAfterLogin);
+                    return false; // not continue. since it is a redirect.
+                } catch (IOException e) {
+
+                    Logger.error(this, e.getMessage(), e);
+                }
+            }
+        }
+
+        return true; // continue with the current request.
+    } // checkRedirection.
 
     @Override
     public void destroy() {

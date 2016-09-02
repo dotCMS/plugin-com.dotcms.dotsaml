@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 /**
  * Encapsulates the Idp Meta Data xml parsing.
- * Generates the SP Meta Data xml.
+ * Generates the Service Provider Meta Data xml.
  *
  * @author jsanca
  */
@@ -16,7 +16,7 @@ public interface MetaDescriptorService extends Serializable {
     /**
      * Parse the meta data xml encapsulate on the inputStream
      * this is to parse the idp-metadata.
-     * @param inputStream {@link InputStream}
+     * @param inputStream {@link InputStream} this is the stream of the Idp-metadata.xml
      * @return MetadataBean
      * @throws Exception
      */
@@ -24,7 +24,8 @@ public interface MetaDescriptorService extends Serializable {
     ;
 
     /**
-     * Get the Service Provider Entity Descriptor
+     * Get the Service Provider Entity Descriptor.
+     * This object is built based on the runtime information configured for the dotCMS SP (Service Provider)
      * @return EntityDescriptor
      */
     EntityDescriptor getServiceProviderEntityDescriptor ();
