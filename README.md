@@ -19,10 +19,12 @@ lastname. The roles are optional
 1) To enable or disable in the plugin you have to include the following servlet on your web.xml (dotCMS app)
 before the AutoLoginFilter.
 
+~~~
 <filter>
 		<filter-name>SamlAccessFilter</filter-name>
 		<filter-class>com.dotcms.plugin.saml.v3.filter.SamlAccessFilter</filter-class>
 </filter>
+~~~
 
 and of course the mapping:
 
