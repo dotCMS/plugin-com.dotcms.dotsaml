@@ -19,7 +19,7 @@ import java.io.Serializable;
 import java.io.Writer;
 
 /**
- * Marshall to XML a {@link org.opensaml.saml.saml2.metadata.EntityDescriptor}
+ * Marshall to convert a {@link org.opensaml.saml.saml2.metadata.EntityDescriptor} to XML
  * @author jsanca
  */
 public class MetaDataXMLPrinter implements Serializable {

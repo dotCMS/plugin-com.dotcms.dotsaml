@@ -2,6 +2,7 @@ package com.dotcms.plugin.saml.v3;
 
 /**
  * Encapsulates the idp meta datas binding tye names
+ * @author jsanca
  */
 public enum BindingType {
 

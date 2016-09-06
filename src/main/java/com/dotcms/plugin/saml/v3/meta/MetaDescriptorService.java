@@ -13,6 +13,8 @@ import java.io.Serializable;
  */
 public interface MetaDescriptorService extends Serializable {
 
+    String X_509 = "X.509";
+
     /**
      * Parse the meta data xml encapsulate on the inputStream
      * this is to parse the idp-metadata.

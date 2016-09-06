@@ -10,6 +10,7 @@ import org.opensaml.soap.common.SOAPException;
 
 /**
  * Dot Pipeline http soap client implementation.
+ * This is just an encapsulation from the original code.
  * @author jsanca
  */
 public class DotPipelineHttpSOAPClient extends AbstractPipelineHttpSOAPClient {

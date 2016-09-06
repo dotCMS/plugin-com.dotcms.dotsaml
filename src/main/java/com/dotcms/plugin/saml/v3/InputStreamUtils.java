@@ -16,6 +16,14 @@ public class InputStreamUtils {
 
     private final static String PREFIX_FILE = "file://"; // file://
 
+    /**
+     * If the resourceName start with {@link InputStreamUtils}.PREFIX_FILE ("file://")
+     * will load the stream from the file system, otherwise will be get from the classpath.
+     *
+     * @param resourceName {@link String}
+     * @return InputStream
+     * @throws IOException
+     */
     public static InputStream getInputStream (final String resourceName) throws IOException {
 
         InputStream inputStream = null;

@@ -45,7 +45,13 @@ public class InstanceUtil {
         return t;
     } // newInstance.
 
-
+    /**
+     * Just get a new instance without throwing an exception.
+     * Null if couldn't create the instance.
+     * @param tClass {@link Class}
+     * @param <T>
+     * @return T
+     */
     public static <T> T newInstance (final Class<T> tClass) {
 
         T t = null;
@@ -62,8 +68,13 @@ public class InstanceUtil {
         }
 
         return t;
-    }
+    } // newInstance.
 
+    /**
+     * Get a {@link Class} object based on the className, full if the class does not exists or invalid.
+     * @param className {@link String}
+     * @return Class
+     */
     public static Class getClass(final String className) {
 
         Class clazz = null;

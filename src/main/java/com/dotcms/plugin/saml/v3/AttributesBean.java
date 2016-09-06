@@ -9,10 +9,19 @@ import java.io.Serializable;
  */
 public class AttributesBean implements Serializable {
 
+    // user email from opensaml
     private final String    email;
+
+    // user last name from opensaml
     private final String    lastName;
+
+    // user first name from opensaml
     private final String    firstName;
+
+    // true if opensaml returned roles
     private final boolean   addRoles;
+
+    // Saml object with the roles info.
     private final Attribute roles;
 
     private AttributesBean(final Builder builder) {

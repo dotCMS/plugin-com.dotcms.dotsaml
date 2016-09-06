@@ -237,7 +237,7 @@ public class SamlUtils {
         final NameIDPolicy nameIDPolicy = buildSAMLObject(NameIDPolicy.class);
 
         // True if you want that when the  user does not exists, allows to create
-        nameIDPolicy.setAllowCreate(configuration.getBooleanProperty(DotSamlConstants.DOTCMS_SAML_POLICY_ALLOW_CREATE, true));
+        nameIDPolicy.setAllowCreate(configuration.getBooleanProperty(DotSamlConstants.DOTCMS_SAML_POLICY_ALLOW_CREATE, false));
 
         // it supports several formats, such as Kerberos, email, Windows Domain Qualified Name, etc.
         nameIDPolicy.setFormat(configuration.getStringProperty(

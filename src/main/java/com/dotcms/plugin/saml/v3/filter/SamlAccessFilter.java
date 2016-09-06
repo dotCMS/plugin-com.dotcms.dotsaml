@@ -59,6 +59,18 @@ public class SamlAccessFilter implements Filter {
         this.metaDataXMLPrinter = new MetaDataXMLPrinter();
     }
 
+    @VisibleForTesting
+    public SamlAccessFilter(final SamlAuthenticationService samlAuthenticationService,
+                            final Initializer initializer,
+                            final MetaDataXMLPrinter metaDataXMLPrinter) {
+
+        this.samlAuthenticationService = samlAuthenticationService;
+        this.initializer               = (null == initializer)?
+                new DefaultInitializer():
+                initializer;
+        this.metaDataXMLPrinter = metaDataXMLPrinter;
+    }
+
     @Override
     public void init(final FilterConfig filterConfig) throws ServletException {
 
@@ -103,7 +115,7 @@ public class SamlAccessFilter implements Filter {
         final HttpServletResponse response = (HttpServletResponse) res;
         final HttpServletRequest  request  = (HttpServletRequest) req;
         final Configuration configuration  = (Configuration) InstancePool.get(Configuration.class.getName());
-        HttpSession         session        = request.getSession();
+        final HttpSession         session  = request.getSession();
         String redirectAfterLogin = null;
 
         // First, check if the current request is the SP metadata xml.

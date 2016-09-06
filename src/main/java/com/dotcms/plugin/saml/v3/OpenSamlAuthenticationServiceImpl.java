@@ -51,6 +51,7 @@ import static com.dotmarketing.util.UtilMethods.isSet;
  */
 public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationService {
 
+    // this one is an object to send an artifact resolve by post.
     private final HttpClient httpClient;
     private final UserAPI userAPI;
     private final RoleAPI roleAPI;
@@ -133,6 +134,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         return user;
     } // getUser.
 
+    // resolve the artributes from the assertion resolved from the OpenSaml artifact resolver via
+    // post soap message.
     private AttributesBean resolveAttributes (final Assertion assertion) {
 
         final String emailField       = Config.getStringProperty
@@ -169,6 +172,9 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         return attrBuilder.build();
     } // resolveAttributes.
 
+    // Gets the attributes from the Assertion, based on the attributes
+    // see if the user exists return it from the dotCMS records, if does not exist then, tries to create it.
+    // the existing or created user, will be updated the roles if they present on the assertion.
     private User resolveUser(final Assertion assertion) {
 
         User systemUser  = null;

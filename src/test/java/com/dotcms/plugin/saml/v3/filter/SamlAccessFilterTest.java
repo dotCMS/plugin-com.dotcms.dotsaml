@@ -1,7 +1,9 @@
 package com.dotcms.plugin.saml.v3.filter;
 
+import com.dotcms.plugin.saml.v3.MetaDataXMLPrinter;
 import com.dotcms.plugin.saml.v3.SamlAuthenticationService;
 import com.dotcms.plugin.saml.v3.config.Configuration;
+import com.dotcms.plugin.saml.v3.init.DefaultInitializer;
 import com.dotcms.plugin.saml.v3.init.Initializer;
 import com.dotmarketing.util.WebKeys;
 import com.liferay.portal.model.User;
@@ -28,7 +30,17 @@ public class SamlAccessFilterTest {
 
     private boolean filterChainCalled = false;
 
-    @Before
+    static {
+        try {
+            new DefaultInitializer().init(null);
+            //InitializationService.initialize();
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+    }
+
+/*    @Before
     public void initTest(){
 
         filterChainCalled = false;
@@ -37,21 +49,23 @@ public class SamlAccessFilterTest {
         InstancePool.put(Configuration.class.getName(), configuration);
         when(configuration.getAccessFilterArray()).thenReturn(new String [] {"saml3/metadata/dotcms_metadata.xml"});
     }
-
+*/
     @Test
     public void doFilterMetadataTest () throws Exception {
 
         final SamlAuthenticationService authenticationService =
                 mock(SamlAuthenticationService.class);
         final Initializer initializer = mock(Initializer.class);
-        final SamlAccessFilter accessFilter =
-                new SamlAccessFilter(authenticationService, initializer);
         final HttpServletRequest request  = mock(HttpServletRequest.class);
         final HttpServletResponse response = mock(HttpServletResponse.class);
         final HttpSession session  = mock(HttpSession.class);
         final FilterChain chain = mock(FilterChain.class);
-        when(request.getSession(false)).thenReturn(session);
-        when(request.getRequestURI()).thenReturn("saml3/metadata/dotcms_metadata.xml");
+        final MetaDataXMLPrinter metaDataXMLPrinter = mock(MetaDataXMLPrinter.class);
+        final SamlAccessFilter accessFilter =
+                new SamlAccessFilter(authenticationService, initializer,
+                        metaDataXMLPrinter);
+        when(request.getSession()).thenReturn(session);
+        when(request.getRequestURI()).thenReturn("/dotsaml3sp/metadata.xml");
         doAnswer(new Answer<Void>() { // if this method is called, should fail
 
             @Override
@@ -63,7 +77,7 @@ public class SamlAccessFilterTest {
         }).when(chain).doFilter(request, response);
 
         accessFilter.doFilter(request, response, chain);
-        assertTrue(this.filterChainCalled);
+        assertFalse(this.filterChainCalled);
     } // doFilterTestMetada
 
     @Test
@@ -137,7 +151,7 @@ public class SamlAccessFilterTest {
         final HttpSession session  = mock(HttpSession.class);
         final FilterChain chain = mock(FilterChain.class);
 
-        when(request.getSession(false)).thenReturn(session);
+        when(request.getSession()).thenReturn(session);
         when(request.getRequestURI()).thenReturn("some/test/url");
         when(session.getAttribute(WebKeys.CMS_USER)).thenReturn(new User());
         doAnswer(new Answer<Void>() { // if this method is called, should fail

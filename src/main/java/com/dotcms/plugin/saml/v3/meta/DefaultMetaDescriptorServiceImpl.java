@@ -218,8 +218,8 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
     } // getCredential.
 
     /**
-     * Set the Key Descriptors, SIGNING and ENCRYPTION.
-     * @param spssoDescriptor
+     * Set the Key Descriptors, SIGNING and ENCRYPTION keyInfo.
+     * @param spssoDescriptor {@link SPSSODescriptor}
      */
     protected void setKeyDescriptors(final SPSSODescriptor spssoDescriptor) {
 
@@ -266,6 +266,12 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         }
     } // setKeyDescriptors.
 
+    /**
+     * Using the {@link Credential} gets the KeyInfo.
+     * @param credential {@link Credential}
+     * @return KeyInfo
+     * @throws Exception
+     */
     protected KeyInfo getKeyInfo(final Credential credential) throws Exception {
 
         final X509KeyInfoGeneratorFactory keyInfoGeneratorFactory = new X509KeyInfoGeneratorFactory();
@@ -276,9 +282,16 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         Logger.info(this, "Meta Data Credential: " + credential);
 
         return keyInfoGenerator.generate(credential);
-    }
+    } // getKeyInfo.
 
-    protected List<Credential> getCredentialSigningList(final String entityId, final IDPSSODescriptor idpDescriptor) {
+    /**
+     * Gets from the idp metada the list of signing credential's
+     * @param entityId {@link String}
+     * @param idpDescriptor {@link IDPSSODescriptor}
+     * @return
+     */
+    protected List<Credential> getCredentialSigningList(final String entityId,
+                                                        final IDPSSODescriptor idpDescriptor) {
 
         return idpDescriptor.getKeyDescriptors().stream()
                 .filter( key -> null != key.getKeyInfo() &&
@@ -287,8 +300,14 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                 .map   ( key ->  convertToCredential(entityId, key.getKeyInfo().getX509Datas()
                                         .get(0).getX509Certificates().get(0)) )
                 .collect(Collectors.toList());
-    }
+    } // getCredentialSigningList.
 
+    /**
+     * Convert the x509Certificate {@link org.opensaml.xmlsec.signature.X509Certificate} to {@link Credential}
+     * @param entityId {@link String}
+     * @param x509Certificate {@link org.opensaml.xmlsec.signature.X509Certificate}
+     * @return Credential
+     */
     protected Credential convertToCredential(final String entityId,
                                            final org.opensaml.xmlsec.signature.X509Certificate x509Certificate) {
 
@@ -301,7 +320,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         try {
 
             decoded = Base64.decode(x509Certificate.getValue());
-            cf      = CertificateFactory.getInstance("X.509");
+            cf      = CertificateFactory.getInstance(X_509);
             bais    = new ByteArrayInputStream(decoded);
             javaX509Certificate =
                     java.security.cert.X509Certificate.class.cast(cf.generateCertificate(bais));
@@ -323,6 +342,11 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         return credential;
     } // convertToCredential/
 
+    /**
+     * Generates a map of binding type -> location
+     * @param idpDescriptor IDPSSODescriptor
+     * @return Map
+     */
     protected Map<String, String> getSingleSignOnMap(final IDPSSODescriptor idpDescriptor) {
 
         final Map<String, String> singleSignOnBindingLocationMap =
