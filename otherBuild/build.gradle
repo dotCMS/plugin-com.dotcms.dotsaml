@@ -1,0 +1,63 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'war'
+
+sourceCompatibility = 1.8
+version = '0.1'
+
+jar {
+    manifest {
+        attributes("Implementation-Title": "Gradle",
+                "Implementation-Version": version)
+    }
+}
+
+repositories {
+
+    mavenCentral()
+
+    maven {
+        url "http://repo.dotcms.com/artifactory/libs-release"
+    }
+
+    maven {
+        url "https://build.shibboleth.net/nexus/content/repositories/releases"
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'src/main/resources/libs', include: '*.jar')
+    providedCompile (group: 'com.dotcms', name: 'dotcms', version: '3.5'){
+        transitive = true
+    }
+    compile (group: 'org.opensaml', name: 'opensaml-core',            version: '3.2.0')
+    compile (group: 'org.opensaml', name: 'opensaml-messaging-api',   version: '3.2.0')
+    compile (group: 'org.opensaml', name: 'opensaml-messaging-impl',  version: '3.2.0')
+    compile (group: 'org.opensaml', name: 'opensaml-saml-api',        version: '3.2.0')
+    compile (group: 'org.opensaml', name: 'opensaml-saml-impl',       version: '3.2.0')
+    compile (group: 'org.opensaml', name: 'opensaml-soap-api',        version: '3.2.0')
+    compile (group: 'org.opensaml', name: 'opensaml-soap-impl',       version: '3.2.0')
+    compile (group: 'org.opensaml', name: 'opensaml-xmlsec-api',      version: '3.2.0')
+   // compile (group: 'org.opensaml', name: 'opensaml-xmlsec-impl',     version: '3.2.0')
+
+    compile (group: 'org.opensaml', name: 'xmltooling',               version: '1.4.6') {
+        exclude group: 'org.slf4j'
+    }
+
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '1.+'
+
+    providedCompile "javax.servlet:servlet-api:2.5"
+}
+
+
+task copyTestResources(type: Copy) {
+    from "${projectDir}/src/test/resources"
+    into "${buildDir}/classes/test"
+}
+
+processTestResources.dependsOn copyTestResources
+
+/*task wrapper(type: Wrapper) {
+    gradleVersion = '2.14'
+}*/
