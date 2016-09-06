@@ -85,27 +85,34 @@ This is the App Id for the DotCMS Service Provider, by default we use this one: 
 http://www.dotcms.com, could be the dotCMS id.
 
 4.6) dotcms.saml.policy.allowcreate
+
 By default dotCMS plugin advise to not allow to create new user on the Idp, however you can advise the value you want (true or false) overriding the value in the properties file.
 
 4.7) dotcms.saml.policy.format
+
 By default we support TRANSIENT and PERSISTANCE formats, however if you want to override it just add the values (comma separated) in the properties file.
 See org.opensaml.saml.saml2.core.NameIDType for more details about the valid values.
 
 4.8) dotcms.saml.authn.comparisontype
+
 By default we use a MINIMUM Authorization, But you can switch to another one; for instance:
 
 dotcms.saml.authn.comparisontype=BETTER
 
 MINIMUM
+
 The user could be authenticated by using password or any stronger method, such as smart card for instance.
 
 BETTER
+
 The user must be authenticated with a stronger method than password.
 
 EXACT
+
 The user will be authenticated with a specific method assigment for it, for instance if it is password, the user will be authenticated by password, not anything else.
 
 MAXIMUM
+
 The user will use the strong possible method.
 
 4.9) dotcms.saml.authn.context.class.ref
@@ -140,7 +147,6 @@ By default we use  org.opensaml.xmlsec.signature.support.SignatureConstants.ALGO
 4.16) dotcms.saml.clock.skew and dotcms.saml.message.life.time
 
 DotCMS does validation for the message lifetime, by default the clock skew is 1000 and life time 2000, in case you need a greater value feel free to override it.
-
 
 4.17) dotcms.saml.remove.roles.prefix
 
