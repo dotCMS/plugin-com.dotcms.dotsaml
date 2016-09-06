@@ -66,7 +66,7 @@ By default dotCMS used org.opensaml.saml.common.xml.SAMLConstants.SAML2_ARTIFACT
 
 4.2) dotcms.saml.identity.provider.destinationsso.url
 
-This is url for the login page on the OpenSAML Server, by default it gets url from the idp-metadata (the file provided from the OpenSAML server), but if it is not any idp-metadata you can
+This is url for the login page on the Shibboleth Server, by default it gets url from the idp-metadata (the file provided from the Shibboleth server), but if it is not any idp-metadata you can
 edit this property and include the SSO url. (Note, if you set this property and set the idp-metadata, the idp-metada will be get by default)
 
 4.3) dotcms.saml.artifact.resolution.service.url
@@ -75,7 +75,7 @@ This is a mandatory property for the app and it is the SOAP URL for the Artifact
 
 4.4) dotcms.saml.assertion.customer.endpoint.url
 
-This is the URL where the Idp (the OpenSAML server) will be redirected to dotCMS when the login is made, we suggest to go to http://[domain]/c.
+This is the URL where the Idp (the Shibboleth server) will be redirected to dotCMS when the login is made, we suggest to go to http://[domain]/c.
 If this value is not set, will be send a current request as a default, however keep in mind some Idp Server might not admit this configuration.
 
 4.5) dotcms.saml.service.provider.issuer
@@ -180,7 +180,7 @@ If you want to get the XML from the file system use the prefix; file://
 
 4.25) dotcms.saml.idp.metadata.protocol
 
-This is the attribute name to find the Idp Information on the idp-metadata.xml (the file provided from the OpenSAML server), the default used is
+This is the attribute name to find the Idp Information on the idp-metadata.xml (the file provided from the Shibboleth server), the default used is
 "urn:oasis:names:tc:SAML:2.0:protocol", probably you do not need to change it but if you can override it here if needed.
 
 4.26) dotcms.saml.idp.metadata.parser.classname
