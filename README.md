@@ -46,12 +46,12 @@ could see and example of how you can create one
 http://blog.tirasa.net/category/codeexp/security/create-a-new-keystore-to.html
 
 In addition here is an example of the properties to override:
-
+~~~
 dotcms.saml.keystore.path=SPKeystore.jks
 dotcms.saml.keystore.password=password
 dotcms.saml.keyentryid=SPKey
 dotcms.saml.keystore.entry.password=password
-
+~~~
 Keep in mind that the dotcms.saml.keystore.path, could be get from the app classpath or from the file system;
 To include a file system just include the prefix file://
 
