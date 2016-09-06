@@ -28,11 +28,12 @@ before the AutoLoginFilter.
 
 and of course the mapping:
 
+~~~
 <filter-mapping>
 		<filter-name>SamlAccessFilter</filter-name>
 		<url-pattern>/*</url-pattern>
 </filter-mapping>
-
+~~~
 
 2) Set in the DOTCMS_plugin_path/conf/dotmarketing-config-ext.properties file the
 configuration values for your service provider. The Plugin included some examples, however
