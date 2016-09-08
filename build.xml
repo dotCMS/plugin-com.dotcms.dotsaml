@@ -4,7 +4,7 @@
 
 
 	<path id="files-classpath-root">
-		<fileset dir="ROOT/dotserver/tomcat-8.0.18/webapps/ROOT/dotCMS/WEB-INF/lib">
+		<fileset dir="ROOT/dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/lib">
 			<include name="**/*.jar" />
 		</fileset>
 	</path>
