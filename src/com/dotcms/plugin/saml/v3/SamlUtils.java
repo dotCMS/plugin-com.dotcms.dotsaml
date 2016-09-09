@@ -425,7 +425,8 @@ public class SamlUtils {
                 return;
             } catch (SignatureException ignore) {
 
-                Logger.error(SamlUtils.class, "Validation failed with credential", ignore);
+                Logger.info(SamlUtils.class, "Validation failed with credential: " + ignore.getMessage());
+                //Logger.error(SamlUtils.class, "Validation failed with credential", ignore);
             }
         }
 
