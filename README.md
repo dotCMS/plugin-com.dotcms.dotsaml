@@ -225,7 +225,7 @@ By default true, overrides it if you want the authorization requests signed or n
 By default this is the URL to get the dotCMS Service Provider metadata: "/dotsaml3sp/metadata.xml"
 However if you want to use a different path, feel free to override it on the properties file.
 
-5) The plugin needs several libraries to run, all of them has been renamed with a prefix called: "". In case you need to undeploy the plugin you have to manually remove these libraries from the 
+5) The plugin needs several libraries to run, all of them has been renamed with a prefix called: "opensaml". In case you need to undeploy the plugin you have to manually remove these libraries from the 
  /dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/lib
 
 ########################################
