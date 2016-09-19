@@ -35,6 +35,9 @@ and of course the mapping:
 </filter-mapping>
 ~~~
 
+By default the web.xml is gonna be overriden by the plugin (please see the file: ROOT/dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/web.xml)
+If you have modified your web.xml before the plugin installation, please add the changes on this web.xml to avoid to loss any custom change.
+
 2) Set in the DOTCMS_plugin_path/conf/dotmarketing-config-ext.properties file the
 configuration values for your service provider. The Plugin included some examples, however
 you can take a look to DOTCMS_plugin_path/src/com/dotcms/plugin/saml/v3/DotSamlConstants.java, there you can find
@@ -221,6 +224,9 @@ By default true, overrides it if you want the authorization requests signed or n
 
 By default this is the URL to get the dotCMS Service Provider metadata: "/dotsaml3sp/metadata.xml"
 However if you want to use a different path, feel free to override it on the properties file.
+
+5) The plugin needs several libraries to run, all of them has been renamed with a prefix called: "". In case you need to undeploy the plugin you have to manually remove these libraries from the 
+ /dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/lib
 
 ########################################
 ##  HOW TO USE
