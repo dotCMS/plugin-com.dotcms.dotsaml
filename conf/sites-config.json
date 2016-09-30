@@ -1,0 +1,32 @@
+{
+  "config": [
+    {
+      "site1.dotcms.com" : {
+        "dotcms.saml.service.provider.issuer": "https://site1.dotcms.com/",
+        "dotcms.saml.keystore.path":"SPKeystore.jks",
+        "dotcms.saml.keystore.password":"password",
+        "dotcms.saml.keyentryid":"SPKey",
+        "dotcms.saml.keystore.entry.password":"password",
+        "dotcms.saml.artifact.resolution.service.url":"https://site1.localdomain:8443/idp/profile/SAML2/SOAP/ArtifactResolution",
+        "dotcms.saml.assertion.customer.endpoint.url":"https://site1.dotcms.com/c",
+        "dotcms.saml.idp.metadata.path":"file:///Users/jsanca/gitsources/3.6/plugin-dotcms-openSAML3/conf/idp1-metadata.xml",
+        "dotcms.saml.want.assertions.signed":"false",
+        "dotcms.saml.authn.requests.signed":"true"
+      }
+    },
+    {
+      "site2.dotcms.com": {
+        "dotcms.saml.service.provider.issuer": "https://site2.dotcms.com/",
+        "dotcms.saml.keystore.path": "SPKeystore.jks",
+        "dotcms.saml.keystore.password": "password",
+        "dotcms.saml.keyentryid": "SPKey",
+        "dotcms.saml.keystore.entry.password": "password",
+        "dotcms.saml.artifact.resolution.service.url": "https://site2.localdomain:8443/idp/profile/SAML2/SOAP/ArtifactResolution",
+        "dotcms.saml.assertion.customer.endpoint.url": "https://site2.dotcms.com/c",
+        "dotcms.saml.idp.metadata.path": "file:///Users/jsanca/gitsources/3.6/plugin-dotcms-openSAML3/conf/idp2-metadata.xml",
+        "dotcms.saml.want.assertions.signed": "false",
+        "dotcms.saml.authn.requests.signed": "true"
+      }
+    }
+  ]
+}

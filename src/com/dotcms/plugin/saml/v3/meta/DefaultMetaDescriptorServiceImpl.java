@@ -4,10 +4,9 @@ import com.dotcms.plugin.saml.v3.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.DotSamlException;
 import com.dotcms.plugin.saml.v3.SamlUtils;
 import com.dotcms.plugin.saml.v3.config.Configuration;
+import com.dotcms.plugin.saml.v3.config.SiteConfigurationBean;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
-import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
-import com.liferay.util.InstancePool;
 import net.shibboleth.utilities.java.support.xml.ParserPool;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
@@ -71,10 +70,10 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
      * @throws Exception
      */
     @Override
-    public MetadataBean parse(final InputStream inputStream) throws Exception {
+    public MetadataBean parse(final InputStream inputStream, final SiteConfigurationBean siteConfigurationBean) throws Exception {
 
         final EntityDescriptor descriptor = unmarshall(inputStream);
-        final String protocol             = Config.getStringProperty
+        final String protocol             = siteConfigurationBean.getString
                 (DotSamlConstants.DOT_SAML_IDP_METADATA_PROTOCOL,
                         DotSamlConstants.DOT_SAML_IDP_METADATA_PROTOCOL_DEFAULT_VALUE);
         final IDPSSODescriptor idpDescriptor = descriptor.getIDPSSODescriptor(protocol);
@@ -97,13 +96,12 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
      * 3) All Assertion Consumer Services use the url returned by: {@link DotSamlConstants}.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL, this value usually will be the dotCMS landing page.
      * 4) By default as a formats we return: {@link NameIDType}.TRANSIENT, {@link NameIDType}.PERSISTENT
      *          however if you want to override it change the {@link DotSamlConstants}.DOTCMS_SAML_NAME_ID_FORMATS on the dotmarketing-config.properties (comma separated)
+     * @param configuration {@link Configuration}
      * @return EntityDescriptor
      */
     @Override
-    public EntityDescriptor getServiceProviderEntityDescriptor() {
+    public EntityDescriptor getServiceProviderEntityDescriptor(final Configuration configuration) {
 
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
         final SAMLObjectBuilder<EntityDescriptor>  entityDescriptorBuilder =
                 (SAMLObjectBuilder<EntityDescriptor>) this.xmlObjectBuilderFactory.getBuilder
                         (EntityDescriptor.DEFAULT_ELEMENT_NAME);
@@ -117,8 +115,9 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         final EntityDescriptor descriptor      = entityDescriptorBuilder.buildObject();
         final SPSSODescriptor  spssoDescriptor = spssoDescriptorBuilder.buildObject();
 
-        descriptor.setEntityID(SamlUtils.getSPIssuerValue()); // this get from the dotmarketing-config.properties.
+        descriptor.setEntityID(SamlUtils.getSPIssuerValue(configuration)); // this get from the dotmarketing-config.properties.
 
+        Logger.info(this, "Creating the MetaData for the site: " + configuration.getSiteName());
         Logger.info(this, "Generating the Entity Provider Descriptor for: " +
                 descriptor.getEntityID());
 
@@ -132,7 +131,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                 descriptor.getEntityID());
 
         // set's the SIGNING and ENCRYPTION keyinfo.
-        this.setKeyDescriptors (spssoDescriptor);
+        this.setKeyDescriptors (spssoDescriptor, configuration);
 
         // set's the messages format.
         this.setFormat(configuration, spssoDescriptor);
@@ -212,23 +211,23 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
      * This method is created in this way, just in case some subclass would like to override it.
      * @return Credential
      */
-    protected Credential getCredential () {
+    protected Credential getCredential (final Configuration configuration) {
 
-        return SamlUtils.getCredential();
+        return SamlUtils.getCredential(configuration);
     } // getCredential.
 
     /**
      * Set the Key Descriptors, SIGNING and ENCRYPTION keyInfo.
      * @param spssoDescriptor {@link SPSSODescriptor}
      */
-    protected void setKeyDescriptors(final SPSSODescriptor spssoDescriptor) {
+    protected void setKeyDescriptors(final SPSSODescriptor spssoDescriptor, final Configuration configuration) {
 
         final SAMLObjectBuilder<KeyDescriptor> keyDescriptorBuilder =
                 (SAMLObjectBuilder<KeyDescriptor>) this.xmlObjectBuilderFactory.
                         getBuilder(KeyDescriptor.DEFAULT_ELEMENT_NAME);
         final KeyDescriptor signKeyDescriptor;
         final KeyDescriptor encryptedKeyDescriptor;
-        final Credential credential = getCredential();
+        final Credential credential = this.getCredential(configuration);
         final EncryptionMethodBuilder encryptionMethodBuilder = new EncryptionMethodBuilder();
         final EncryptionMethod encryptionMethod;
 

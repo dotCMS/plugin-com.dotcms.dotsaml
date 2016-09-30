@@ -1,5 +1,7 @@
 package com.dotcms.plugin.saml.v3.meta;
 
+import com.dotcms.plugin.saml.v3.config.Configuration;
+import com.dotcms.plugin.saml.v3.config.SiteConfigurationBean;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 
 import java.io.InputStream;
@@ -22,13 +24,14 @@ public interface MetaDescriptorService extends Serializable {
      * @return MetadataBean
      * @throws Exception
      */
-    MetadataBean parse(InputStream inputStream) throws Exception // parse.
+    MetadataBean parse(InputStream inputStream, final SiteConfigurationBean siteConfigurationBean) throws Exception // parse.
     ;
 
     /**
      * Get the Service Provider Entity Descriptor.
      * This object is built based on the runtime information configured for the dotCMS SP (Service Provider)
+     * @param configuration {@link Configuration}
      * @return EntityDescriptor
      */
-    EntityDescriptor getServiceProviderEntityDescriptor ();
+    EntityDescriptor getServiceProviderEntityDescriptor (final Configuration configuration);
 } // E:O:F:MetaDescriptorService.

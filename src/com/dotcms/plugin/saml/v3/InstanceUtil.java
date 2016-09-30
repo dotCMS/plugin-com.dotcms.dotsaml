@@ -4,11 +4,82 @@ import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
 import jnr.ffi.annotations.In;
 
+import java.lang.reflect.Constructor;
+
 /**
  * Just a class to instance without exceptions.
  * @author jsanca
  */
 public class InstanceUtil {
+
+    /**
+     * Creates a new instance avoiding to throw any exception, null in case it
+     * can not be create (if an exception happens). This approach is based on a
+     * constructor with many arguments, keep in mind the method can not find a
+     * contructor to match with the arguments, null will be returned.
+     *
+     * @param className
+     * @param tClass
+     * @param arguments
+     * @param <T>
+     * @return T
+     */
+    public static final <T> T newInstance (final String className,
+                                           final Class<T> tClass,
+                                           final Object... arguments) {
+
+        T t = null;
+        Constructor<?> constructor = null;
+        Class<?> [] parameterTypes = null;
+        Class<T> clazz = tClass;
+
+        if (UtilMethods.isSet(className)) {
+
+            clazz = getClass(className);
+        }
+
+        if (null != clazz) {
+
+            try {
+
+                parameterTypes = getTypes(arguments);
+                constructor = clazz.getDeclaredConstructor(parameterTypes);
+                t = (T) constructor.newInstance(arguments);
+            } catch (Exception e) {
+
+                if (Logger.isErrorEnabled(InstanceUtil.class)) {
+
+                    Logger.error(InstanceUtil.class, e.getMessage(), e);
+                }
+            }
+        }
+
+        return t;
+    } // newInstance.
+
+    /**
+     * Get the types of an array, you can pass an array or a comma separated
+     * arguments.
+     *
+     * @param array
+     *            - {@link Object}
+     * @return array of Class
+     */
+    public static final Class<?> [] getTypes (final Object... array) {
+
+        Class<?> [] parameterTypes = null;
+
+        if (null != array) {
+
+            parameterTypes = new Class[array.length];
+            for (int i = 0; i < array.length; ++i) {
+
+                parameterTypes[i] = array[i].getClass();
+            }
+        }
+
+        return parameterTypes;
+    } // getTypes.
 
     /**
      * Tries to create a new instance from the className, otherwise creates a new from tClass.

@@ -7,7 +7,6 @@ import com.dotcms.plugin.saml.v3.InstanceUtil;
 import com.dotcms.plugin.saml.v3.meta.DefaultMetaDescriptorServiceImpl;
 import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
 import com.dotcms.plugin.saml.v3.meta.MetadataBean;
-import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
 import org.opensaml.security.credential.Credential;
@@ -25,17 +24,24 @@ public class DefaultDotCMSConfiguration implements Configuration {
 
     private final MetadataBean metadataBean;
     private final MetaDescriptorService descriptorParser;
+    private final SiteConfigurationBean siteConfigurationBean;
+    private final String siteName;
 
-    public DefaultDotCMSConfiguration() {
+    public DefaultDotCMSConfiguration(final SiteConfigurationBean siteConfigurationBean, final String siteName) {
+
+        this.siteConfigurationBean = siteConfigurationBean;
 
         this.descriptorParser = InstanceUtil.newInstance(
-                Config.getStringProperty(DotSamlConstants.DOT_SAML_IDP_METADATA_PARSER_CLASS_NAME,
-                        null), DefaultMetaDescriptorServiceImpl.class);
+                this.getStringProperty(DotSamlConstants.DOT_SAML_IDP_METADATA_PARSER_CLASS_NAME, null),
+                    DefaultMetaDescriptorServiceImpl.class);
+
         final String metaDescriptorResourcePath =
                 this.getStringProperty(DotSamlConstants.DOTCMS_SAML_IDP_METADATA_PATH, null);
 
         this.metadataBean = (UtilMethods.isSet(metaDescriptorResourcePath))?
                 this.getMetaData(metaDescriptorResourcePath):null;
+
+        this.siteName     = siteName;
     } // DefaultDotCMSConfiguration.
 
     /**
@@ -51,7 +57,7 @@ public class DefaultDotCMSConfiguration implements Configuration {
                      InputStreamUtils.getInputStream(metaDescriptorResourcePath)) {
 
             Logger.info(this, "Parsing the meta data: " + metaDescriptorResourcePath);
-            metadataBean = this.descriptorParser.parse (inputStream);
+            metadataBean = this.descriptorParser.parse (inputStream, this.siteConfigurationBean);
         } catch (Exception e) {
 
             Logger.error(this, e.getMessage(), e);
@@ -59,6 +65,18 @@ public class DefaultDotCMSConfiguration implements Configuration {
 
         return metadataBean;
     } // initMetaData.
+
+    @Override
+    public String getSiteName() {
+
+        return this.siteName;
+    }
+
+    @Override
+    public SiteConfigurationBean getSiteConfiguration() {
+
+        return this.siteConfigurationBean;
+    }
 
     @Override
     public MetaDescriptorService getMetaDescriptorService() {

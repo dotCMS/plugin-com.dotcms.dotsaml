@@ -2,6 +2,7 @@ package com.dotcms.plugin.saml.v3.filter;
 
 import com.dotcms.plugin.saml.v3.*;
 import com.dotcms.plugin.saml.v3.config.Configuration;
+import com.dotcms.plugin.saml.v3.config.SiteConfigurationService;
 import com.dotcms.plugin.saml.v3.init.DefaultInitializer;
 import com.dotcms.plugin.saml.v3.init.Initializer;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
@@ -12,6 +13,7 @@ import com.dotmarketing.cms.login.factories.LoginFactory;
 import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.WebKeys;
+import com.liferay.portal.auth.PrincipalThreadLocal;
 import com.liferay.portal.model.User;
 import com.liferay.util.InstancePool;
 import org.opensaml.core.xml.io.MarshallingException;
@@ -36,6 +38,7 @@ import java.util.Collections;
  */
 public class SamlAccessFilter implements Filter {
 
+    private static final String TEXT_XML = "text/xml";
     private final SamlAuthenticationService samlAuthenticationService;
     private final Initializer initializer;
     private final MetaDataXMLPrinter metaDataXMLPrinter;
@@ -112,54 +115,66 @@ public class SamlAccessFilter implements Filter {
                          final ServletResponse res,
                          final FilterChain chain) throws IOException, ServletException {
 
-        final HttpServletResponse response = (HttpServletResponse) res;
-        final HttpServletRequest  request  = (HttpServletRequest) req;
-        final Configuration configuration  = (Configuration) InstancePool.get(Configuration.class.getName());
-        final HttpSession         session  = request.getSession();
-        String redirectAfterLogin = null;
+        final HttpServletResponse       response      = (HttpServletResponse) res;
+        final HttpServletRequest        request       = (HttpServletRequest) req;
+        final HttpSession               session       = request.getSession();
+        final SiteConfigurationResolver resolver      = (SiteConfigurationResolver)InstancePool.get(SiteConfigurationResolver.class.getName());
+        final Configuration             configuration = resolver.resolveConfiguration(request);
+        String redirectAfterLogin                     = null;
 
-        // First, check if the current request is the SP metadata xml.
-        if (request.getRequestURI().contains(configuration.getServiceProviderCustomMetadataPath())) {
+        // If configuration is not, means this site does not need
+        if (null != configuration) {
 
-            // if its, so print it out in the response and return.
-            this.printMetaData(request, response, configuration);
-            return;
-        }
+            ThreadLocalConfiguration.setCurrentSiteConfiguration(configuration);
 
-        // check if there is any exception filter path, to avoid to apply all the logic.
-        if (!this.checkAccessFilters(request.getRequestURI(), configuration.getAccessFilterArray())) {
+            // First, check if the current request is the SP metadata xml.
+            if (request.getRequestURI().contains(configuration.getServiceProviderCustomMetadataPath())) {
 
-            // if it is an url to apply the Saml access logic, determine if the autoLogin is possible
-            // the autologin will works if the SAMLArt (Saml artifact id) is in the request query string.
-            if (!this.autoLogin(request, response, session)) {
-
-                return; // no continue. Usually no continue when there is a sendRedirect done.
-            }
-
-
-            // if the auto login couldn't logged the user, then send it to the IdP login page.
-            if (null == session || null == session.getAttribute(WebKeys.CMS_USER)) {
-
-                // this is safe, just to make a redirection when the user get's logged.
-                redirectAfterLogin = request.getRequestURI() +
-                        ((null != request.getQueryString())? "?" + request.getQueryString():
-                                     StringUtils.EMPTY);
-
-                Logger.warn(this.getClass(),
-                        "Doing Saml Login Redirection when request: " +
-                                redirectAfterLogin);
-
-                //if we don't have a redirect yet
-                if (null != session) {
-
-                    session.setAttribute(WebKeys.REDIRECT_AFTER_LOGIN,
-                            redirectAfterLogin);
-                }
-
-                // this will redirect the user to the IdP Login Page.
-                this.samlAuthenticationService.authentication(request, response);
+                // if its, so print it out in the response and return.
+                this.printMetaData(request, response, configuration);
                 return;
             }
+
+            // check if there is any exception filter path, to avoid to apply all the logic.
+            if (!this.checkAccessFilters(request.getRequestURI(), configuration.getAccessFilterArray())) {
+
+                // if it is an url to apply the Saml access logic, determine if the autoLogin is possible
+                // the autologin will works if the SAMLArt (Saml artifact id) is in the request query string.
+                if (!this.autoLogin(request, response, session, configuration)) {
+
+                    return; // no continue. Usually no continue when there is a sendRedirect done.
+                }
+
+
+                // if the auto login couldn't logged the user, then send it to the IdP login page.
+                if (null == session || null == session.getAttribute(WebKeys.CMS_USER)) {
+
+                    // this is safe, just to make a redirection when the user get's logged.
+                    redirectAfterLogin = request.getRequestURI() +
+                            ((null != request.getQueryString()) ? "?" + request.getQueryString() :
+                                    StringUtils.EMPTY);
+
+                    Logger.warn(this.getClass(),
+                            "Doing Saml Login Redirection when request: " +
+                                    redirectAfterLogin);
+
+                    //if we don't have a redirect yet
+                    if (null != session) {
+
+                        session.setAttribute(WebKeys.REDIRECT_AFTER_LOGIN,
+                                redirectAfterLogin);
+                    }
+
+                    // this will redirect the user to the IdP Login Page.
+                    this.samlAuthenticationService.authentication(request,
+                            response, configuration.getSiteName());
+                    return;
+                }
+            }
+        } else {
+
+            Logger.warn(this, "Not configuration for the site: " + request.getServerName() +
+                            ". No any saml filtering for this request: " + request.getRequestURI());
         }
 
         chain.doFilter(request, response);
@@ -171,13 +186,14 @@ public class SamlAccessFilter implements Filter {
 
         // First, get the Entity descriptor.
         final EntityDescriptor descriptor =
-                configuration.getMetaDescriptorService().getServiceProviderEntityDescriptor();
+                configuration.getMetaDescriptorService()
+                        .getServiceProviderEntityDescriptor(configuration);
         Writer writer = null;
 
         try {
 
             // get ready to convert it to XML.
-            response.setContentType("text/xml");
+            response.setContentType(TEXT_XML);
             writer = response.getWriter();
             this.metaDataXMLPrinter.print(descriptor, writer);
             response.setStatus(HttpServletResponse.SC_OK);
@@ -192,12 +208,14 @@ public class SamlAccessFilter implements Filter {
         }
     } // printMetaData.
 
-    private boolean autoLogin (final HttpServletRequest request,
-                            final HttpServletResponse response,
-                            HttpSession         session) {
+    private boolean autoLogin (final HttpServletRequest   request,
+                            final HttpServletResponse    response,
+                            final HttpSession             session,
+                            final Configuration     configuration) {
 
         final User user =
-                this.samlAuthenticationService.getUser(request, response);
+                this.samlAuthenticationService.getUser
+                        (request, response, configuration.getSiteName());
 
         if (null != user) {
 
@@ -224,6 +242,11 @@ public class SamlAccessFilter implements Filter {
                     Logger.info(this, "Setting the user id on the session: " + user.getUserId());
                     session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
 
+                    if(this.isBackEndAdmin(session)) {
+
+                        PrincipalThreadLocal.setName(user.getUserId());
+                    }
+
                     return this.checkRedirection(request, response, session);
                 }
             }
@@ -231,6 +254,11 @@ public class SamlAccessFilter implements Filter {
 
         return true;
     } // autoLogin.
+
+    private boolean isBackEndAdmin(final HttpSession session) {
+
+        return (session.getAttribute(com.dotmarketing.util.WebKeys.ADMIN_MODE_SESSION) != null);
+    } // isBackEndAdmin.
 
     private boolean checkRedirection(final HttpServletRequest request,
                                   final HttpServletResponse response,
