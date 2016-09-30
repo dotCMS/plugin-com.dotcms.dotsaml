@@ -12,7 +12,7 @@ import java.util.Collection;
 
 /**
  * The configuration encapsulates all the info necessary for the open saml plugin
- * Note: an implementation of {@link Configuration} must has a constructor with {@link SiteConfigurationBean} argumentSi
+ * Note: an implementation of {@link Configuration} must has a constructor with {@link SiteConfigurationBean} arguments and a {@link String} siteName
  * @author jsanca
  */
 public interface Configuration extends Serializable {
