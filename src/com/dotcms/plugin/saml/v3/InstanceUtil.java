@@ -1,10 +1,14 @@
 package com.dotcms.plugin.saml.v3;
 
+import com.dotcms.plugin.saml.v3.config.Configuration;
+import com.dotcms.plugin.saml.v3.config.DefaultDotCMSConfiguration;
+import com.dotcms.plugin.saml.v3.config.SiteConfigurationBean;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
 import jnr.ffi.annotations.In;
 
 import java.lang.reflect.Constructor;
+import java.util.Collections;
 
 /**
  * Just a class to instance without exceptions.
@@ -164,4 +168,13 @@ public class InstanceUtil {
 
         return clazz;
     } // getClass.
+
+    public static void main(String[] args) throws Exception {
+
+        SiteConfigurationBean siteConfigurationBean = new SiteConfigurationBean(Collections.emptyMap());
+        final Configuration configuration = InstanceUtil.newInstance
+                (null, DefaultDotCMSConfiguration.class, siteConfigurationBean, "name");
+
+        System.out.println(configuration);
+    }
 } // E:O:F:InstanceUtil.

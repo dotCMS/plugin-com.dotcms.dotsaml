@@ -85,24 +85,27 @@ public class DefaultInitializer implements Initializer {
             throw new DotSamlException(e.getMessage(), e);
         }
 
+        siteConfigurationService = new SiteConfigurationService(configurationMap);
+
         for (Map.Entry<String, SiteConfigurationBean> configEntry : configurationBeanMap.entrySet()) {
 
-            configurationMap.put(configEntry.getKey(), this.createConfigurationBean(configEntry.getValue()));
+            configurationMap.put(configEntry.getKey(), this.createConfigurationBean
+                    (configEntry.getKey(), configEntry.getValue()));
         }
 
-        siteConfigurationService = new SiteConfigurationService(configurationMap);
+
 
         InstancePool.put(SiteConfigurationService.class.getName(), siteConfigurationService);
         InstancePool.put(SiteConfigurationResolver.class.getName(), siteConfigurationResolver);
     } // initConfiguration.
 
-    public Configuration createConfigurationBean (final SiteConfigurationBean siteConfigurationBean) {
+    public Configuration createConfigurationBean (final String siteName, final SiteConfigurationBean siteConfigurationBean) {
 
         final String configInstance = siteConfigurationBean
                 .getString(DotSamlConstants.DOT_SAML_CONFIGURATION_CLASS_NAME, null);
 
         final Configuration configuration = InstanceUtil.newInstance
-                (configInstance, DefaultDotCMSConfiguration.class, siteConfigurationBean);
+                (configInstance, DefaultDotCMSConfiguration.class, siteConfigurationBean, siteName);
 
         return configuration;
     }
