@@ -4,7 +4,6 @@ import com.dotcms.plugin.saml.v3.CredentialProvider;
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.InstanceUtil;
 import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
-import com.dotmarketing.util.Config;
 import com.dotmarketing.util.UtilMethods;
 import org.opensaml.security.credential.Credential;
 
@@ -13,9 +12,36 @@ import java.util.Collection;
 
 /**
  * The configuration encapsulates all the info necessary for the open saml plugin
+ * Note: an implementation of {@link Configuration} must has a constructor with {@link SiteConfigurationBean} arguments and a {@link String} siteName
  * @author jsanca
  */
 public interface Configuration extends Serializable {
+
+    /**
+     * Key to get from the configuration a boolean that determine if the site configuration is the default one.
+     */
+    public static final String DEFAULT_SITE_KEY = "default";
+
+    /**
+     * Returns true if this configuration encapsulates the default site
+     * @return Boolean
+     */
+    public default boolean isDefault() {
+
+        return this.getSiteConfiguration().getBoolean(DEFAULT_SITE_KEY);
+    } // isDefault.
+
+    /**
+     * Returns the site name associated to this configuration
+     * @return String
+     */
+    String getSiteName ();
+
+    /**
+     * Returns the site configuration for the site associated to this configuration.
+     * @return SiteConfigurationBean
+     */
+    public SiteConfigurationBean getSiteConfiguration();
 
     /**
      * The meta descriptor service is created on the configuration, so we take advance and return the instance from it.
@@ -32,7 +58,7 @@ public interface Configuration extends Serializable {
      */
     public default String getStringProperty (final String propertyKey, final String defaultValue) {
 
-        return Config.getStringProperty(propertyKey, defaultValue);
+        return this.getSiteConfiguration().getString(propertyKey, defaultValue);
     } // getStringProperty
 
     /**
@@ -43,8 +69,19 @@ public interface Configuration extends Serializable {
      */
     public default boolean getBooleanProperty(final String propertyKey, final boolean defaultValue) {
 
-        return Config.getBooleanProperty(propertyKey, defaultValue);
+        return this.getSiteConfiguration().getBoolean(propertyKey, defaultValue);
     } // getBooleanProperty.
+
+    /**
+     * Gets a single property, defaultValue if the property does not exists in the configuration file
+     * @param propertyKey {@link String}
+     * @param defaultValue {@link String}
+     * @return int
+     */
+    default int getIntProperty(final String propertyKey, final int defaultValue) {
+
+        return this.getSiteConfiguration().getInteger(propertyKey, defaultValue);
+    }
 
     /**
      * Gets an array string, defaultStringArray if does not exists
@@ -54,7 +91,7 @@ public interface Configuration extends Serializable {
      */
     public default String[] getStringArray(final String propertyKey, final String[] defaultStringArray) {
 
-        final String [] array = Config.getStringArrayProperty(propertyKey);
+        final String [] array = this.getSiteConfiguration().getStringArray(propertyKey);
         return (null != array && array.length > 0)? array:defaultStringArray;
     } // getStringArray.
 
@@ -64,7 +101,7 @@ public interface Configuration extends Serializable {
      */
     public default String getServiceProviderCustomMetadataPath() {
 
-        return Config.getStringProperty(
+        return this.getSiteConfiguration().getString(
                     DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH,
                         DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH_DEFAULT_VALUE);
     } // getServiceProviderCustomMetadataPath.
@@ -84,7 +121,7 @@ public interface Configuration extends Serializable {
      */
     public default boolean isVerifyAssertionSignatureNeeded () {
 
-        return Config.getBooleanProperty
+        return this.getSiteConfiguration().getBoolean
                 (DotSamlConstants.DOT_SAML_VERIFY_ASSERTION_SIGNATURE, true);
     } // isVerifyAssertionSignatureNeeded
 
@@ -97,7 +134,7 @@ public interface Configuration extends Serializable {
      */
     public default boolean isVerifySignatureProfileNeeded() {
 
-        return Config.getBooleanProperty
+        return this.getSiteConfiguration().getBoolean
                 (DotSamlConstants.DOT_SAML_VERIFY_SIGNATURE_PROFILE, true);
     } // isVerifySignatureProfileNeeded
 
@@ -111,7 +148,7 @@ public interface Configuration extends Serializable {
      */
     public default boolean isVerifySignatureCredentialsNeeded() {
 
-        return Config.getBooleanProperty
+        return this.getSiteConfiguration().getBoolean
                 (DotSamlConstants.DOT_SAML_VERIFY_SIGNATURE_CREDENTIALS, true);
     } // isVerifySignatureCredentialsNeeded.
 
@@ -129,7 +166,8 @@ public interface Configuration extends Serializable {
     public default String getAssertionConsumerEndpoint() {
 
         final String assertionConsumerEndpoint =
-                Config.getStringProperty(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL, null);
+                this.getSiteConfiguration().
+                        getString(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL, null);
 
         return UtilMethods.isSet(assertionConsumerEndpoint)?
                 assertionConsumerEndpoint: null;
@@ -143,7 +181,7 @@ public interface Configuration extends Serializable {
      */
     public default CredentialProvider getServiceProviderCustomCredentialProvider() {
 
-        final String className = Config.getStringProperty
+        final String className = this.getSiteConfiguration().getString
                 (DotSamlConstants.DOT_SAML_SERVICE_PROVIDER_CUSTOM_CREDENTIAL_PROVIDER_CLASSNAME, null);
 
         final Class clazz = InstanceUtil.getClass(className);
@@ -162,7 +200,7 @@ public interface Configuration extends Serializable {
      */
     public default CredentialProvider getIdProviderCustomCredentialProvider()  {
 
-        final String className = Config.getStringProperty
+        final String className = this.getSiteConfiguration().getString
                 (DotSamlConstants.DOT_SAML_ID_PROVIDER_CUSTOM_CREDENTIAL_PROVIDER_CLASSNAME, null);
 
         final Class clazz = InstanceUtil.getClass(className);

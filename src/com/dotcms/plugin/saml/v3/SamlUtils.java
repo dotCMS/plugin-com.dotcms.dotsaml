@@ -51,6 +51,7 @@ import java.security.NoSuchProviderException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.dotmarketing.util.UtilMethods.isSet;
 
@@ -72,9 +73,9 @@ public class SamlUtils {
 
     private static final String DEFAULT_ELEMENT_NAME = "DEFAULT_ELEMENT_NAME";
 
-    private static volatile Credential credential;
+    private static Map<String, Credential> credentialMap = new ConcurrentHashMap<>();
 
-    private static volatile Credential idpCredential;
+    private static Map<String, Credential> idpCredentialMap = new ConcurrentHashMap<>();
 
     /**
      * Build a SAML Object
@@ -110,11 +111,9 @@ public class SamlUtils {
      * Build an authentication request.
      * @return AuthnRequest
      */
-    public static AuthnRequest buildAuthnRequest(final HttpServletRequest request) {
+    public static AuthnRequest buildAuthnRequest(final HttpServletRequest request, final Configuration configuration) {
 
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
-        final String ipDSSODestination = getIPDSSODestination();
+        final String ipDSSODestination = getIPDSSODestination(configuration);
         final AuthnRequest authnRequest = buildSAMLObject(AuthnRequest.class);
 
         // this ensure that the message redirected is not too old
@@ -124,7 +123,7 @@ public class SamlUtils {
         if (!isSet(ipDSSODestination)) {
 
             throw new DotSamlException ("The property: " + DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL +
-                " must be set on the dotmarketing-config.properties");
+                " must be set on the sites-config.json");
         }
 
         authnRequest.setDestination(ipDSSODestination);
@@ -135,16 +134,16 @@ public class SamlUtils {
                         SAMLConstants.SAML2_ARTIFACT_BINDING_URI));
 
         // this is the address that receives the SAML Assertion, after a successful authentication on the IdP.
-        authnRequest.setAssertionConsumerServiceURL(getAssertionConsumerEndpoint(request));
+        authnRequest.setAssertionConsumerServiceURL(getAssertionConsumerEndpoint(request, configuration));
 
         // this is a uid or random id just to identified the response.
         authnRequest.setID(generateSecureRandomId());
 
         // id for the sender
-        authnRequest.setIssuer(buildIssuer());
+        authnRequest.setIssuer(buildIssuer(configuration));
 
-        authnRequest.setNameIDPolicy(buildNameIdPolicy());
-        authnRequest.setRequestedAuthnContext(buildRequestedAuthnContext());
+        authnRequest.setNameIDPolicy(buildNameIdPolicy(configuration));
+        authnRequest.setRequestedAuthnContext(buildRequestedAuthnContext(configuration));
 
         return authnRequest;
     } // buildAuthnRequest.
@@ -153,10 +152,7 @@ public class SamlUtils {
      * Gets from the dotmarketing-config.properties the destination sso url
      * @return String
      */
-    public static String getIPDSSODestination() {
-
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
+    public static String getIPDSSODestination(final Configuration configuration) {
 
         final String redirectIdentityProviderDestinationSSOURL =
                     configuration.getRedirectIdentityProviderDestinationSSOURL();
@@ -168,10 +164,7 @@ public class SamlUtils {
                     DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL, null);
     } // getIPDSSODestination.
 
-    public static  String getAssertionConsumerEndpoint(final HttpServletRequest request) {
-
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
+    public static  String getAssertionConsumerEndpoint(final HttpServletRequest request, final Configuration configuration) {
 
         final String assertionConsumerEndpoint =
                 configuration.getAssertionConsumerEndpoint();
@@ -203,11 +196,11 @@ public class SamlUtils {
      * Build the Id for the sender.
      * @return Issuer
      */
-    public static Issuer buildIssuer() {
+    public static Issuer buildIssuer(final Configuration configuration) {
 
         final Issuer issuer =
                 buildSAMLObject(Issuer.class);
-        issuer.setValue(getSPIssuerValue());
+        issuer.setValue(getSPIssuerValue(configuration));
 
         return issuer;
     } // buildIssuer.
@@ -216,10 +209,7 @@ public class SamlUtils {
      * Get the od for the Issuer, it is the SP identifier on the IdP
      * @return String
      */
-    public static String getSPIssuerValue() {
-
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
+    public static String getSPIssuerValue(final Configuration configuration) {
 
         return configuration.getStringProperty(
                 DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER,
@@ -230,10 +220,8 @@ public class SamlUtils {
      * Return the policy for the Name ID (which is the IdP identifier for the user)
      * @return NameIDPolicy
      */
-    public static NameIDPolicy buildNameIdPolicy() {
+    public static NameIDPolicy buildNameIdPolicy(final Configuration configuration) {
 
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
         final NameIDPolicy nameIDPolicy = buildSAMLObject(NameIDPolicy.class);
 
         // True if you want that when the  user does not exists, allows to create
@@ -264,15 +252,13 @@ public class SamlUtils {
      * Build the Authentication context, with the login and password strategies
      * @return RequestedAuthnContext
      */
-    public static RequestedAuthnContext buildRequestedAuthnContext() {
+    public static RequestedAuthnContext buildRequestedAuthnContext(final Configuration configuration) {
 
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
         final RequestedAuthnContext requestedAuthnContext =
                 buildSAMLObject(RequestedAuthnContext.class);
 
         requestedAuthnContext.setComparison
-                (getAuthnContextComparisonTypeEnumeration());
+                (getAuthnContextComparisonTypeEnumeration(configuration));
 
         final AuthnContextClassRef passwordAuthnContextClassRef =
                 buildSAMLObject(AuthnContextClassRef.class);
@@ -291,10 +277,8 @@ public class SamlUtils {
      * Based on the configuration properties get the desire comparison type
      * @return AuthnContextComparisonTypeEnumeration
      */
-    public static AuthnContextComparisonTypeEnumeration getAuthnContextComparisonTypeEnumeration() {
+    public static AuthnContextComparisonTypeEnumeration getAuthnContextComparisonTypeEnumeration(final Configuration configuration) {
 
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
         AuthnContextComparisonTypeEnumeration comparisonTypeEnumeration =
                 AuthnContextComparisonTypeEnumeration.MINIMUM;
 
@@ -323,13 +307,13 @@ public class SamlUtils {
      * Get the Identity Provider Destination
      * @return Endpoint
      */
-    public static Endpoint getIdentityProviderDestinationEndpoint() {
+    public static Endpoint getIdentityProviderDestinationEndpoint(final Configuration configuration) {
 
         final SingleSignOnService endpoint = buildSAMLObject(SingleSignOnService.class);
 
         // todo: based on the configuration use redirect or post
         endpoint.setBinding(SAMLConstants.SAML2_REDIRECT_BINDING_URI);
-        endpoint.setLocation(getIPDSSODestination());
+        endpoint.setLocation(getIPDSSODestination(configuration));
 
         return endpoint;
     } // getIdentityProviderDestinationEndpoint.
@@ -341,10 +325,9 @@ public class SamlUtils {
      * @param artifact {@link Artifact}
      * @return ArtifactResolve
      */
-    public static ArtifactResolve buildArtifactResolve(final Artifact artifact) {
+    public static ArtifactResolve buildArtifactResolve(final Artifact artifact,
+                                                       final Configuration configuration) {
 
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
         final ArtifactResolve artifactResolve = buildSAMLObject(ArtifactResolve.class);
         final String artifactResolutionService = configuration.getStringProperty(
                 DotSamlConstants.DOT_SAML_ARTIFACT_RESOLUTION_SERVICE_URL, null);
@@ -355,7 +338,7 @@ public class SamlUtils {
                     " must be set on the dotmarketing-config.properties");
         }
 
-        artifactResolve.setIssuer(buildIssuer());
+        artifactResolve.setIssuer(buildIssuer(configuration));
         artifactResolve.setIssueInstant(new DateTime());
         artifactResolve.setID(generateSecureRandomId());
         artifactResolve.setDestination(artifactResolutionService);
@@ -369,10 +352,11 @@ public class SamlUtils {
      * @param artifactResponse {@link ArtifactResponse}
      * @return Assertion
      */
-    public static Assertion getAssertion(final ArtifactResponse artifactResponse) {
+    public static Assertion getAssertion(final ArtifactResponse artifactResponse,
+                                         final Configuration configuration) {
 
         final EncryptedAssertion encryptedAssertion = getEncryptedAssertion(artifactResponse);
-        final Assertion assertion = decryptAssertion(encryptedAssertion); /// this is the user message itself
+        final Assertion assertion = decryptAssertion(encryptedAssertion, configuration); /// this is the user message itself
 
         return assertion;
     } // getAssertion.
@@ -393,11 +377,12 @@ public class SamlUtils {
      * @param encryptedAssertion {@link EncryptedAssertion}
      * @return Assertion
      */
-    public static Assertion decryptAssertion(final EncryptedAssertion encryptedAssertion) {
+    public static Assertion decryptAssertion(final EncryptedAssertion encryptedAssertion,
+                                             final Configuration configuration) {
 
         Assertion assertion = null;
         final StaticKeyInfoCredentialResolver keyInfoCredentialResolver =
-                new StaticKeyInfoCredentialResolver(getCredential());
+                new StaticKeyInfoCredentialResolver(getCredential(configuration));
 
         final Decrypter decrypter = new Decrypter(null,
                 keyInfoCredentialResolver, new InlineEncryptedKeyResolver());
@@ -437,10 +422,9 @@ public class SamlUtils {
      * Does the verification of the assertiong
      * @param assertion {@link Assertion}
      */
-    public static void verifyAssertionSignature(final Assertion assertion) {
+    public static void verifyAssertionSignature(final Assertion assertion,
+                                                final Configuration configuration) {
 
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
         final SAMLSignatureProfileValidator profileValidator;
 
         if (!assertion.isSigned()) {
@@ -467,7 +451,7 @@ public class SamlUtils {
                     validateSignature(assertion, configuration.getSigningCredentials ());
                 } else {
 
-                    SignatureValidator.validate(assertion.getSignature(), getIdPCredentials());
+                    SignatureValidator.validate(assertion.getSignature(), getIdPCredentials(configuration));
                 }
             } else {
 
@@ -495,12 +479,11 @@ public class SamlUtils {
      * @return KeyStore
      */
     public static KeyStore readKeyStoreFromFile(final String pathToKeyStore,
-                                                final String keyStorePassword) {
+                                                final String keyStorePassword,
+                                                final Configuration configuration) {
 
         final KeyStore keystore;
         final String keyStoreType;
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
         InputStream inputStream = null;
 
         try {
@@ -522,10 +505,8 @@ public class SamlUtils {
         return keystore;
     } // readKeystoreFromFile.
 
-    public static void createCredential () {
+    public static Credential createCredential (final Configuration configuration) {
 
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
         final Map<String, String> passwordMap = new HashMap<String, String>();
         final KeyStoreCredentialResolver resolver;
         final KeyStore keystore;
@@ -537,6 +518,7 @@ public class SamlUtils {
         final CriteriaSet criteriaSet;
         final CredentialProvider customCredentialProvider =
                 configuration.getServiceProviderCustomCredentialProvider();
+        Credential credential = null;
 
         try {
 
@@ -558,7 +540,7 @@ public class SamlUtils {
                         ", key store path: " + keyStorePath);
 
                 keystore = readKeyStoreFromFile
-                        (keyStorePath, password);
+                        (keyStorePath, password, configuration);
 
                 passwordMap.put(keyEntryId, keyStoreEntryPassword);
                 resolver = new KeyStoreCredentialResolver(keystore, passwordMap);
@@ -573,35 +555,31 @@ public class SamlUtils {
             Logger.error(SamlUtils.class, e.getMessage(), e);
             throw new DotSamlException("Something went wrong reading credentials", e);
         }
+
+        return credential;
     } // createCredential.
 
     /**
      * Get the SP credential
      * @return Credential
      */
-    public static Credential getCredential() {
+    public static Credential getCredential(final Configuration configuration) {
 
-        if (null == credential) {
+        if (!credentialMap.containsKey(configuration.getSiteName())) {
 
-            synchronized (SamlUtils.class) {
-
-                if (null == credential) {
-
-                    createCredential();
-                }
-            }
+            credentialMap.put(configuration.getSiteName(),
+                    createCredential(configuration));
         }
 
-        return credential;
+        return credentialMap.get(configuration.getSiteName());
     } // getCredential.
 
-    private static void createIdpCredential () {
+    private static Credential createIdpCredential (final Configuration configuration) {
 
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
         KeyPair keyPair = null;
         final CredentialProvider customCredentialProvider =
                 configuration.getIdProviderCustomCredentialProvider();
+        Credential idpCredential = null;
 
         try {
 
@@ -619,22 +597,20 @@ public class SamlUtils {
             Logger.error(SamlUtils.class, e.getMessage(), e);
             throw new DotSamlException(e.getMessage(), e);
         }
-    } // createIdpCredential.
-
-    public static Credential getIdPCredentials () {
-
-        if (null == idpCredential) {
-
-            synchronized (SamlUtils.class) {
-
-                if (null == idpCredential) {
-
-                    createIdpCredential();
-                }
-            }
-        }
 
         return idpCredential;
+    } // createIdpCredential.
+
+    public static Credential getIdPCredentials (final Configuration configuration) {
+
+        if (!idpCredentialMap.containsKey(configuration)) {
+
+
+            idpCredentialMap.put(configuration.getSiteName(),
+                    createIdpCredential(configuration));
+        }
+
+        return idpCredentialMap.get(configuration.getSiteName());
     } // getIdPCredentials.
 
     /**

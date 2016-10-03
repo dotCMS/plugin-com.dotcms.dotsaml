@@ -3,8 +3,9 @@ package com.dotcms.plugin.saml.v3.init;
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.DotSamlException;
 import com.dotcms.plugin.saml.v3.InstanceUtil;
-import com.dotcms.plugin.saml.v3.config.Configuration;
-import com.dotcms.plugin.saml.v3.config.DefaultDotCMSConfiguration;
+import com.dotcms.plugin.saml.v3.SiteConfigurationResolver;
+import com.dotcms.plugin.saml.v3.config.*;
+import com.dotcms.repackage.org.json.JSONException;
 import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
 import com.liferay.util.InstancePool;
@@ -12,8 +13,10 @@ import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.config.InitializationService;
 import org.opensaml.xmlsec.config.JavaCryptoValidationInitializer;
 
+import java.io.IOException;
 import java.security.Provider;
 import java.security.Security;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -30,7 +33,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class DefaultInitializer implements Initializer {
 
-    private AtomicBoolean initDone = new AtomicBoolean(false);
+    private final AtomicBoolean initDone = new AtomicBoolean(false);
+    private final SiteConfigurationParser siteConfigurationParser = new SiteConfigurationParser();
 
     @Override
     public void init(final Map<String, Object> context) {
@@ -61,15 +65,50 @@ public class DefaultInitializer implements Initializer {
      */
     protected void initConfiguration() {
 
-        final String configInstance = Config.getStringProperty(
-                DotSamlConstants.DOT_SAML_CONFIGURATION_CLASS_NAME, null
+        final SiteConfigurationService siteConfigurationService;
+        final Map<String, Configuration> configurationMap = new HashMap<>();
+        final  Map<String, SiteConfigurationBean> configurationBeanMap;
+        final String sitesConfigPath = Config.getStringProperty(
+                DotSamlConstants.DOTCMS_SAML_SITES_CONFIG_PATH,
+                DotSamlConstants.DOTCMS_SAML_SITES_CONFIG_PATH_DEFAULT_VALUE
         );
+        final SiteConfigurationResolver siteConfigurationResolver =
+                new SiteConfigurationResolver();
+
+        try {
+
+            configurationBeanMap =
+                    this.siteConfigurationParser.parser(sitesConfigPath);
+        } catch (IOException | JSONException e) {
+
+            Logger.error(this, e.getMessage(), e);
+            throw new DotSamlException(e.getMessage(), e);
+        }
+
+        siteConfigurationService = new SiteConfigurationService(configurationMap);
+
+        for (Map.Entry<String, SiteConfigurationBean> configEntry : configurationBeanMap.entrySet()) {
+
+            configurationMap.put(configEntry.getKey(), this.createConfigurationBean
+                    (configEntry.getKey(), configEntry.getValue()));
+        }
+
+
+
+        InstancePool.put(SiteConfigurationService.class.getName(), siteConfigurationService);
+        InstancePool.put(SiteConfigurationResolver.class.getName(), siteConfigurationResolver);
+    } // initConfiguration.
+
+    public Configuration createConfigurationBean (final String siteName, final SiteConfigurationBean siteConfigurationBean) {
+
+        final String configInstance = siteConfigurationBean
+                .getString(DotSamlConstants.DOT_SAML_CONFIGURATION_CLASS_NAME, null);
 
         final Configuration configuration = InstanceUtil.newInstance
-                (configInstance, DefaultDotCMSConfiguration.class);
+                (configInstance, DefaultDotCMSConfiguration.class, siteConfigurationBean, siteName);
 
-        InstancePool.put(Configuration.class.getName(), configuration);
-    } // initConfiguration.
+        return configuration;
+    }
 
     /**
      * Inits the OpenSaml service.

@@ -9,7 +9,6 @@ import com.dotmarketing.business.RoleAPI;
 import com.dotmarketing.business.UserAPI;
 import com.dotmarketing.cms.factories.PublicEncryptionFactory;
 import com.dotmarketing.exception.DotDataException;
-import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UUIDGenerator;
 import com.liferay.portal.model.User;
@@ -78,10 +77,13 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
      */
     @Override
     public void authentication(final HttpServletRequest request,
-                               final HttpServletResponse response) {
+                               final HttpServletResponse response,
+                               final String siteName) {
 
-        final MessageContext context = new MessageContext(); // main context
-        final AuthnRequest authnRequest = buildAuthnRequest(request);
+        final SiteConfigurationResolver resolver      = (SiteConfigurationResolver)InstancePool.get(SiteConfigurationResolver.class.getName());
+        final Configuration             configuration = resolver.resolveConfiguration(request);
+        final MessageContext            context       = new MessageContext(); // main context
+        final AuthnRequest              authnRequest  = buildAuthnRequest(request, configuration);
 
         context.setMessage(authnRequest);
 
@@ -91,9 +93,9 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                 peerEntityContext.getSubcontext(SAMLEndpointContext.class, true);
 
         endpointContext.setEndpoint(
-                getIdentityProviderDestinationEndpoint());
+                getIdentityProviderDestinationEndpoint(configuration));
 
-        this.setSignatureSigningParams(context);
+        this.setSignatureSigningParams(context, configuration);
         this.doRedirect(context, response, authnRequest);
     } // authentication.
 
@@ -115,18 +117,21 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
      */
     @Override
     public User getUser(final HttpServletRequest request,
-                        final HttpServletResponse response) {
+                        final HttpServletResponse response,
+                        final String siteName) {
 
         User user = null;
         final Assertion assertion;
+        final SiteConfigurationResolver resolver      = (SiteConfigurationResolver)InstancePool.get(SiteConfigurationResolver.class.getName());
+        final Configuration             configuration = resolver.resolveConfiguration(request);
 
         if (this.isValidSamlRequest (request)) {
 
-            assertion = this.resolveAssertion(request, response);
+            assertion = this.resolveAssertion(request, response, siteName);
 
             Logger.info (this, "Resolved assertion: " + assertion);
 
-            user      = this.resolveUser(assertion);
+            user      = this.resolveUser(assertion, configuration);
 
             Logger.info (this, "Resolved user: " + user);
         }
@@ -136,15 +141,15 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
     // resolve the artributes from the assertion resolved from the OpenSaml artifact resolver via
     // post soap message.
-    private AttributesBean resolveAttributes (final Assertion assertion) {
+    private AttributesBean resolveAttributes (final Assertion assertion, final Configuration configuration) {
 
-        final String emailField       = Config.getStringProperty
+        final String emailField       = configuration.getStringProperty
                 (DotSamlConstants.DOT_SAML_EMAIL_ATTRIBUTE, "mail");
-        final String firstNameField   = Config.getStringProperty
+        final String firstNameField   = configuration.getStringProperty
                 (DotSamlConstants.DOT_SAML_FIRSTNAME_ATTRIBUTE, "givenName");
-        final String lastNameField    = Config.getStringProperty
+        final String lastNameField    = configuration.getStringProperty
                 (DotSamlConstants.DOT_SAML_LASTNAME_ATTRIBUTE, "sn");
-        final String rolesField       = Config.getStringProperty
+        final String rolesField       = configuration.getStringProperty
                 (DotSamlConstants.DOT_SAML_ROLES_ATTRIBUTE, "authorisations");
 
         final AttributesBean.Builder attrBuilder = new AttributesBean.Builder();
@@ -175,12 +180,12 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     // Gets the attributes from the Assertion, based on the attributes
     // see if the user exists return it from the dotCMS records, if does not exist then, tries to create it.
     // the existing or created user, will be updated the roles if they present on the assertion.
-    private User resolveUser(final Assertion assertion) {
+    private User resolveUser(final Assertion assertion, final Configuration configuration) {
 
         User systemUser  = null;
         User user        = null;
         final AttributesBean attributesBean =
-                this.resolveAttributes(assertion);
+                this.resolveAttributes(assertion, configuration);
 
         try {
 
@@ -204,16 +209,16 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                 null != attributesBean.getRoles() &&
                 null != attributesBean.getRoles().getAttributeValues()) {
 
-            this.addRoles(user, attributesBean);
+            this.addRoles(user, attributesBean, configuration);
         }
 
         return user;
     } // resolveUser.
 
     private void addRoles(final User user,
-                          final AttributesBean attributesBean) {
+                          final AttributesBean attributesBean, final Configuration configuration) {
 
-        final String removeRolePrefix = Config.getStringProperty
+        final String removeRolePrefix = configuration.getStringProperty
                 (DotSamlConstants.DOT_SAML_REMOVE_ROLES_PREFIX, StringUtils.EMPTY);
 
         try {
@@ -286,10 +291,10 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
     @Override
     public Assertion resolveAssertion(final HttpServletRequest request,
-                        final HttpServletResponse response) {
+                        final HttpServletResponse response, final String siteName) {
 
-        final Configuration configuration =
-                (Configuration) InstancePool.get(Configuration.class.getName());
+        final SiteConfigurationResolver resolver      = (SiteConfigurationResolver)InstancePool.get(SiteConfigurationResolver.class.getName());
+        final Configuration             configuration = resolver.resolveConfiguration(request);
         final Artifact artifact;
         final ArtifactResolve artifactResolve;
         final ArtifactResponse artifactResponse;
@@ -298,24 +303,25 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         artifact = this.buildArtifactFromRequest(request);
         Logger.info(this, "Artifact: " + artifact.getArtifact());
 
-        artifactResolve = buildArtifactResolve(artifact);
+        artifactResolve = buildArtifactResolve(artifact, configuration);
 
         Logger.info(this, "Sending ArtifactResolve");
         Logger.info(this, "ArtifactResolve: " + toXMLObjectString(artifactResolve));
 
-        artifactResponse = this.sendAndReceiveArtifactResolve(artifactResolve, response);
+        artifactResponse = this.sendAndReceiveArtifactResolve(artifactResolve,
+                                    response, configuration);
 
         Logger.info(this, "ArtifactResponse received");
         Logger.info(this, "ArtifactResponse: " + toXMLObjectString(artifactResponse));
 
-        this.validateDestinationAndLifetime(artifactResponse, request);
+        this.validateDestinationAndLifetime(artifactResponse, request, configuration);
 
-        assertion = getAssertion(artifactResponse);
+        assertion = getAssertion(artifactResponse, configuration);
 
         if (configuration.isVerifyAssertionSignatureNeeded()) {
 
             Logger.info(this, "Doing the verification assertion signature.");
-            verifyAssertionSignature(assertion);
+            verifyAssertionSignature(assertion, configuration);
         } else {
 
             Logger.info(this, "The verification assertion signature was skipped.");
@@ -340,11 +346,12 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     } // isValidSamlRequest.
 
     private void validateDestinationAndLifetime(final ArtifactResponse artifactResponse,
-                                                final HttpServletRequest request) {
+                                                final HttpServletRequest request,
+                                                final Configuration configuration) {
 
-        final long clockSkew = Config.getIntProperty
+        final long clockSkew = configuration.getIntProperty
                 (DotSamlConstants.DOT_SAML_CLOCK_SKEW, 1000);
-        final long lifeTime  = Config.getIntProperty
+        final long lifeTime  = configuration.getIntProperty
                 (DotSamlConstants.DOT_SAML_MESSAGE_LIFE_TIME, 2000);
         final MessageContext context = new MessageContext<ArtifactResponse>();
         final SAMLMessageInfoContext messageInfoContext =
@@ -439,13 +446,13 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         }
     } // doRedirect.
 
-    private void setSignatureSigningParams(final MessageContext context) {
+    private void setSignatureSigningParams(final MessageContext context, final Configuration configuration) {
 
         final SignatureSigningParameters signatureSigningParameters =
                 new SignatureSigningParameters();
 
         signatureSigningParameters.setSigningCredential
-                (getCredential());
+                (getCredential(configuration));
         signatureSigningParameters.setSignatureAlgorithm
                 (SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
 
@@ -454,12 +461,13 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     } // setSignatureSigningParams.
 
     private void setSignatureSigningParams(final MessageContext context,
-                                           final String canonicalizationAlgorithm) {
+                                           final String canonicalizationAlgorithm,
+                                           final Configuration configuration) {
 
         final SignatureSigningParameters signatureSigningParameters =
                 new SignatureSigningParameters();
 
-        final Credential credential = getCredential();
+        final Credential credential = getCredential(configuration);
 
         Logger.info(this, "context: " + context);
         Logger.info(this, "Credential: " + credential);
@@ -480,13 +488,16 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     } // setSignatureSigningParams.
 
     private ArtifactResponse sendAndReceiveArtifactResolve(final ArtifactResolve artifactResolve,
-                                                           final HttpServletResponse servletResponse) {
+                                                           final HttpServletResponse servletResponse,
+                                                           final Configuration configuration) {
 
         final MessageContext<ArtifactResolve> messageContext = new MessageContext<ArtifactResolve>();
         final InOutOperationContext<ArtifactResponse, ArtifactResolve> context;
-        final String artifactResolutionService = Config.getStringProperty(
+
+        final String artifactResolutionService  = configuration.getStringProperty(
                 DotSamlConstants.DOT_SAML_ARTIFACT_RESOLUTION_SERVICE_URL, null);
-        final  String canonicalizationAlgorithm = Config.getStringProperty(
+
+        final  String canonicalizationAlgorithm = configuration.getStringProperty(
                 DotSamlConstants.DOTCMS_SAML_SIGNATURE_CANONICALIZATION_ALGORITHM,
                     SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
         ArtifactResponse artifactResponse = null;
@@ -500,11 +511,12 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         try {
 
             messageContext.setMessage(artifactResolve);
-            this.setSignatureSigningParams(messageContext, canonicalizationAlgorithm);
+            this.setSignatureSigningParams(messageContext,
+                    canonicalizationAlgorithm, configuration);
             context = new ProfileRequestContext<ArtifactResponse, ArtifactResolve>();
             context.setOutboundMessageContext(messageContext);
 
-            Logger.info(this, "Sending the Artifact resolve");
+            Logger.info(this, "Sending the Artifact resolve to: " + artifactResolutionService);
             this.httpClient.send(artifactResolutionService, context);
 
             artifactResponse = context.getInboundMessageContext().getMessage();

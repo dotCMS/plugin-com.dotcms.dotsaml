@@ -20,25 +20,32 @@ public interface SamlAuthenticationService extends Serializable {
      * Authentication with SAML
      * @param request  {@link HttpServletRequest}
      * @param response {@link HttpServletResponse}
+     * @param siteName {@link String}
      */
-    void authentication(final HttpServletRequest request, final HttpServletResponse response);
+    void authentication(final HttpServletRequest request,
+                        final HttpServletResponse response,
+                        final String siteName);
 
     /**
      * Pre: the request parameter SAML_ART_PARAM_KEY must exists
      * Resolve the assertion by making a soap call to the idp.
      * @param request  {@link HttpServletRequest}
      * @param response {@link HttpServletResponse}
+     * @param siteName {@link String}
      * @return Assertion
      */
     Assertion resolveAssertion(final HttpServletRequest request,
-                                         final HttpServletResponse response);
+                               final HttpServletResponse response,
+                               final String siteName);
     /**
      * Perform the logic to get or create the user from the SAML and DotCMS
      * If the SAML_ART_PARAM_KEY, will resolve the Assertion by calling a Soap
      * and will create/get/update the user on the dotcms data.
      * @param request  {@link HttpServletRequest}
      * @param response {@link HttpServletResponse}
+     * @param siteName {@link String}
      * @return User
      */
-    User getUser(final HttpServletRequest request, final HttpServletResponse response);
+    User getUser(final HttpServletRequest request, final HttpServletResponse response,
+                 final String siteName);
 } // E:O:F:SamlAuthenticationService.
