@@ -25,12 +25,16 @@ public class SiteConfigurationService implements Serializable {
         this.configurationBySiteMap = Collections.
                 unmodifiableMap(configurationBySiteMap);
 
+        Logger.debug(this, "Processing the site configuration, with the value: " + configurationBySiteMap);
+
         for (Map.Entry<String, Configuration> configuration : this.configurationBySiteMap.entrySet()) {
 
             if (configuration.getValue().isDefault()) {
 
                 defaultConfiguration            = configuration.getValue();
                 siteNameDefaultConfiguration    = configuration.getKey();
+
+                Logger.debug(this, "Using as a default site: " + defaultConfiguration);
             }
         }
 

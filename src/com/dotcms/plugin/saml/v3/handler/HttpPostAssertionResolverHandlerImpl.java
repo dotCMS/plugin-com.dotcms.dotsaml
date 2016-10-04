@@ -4,27 +4,22 @@ import com.dotcms.plugin.saml.v3.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.DotSamlException;
 import com.dotcms.plugin.saml.v3.SiteConfigurationResolver;
 import com.dotcms.plugin.saml.v3.config.Configuration;
-import com.dotcms.repackage.org.nfunk.jep.function.Dot;
 import com.dotmarketing.util.Logger;
 import com.liferay.util.InstancePool;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
+import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.messaging.decoder.MessageDecodingException;
 import org.opensaml.messaging.handler.MessageHandler;
-import org.opensaml.messaging.handler.MessageHandlerException;
 import org.opensaml.messaging.handler.impl.BasicMessageHandlerChain;
 import org.opensaml.saml.common.SAMLObject;
 import org.opensaml.saml.common.binding.security.impl.MessageLifetimeSecurityHandler;
-import org.opensaml.saml.common.binding.security.impl.MessageReplaySecurityHandler;
-import org.opensaml.saml.common.binding.security.impl.ReceivedEndpointSecurityHandler;
 import org.opensaml.saml.common.messaging.context.SAMLMessageInfoContext;
 import org.opensaml.saml.saml2.binding.decoding.impl.HTTPPostDecoder;
 import org.opensaml.saml.saml2.core.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.util.ArrayList;
 import java.util.List;
 
