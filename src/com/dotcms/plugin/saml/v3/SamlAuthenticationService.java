@@ -17,6 +17,17 @@ public interface SamlAuthenticationService extends Serializable {
     public static final String SAML_ART_PARAM_KEY = "SAMLart";
 
     /**
+     * Determine if the request is a valid saml request depending on the siteName configuration
+     * @param request  {@link HttpServletRequest}
+     * @param response {@link HttpServletResponse}
+     * @param siteName {@link String}
+     * @return boolean
+     */
+    public boolean isValidSamlRequest(final HttpServletRequest request,
+                                      final HttpServletResponse response,
+                                      final String siteName);
+
+    /**
      * Authentication with SAML
      * @param request  {@link HttpServletRequest}
      * @param response {@link HttpServletResponse}

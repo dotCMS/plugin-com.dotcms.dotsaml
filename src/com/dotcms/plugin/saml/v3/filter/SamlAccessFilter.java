@@ -211,11 +211,12 @@ public class SamlAccessFilter implements Filter {
     private boolean autoLogin (final HttpServletRequest   request,
                             final HttpServletResponse    response,
                             final HttpSession             session,
-                            final Configuration     configuration) {
+                            final Configuration     configuration) throws IOException {
 
         final User user =
                 this.samlAuthenticationService.getUser
                         (request, response, configuration.getSiteName());
+        boolean continueFilter = true; // by default continue with the filter
 
         if (null != user) {
 
@@ -246,13 +247,23 @@ public class SamlAccessFilter implements Filter {
 
                         PrincipalThreadLocal.setName(user.getUserId());
                     }
-
-                    return this.checkRedirection(request, response, session);
+                    // depending if it is a redirection or not, continue.
+                    continueFilter = this.checkRedirection(request, response, session);
                 }
+            }
+        } else {
+
+            // if it was a saml request and could get the user, throw an error
+            if (this.samlAuthenticationService.isValidSamlRequest
+                    (request, response, configuration.getSiteName())) {
+
+                Logger.error(this, "This request is a saml request, but couldn't resolve the user so throwing an internal error");
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                continueFilter = false; // not continue. since it is an error redirect.
             }
         }
 
-        return true;
+        return continueFilter;
     } // autoLogin.
 
     private boolean isBackEndAdmin(final HttpSession session) {

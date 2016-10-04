@@ -3,7 +3,7 @@ package com.dotcms.plugin.saml.v3;
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotmarketing.util.Logger;
-import com.liferay.util.InstancePool;
+import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.resolver.Criterion;
 import net.shibboleth.utilities.java.support.resolver.ResolverException;
@@ -16,6 +16,11 @@ import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.Marshaller;
 import org.opensaml.core.xml.io.MarshallerFactory;
 import org.opensaml.core.xml.io.MarshallingException;
+import org.opensaml.messaging.context.MessageContext;
+import org.opensaml.messaging.handler.MessageHandlerException;
+import org.opensaml.messaging.handler.impl.BasicMessageHandlerChain;
+import org.opensaml.saml.common.SAMLObject;
+import org.opensaml.saml.common.SAMLVersion;
 import org.opensaml.saml.common.SignableSAMLObject;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.*;
@@ -73,6 +78,7 @@ public class SamlUtils {
 
     private static final String DEFAULT_ELEMENT_NAME = "DEFAULT_ELEMENT_NAME";
 
+
     private static Map<String, Credential> credentialMap = new ConcurrentHashMap<>();
 
     private static Map<String, Credential> idpCredentialMap = new ConcurrentHashMap<>();
@@ -113,7 +119,7 @@ public class SamlUtils {
      */
     public static AuthnRequest buildAuthnRequest(final HttpServletRequest request, final Configuration configuration) {
 
-        final String ipDSSODestination = getIPDSSODestination(configuration);
+        final String ipDSSODestination  = getIPDSSODestination(configuration);
         final AuthnRequest authnRequest = buildSAMLObject(AuthnRequest.class);
 
         // this ensure that the message redirected is not too old
@@ -144,6 +150,9 @@ public class SamlUtils {
 
         authnRequest.setNameIDPolicy(buildNameIdPolicy(configuration));
         authnRequest.setRequestedAuthnContext(buildRequestedAuthnContext(configuration));
+        authnRequest.setVersion(SAMLVersion.VERSION_20);
+        authnRequest.setForceAuthn(configuration.getBooleanProperty
+                (DotSamlConstants.DOTCMS_SAML_FORCE_AUTHN, false));
 
         return authnRequest;
     } // buildAuthnRequest.
@@ -155,7 +164,7 @@ public class SamlUtils {
     public static String getIPDSSODestination(final Configuration configuration) {
 
         final String redirectIdentityProviderDestinationSSOURL =
-                    configuration.getRedirectIdentityProviderDestinationSSOURL();
+                    configuration.getIdentityProviderDestinationSSOURL(configuration);
 
         // first check the meta data info., secondly the configuration
         return (null != redirectIdentityProviderDestinationSSOURL)?
@@ -226,7 +235,7 @@ public class SamlUtils {
 
         // True if you want that when the  user does not exists, allows to create
         nameIDPolicy.setAllowCreate(configuration.getBooleanProperty(DotSamlConstants.DOTCMS_SAML_POLICY_ALLOW_CREATE, false));
-
+        // todo: should set the SPNameQualifier
         // it supports several formats, such as Kerberos, email, Windows Domain Qualified Name, etc.
         nameIDPolicy.setFormat(configuration.getStringProperty(
                 DotSamlConstants.DOTCMS_SAML_POLICY_FORMAT,
@@ -357,6 +366,29 @@ public class SamlUtils {
 
         final EncryptedAssertion encryptedAssertion = getEncryptedAssertion(artifactResponse);
         final Assertion assertion = decryptAssertion(encryptedAssertion, configuration); /// this is the user message itself
+
+        return assertion;
+    } // getAssertion.
+
+    /**
+     * Get the Assertion decrypted
+     * @param response {@link Response}
+     * @return Assertion
+     */
+    public static Assertion getAssertion(final Response response,
+                                         final Configuration configuration) {
+
+        final EncryptedAssertion encryptedAssertion;
+        Assertion assertion = null;
+
+        if (configuration.getBooleanProperty(DotSamlConstants.DOTCMS_SAML_IS_ASSERTION_ENCRYPTED, true)) {
+
+            encryptedAssertion = response.getEncryptedAssertions().get(0);
+            assertion = decryptAssertion(encryptedAssertion, configuration); /// this is the user message itself
+        } else {
+
+            assertion = response.getAssertions().get(0);
+        }
 
         return assertion;
     } // getAssertion.
@@ -674,4 +706,24 @@ public class SamlUtils {
 
         return object.getDOM();
     } // toElement.
+
+
+    /**
+     * Invoke a message handler chain
+     * @param handlerChain {@link BasicMessageHandlerChain}
+     * @param context MessageContext
+     */
+    public static <T> void invokeMessageHandlerChain (final BasicMessageHandlerChain<T> handlerChain,
+                                                  final MessageContext<T> context) {
+
+        try {
+
+            handlerChain.initialize();
+            handlerChain.doInvoke(context);
+        } catch (ComponentInitializationException | MessageHandlerException e) {
+
+            Logger.error(SamlUtils.class, e.getMessage(), e);
+            throw new DotSamlException(e.getMessage(), e);
+        }
+    } // invokeMessageHandlerChain.
 } // E:O:F:SamlUtils.

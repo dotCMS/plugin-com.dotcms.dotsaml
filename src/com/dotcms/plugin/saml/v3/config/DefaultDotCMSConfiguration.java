@@ -101,21 +101,23 @@ public class DefaultDotCMSConfiguration implements Configuration {
     } // getSigningCredentials.
 
     @Override
-    public String getRedirectIdentityProviderDestinationSSOURL() {
+    public String getIdentityProviderDestinationSSOURL(final Configuration configuration) {
 
-        String url = null;
+        String url               = null;
+        final String bindingType = configuration.getStringProperty(DotSamlConstants.DOTCMS_SAML_BINDING_TYPE,
+                BindingType.REDIRECT.getBinding());
 
         if (null != this.metadataBean &&
                 null != this.metadataBean.getSingleSignOnBindingLocationMap() &&
                 this.metadataBean.getSingleSignOnBindingLocationMap().
-                        containsKey(BindingType.REDIRECT.getBinding())) {
+                        containsKey(bindingType)) {
 
-            url = this.metadataBean.getSingleSignOnBindingLocationMap().get
-                    (BindingType.REDIRECT.getBinding());
+            url = this.metadataBean.
+                    getSingleSignOnBindingLocationMap().get(bindingType);
         }
 
         return url;
-    } // getRedirectIdentityProviderDestinationSSOURL.
+    } // getIdentityProviderDestinationSSOURL.
 
 
 } // E:O:F:DefaultDotCMSConfiguration.

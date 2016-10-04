@@ -288,4 +288,33 @@ public final class DotSamlConstants {
      * Default value for DOTCMS_SAML_SITES_CONFIG_PATH.
      */
     public  static final String  DOTCMS_SAML_SITES_CONFIG_PATH_DEFAULT_VALUE = "sites-config.json";
+
+    /**
+     * Key for site-config.json
+     * By default we use: urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect {@link BindingType}.REDIRECT
+     * But if you want to use a diff mechanism from the Single Sign On Service (see SingleSignOnService tag on the idp-metadata) please override it
+     * @see BindingType
+     */
+    public  static final String  DOTCMS_SAML_BINDING_TYPE = "dotcms.saml.bindingtype";
+
+    /**
+     * Key for site-config.json
+     * By default false, you can override as a true if you want to force the authentication.
+     */
+    public static final String DOTCMS_SAML_FORCE_AUTHN = "dotcms.saml.force.authn";
+
+    /**
+     * Key for site-config.json
+     * By default true, you can override as a false if your assertions are returned non-encrypted.
+     */
+    public static final String DOTCMS_SAML_IS_ASSERTION_ENCRYPTED = "dotcms.saml.isassertion.encrypted";
+
+    /**
+     * Key for site-config.json
+     * By default we use the implementation {@link com.dotcms.plugin.saml.v3.handler.SOAPArtifactAssertionResolverHandlerImpl}
+     * which is in charge of resolve the assertion using the SOAP artifact resolver based on the artifact id pass by the request.
+     *
+     * If you want a different implementation please override with the class here.
+     */
+    public static final String DOTCMS_SAML_ASSERTION_RESOLVER_HANDLER_CLASS_NAME = "dotcms.saml.assertion.resolver.handler.classname";
 } // E:O:F:DotSamlConstants.

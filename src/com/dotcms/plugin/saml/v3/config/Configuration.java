@@ -210,10 +210,11 @@ public interface Configuration extends Serializable {
     } // getIdProviderCustomCredentialProvider.
 
     /**
-     * Gets the Redirect Identity Provider Destination Single Sign on URL
+     * Gets the  Identity Provider Destination Single Sign on URL
+     * @param configuration {@link Configuration}
      * @return String
      */
-    String getRedirectIdentityProviderDestinationSSOURL();
+    String getIdentityProviderDestinationSSOURL(Configuration configuration);
 
 
 } // E:O:F:Configuration.

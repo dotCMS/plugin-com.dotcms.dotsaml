@@ -23,13 +23,25 @@ public class SiteConfigurationResolver implements Serializable {
     public Configuration resolveConfiguration (final HttpServletRequest request) {
 
         final String serverName = request.getServerName();
+        return this.resolveConfiguration(serverName);
+    }
+
+
+    /**
+     * Returns the Configuration associate to the current site, if it is not found a match
+     * returns the default one site config.
+     * @param serverName {@link String}
+     * @return Configuration
+     */
+    public Configuration resolveConfiguration (final String serverName) {
+
         final SiteConfigurationService siteConfigurationService
                 = (SiteConfigurationService) InstancePool.get(SiteConfigurationService.class.getName());
         final Configuration configuration = siteConfigurationService.getConfigurationBySite(serverName);
 
         Logger.debug(this, "Resolving the configuration: " + configuration +
-                             ", for the site: " + serverName + ", sites availables:" +
-                             siteConfigurationService.getSiteNames());
+                ", for the site: " + serverName + ", sites availables:" +
+                siteConfigurationService.getSiteNames());
 
         return configuration;
     }
