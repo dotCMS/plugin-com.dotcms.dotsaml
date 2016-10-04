@@ -25,7 +25,7 @@ public class SiteConfigurationService implements Serializable {
         this.configurationBySiteMap = Collections.
                 unmodifiableMap(configurationBySiteMap);
 
-        Logger.debug(this, "Processing the site configuration, with the value: " + configurationBySiteMap);
+        Logger.debug(this, "Processing the site configuration, with the value: " + this.configurationBySiteMap);
 
         for (Map.Entry<String, Configuration> configuration : this.configurationBySiteMap.entrySet()) {
 

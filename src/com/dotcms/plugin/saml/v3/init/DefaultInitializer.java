@@ -89,15 +89,13 @@ public class DefaultInitializer implements Initializer {
             throw new DotSamlException(e.getMessage(), e);
         }
 
-        siteConfigurationService = new SiteConfigurationService(configurationMap);
-
         for (Map.Entry<String, SiteConfigurationBean> configEntry : configurationBeanMap.entrySet()) {
 
             configurationMap.put(configEntry.getKey(), this.createConfigurationBean
                     (configEntry.getKey(), configEntry.getValue()));
         }
 
-
+        siteConfigurationService = new SiteConfigurationService(configurationMap);
 
         InstancePool.put(SiteConfigurationService.class.getName(), siteConfigurationService);
         InstancePool.put(SiteConfigurationResolver.class.getName(), siteConfigurationResolver);
