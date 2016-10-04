@@ -77,8 +77,12 @@ public class DefaultInitializer implements Initializer {
 
         try {
 
+            Logger.debug(this, "Parsing the json site config file: " + sitesConfigPath);
+
             configurationBeanMap =
                     this.siteConfigurationParser.parser(sitesConfigPath);
+
+            Logger.debug(this, "Json Site Config parsed, result: " + configurationBeanMap);
         } catch (IOException | JSONException e) {
 
             Logger.error(this, e.getMessage(), e);
