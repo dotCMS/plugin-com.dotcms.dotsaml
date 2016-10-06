@@ -317,4 +317,11 @@ public final class DotSamlConstants {
      * If you want a different implementation please override with the class here.
      */
     public static final String DOTCMS_SAML_ASSERTION_RESOLVER_HANDLER_CLASS_NAME = "dotcms.saml.assertion.resolver.handler.classname";
+
+    /**
+     * Key for site-config.json
+     * By default the plugin checks if the assertion is signed, if for some reason you IdP sends an unsigned messages, you can set this property as false.
+     * However keep in mind that signed responses are a desire practice.
+     */
+    public static final String DOTCMS_SAML_CHECKIF_ASSERTION_SIGNED = "dotcms.saml.checkif.assertionsigned";
 } // E:O:F:DotSamlConstants.

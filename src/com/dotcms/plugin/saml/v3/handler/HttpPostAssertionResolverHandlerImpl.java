@@ -51,15 +51,12 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
                                       final HttpServletResponse response,
                                       final String siteName) {
 
-        final SiteConfigurationResolver resolver = (SiteConfigurationResolver) InstancePool.get(SiteConfigurationResolver.class.getName());
-        final Configuration configuration = resolver.resolveConfiguration(request);
-        final Artifact artifact;
-        final ArtifactResolve artifactResolve;
-        final ArtifactResponse artifactResponse;
-        Assertion assertion = null;
-        HTTPPostDecoder decoder = new HTTPPostDecoder();
-        MessageContext<SAMLObject> messageContext = null;
-        Response samlResponse = null;
+        final SiteConfigurationResolver resolver       = (SiteConfigurationResolver) InstancePool.get(SiteConfigurationResolver.class.getName());
+        final Configuration             configuration  = resolver.resolveConfiguration(request);
+        Assertion                       assertion      = null;
+        HTTPPostDecoder                 decoder        = new HTTPPostDecoder();
+        MessageContext<SAMLObject>      messageContext = null;
+        Response                        samlResponse   = null;
 
         Logger.info(this, "Resolving the Artifact with the implementation: " + this.getClass());
 
@@ -74,7 +71,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
             decoder.decode();
 
             messageContext = decoder.getMessageContext();
-            samlResponse = (Response)messageContext.getMessage();
+            samlResponse   = (Response)messageContext.getMessage();
 
             Logger.info(this, "Post message context decoded: " +
                     toXMLObjectString(samlResponse));
@@ -91,6 +88,8 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
         this.validateDestinationAndLifetime(messageContext, request, configuration);
 
         assertion = getAssertion(samlResponse, configuration);
+
+        Logger.info(this, "Decrypted Assertion: " + toXMLObjectString(assertion));
 
         if (configuration.isVerifyAssertionSignatureNeeded()) {
 

@@ -128,6 +128,7 @@ public class SamlUtils {
         // IDP url
         if (!isSet(ipDSSODestination)) {
 
+            Logger.error(SamlUtils.class, "The ipDSSODestination is not set in the idp metadata, neither the configuration files");
             throw new DotSamlException ("The property: " + DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL +
                 " must be set on the sites-config.json");
         }
@@ -320,7 +321,6 @@ public class SamlUtils {
 
         final SingleSignOnService endpoint = buildSAMLObject(SingleSignOnService.class);
 
-        // todo: based on the configuration use redirect or post
         endpoint.setBinding(SAMLConstants.SAML2_REDIRECT_BINDING_URI);
         endpoint.setLocation(getIPDSSODestination(configuration));
 
@@ -459,8 +459,9 @@ public class SamlUtils {
 
         final SAMLSignatureProfileValidator profileValidator;
 
-        if (!assertion.isSigned()) {
+        if (configuration.getBooleanProperty(DotSamlConstants.DOTCMS_SAML_CHECKIF_ASSERTION_SIGNED, true) && !assertion.isSigned()) {
 
+            Logger.error(SamlUtils.class, "The assertion is not signed...");
             throw new DotSamlException("The SAML Assertion was not signed");
         }
 
@@ -468,8 +469,10 @@ public class SamlUtils {
 
             if (configuration.isVerifySignatureProfileNeeded()) {
 
+                Logger.debug(SamlUtils.class, "Doing Profile Validation");
                 profileValidator = new SAMLSignatureProfileValidator();
                 profileValidator.validate(assertion.getSignature());
+                Logger.debug(SamlUtils.class, "Done Profile Validation");
             } else {
 
                 Logger.info(SamlUtils.class, "Skipping the Verify Signature Profile check");
@@ -480,10 +483,14 @@ public class SamlUtils {
 
                 if (null != configuration.getSigningCredentials ()) {
 
+                    Logger.debug(SamlUtils.class, "Validating the signatures: " + configuration.getSigningCredentials ());
                     validateSignature(assertion, configuration.getSigningCredentials ());
+                    Logger.debug(SamlUtils.class, "Doing signatures validation");
                 } else {
 
+                    Logger.debug(SamlUtils.class, "Validating the signature with a IdP Credentials " );
                     SignatureValidator.validate(assertion.getSignature(), getIdPCredentials(configuration));
+                    Logger.debug(SamlUtils.class, "Done validation of the signature with a IdP Credentials " );
                 }
             } else {
 

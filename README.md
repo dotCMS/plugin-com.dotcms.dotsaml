@@ -4,11 +4,11 @@ This plugin allows to modify the authentication process in DOTCMS
 using the Open SAML 3 (Security Assertion Markup Language) protocols for
 frontend, backend or both.
 
-The plugin will add the user in dotcms if the user doens't exist
-and everytime the user log the ROLE will be reasigned if the roles 
+The plugin will add the user in dotcms if the user doesn't exist
+and for every user logging from SAML the ROLEs will be reassigned if the roles 
 are sent by the SAML response message.
 
-the SAML Response should always send the user email, firstname and
+The SAML Response should always send the user email, firstname and
 lastname. The roles are optional
 
 
@@ -35,13 +35,60 @@ and of course the mapping:
 </filter-mapping>
 ~~~
 
-By default the web.xml is gonna be overriden by the plugin (please see the file: ROOT/dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/web.xml)
-If you have modified your web.xml before the plugin installation, please add the changes on this web.xml to avoid to loss any custom change.
+By default the web.xml is gonna be overridden by the plugin (please see the file: ROOT/dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/web.xml)
+If you have modified your web.xml before the plugin installation, please add the changes on plugin web.xml to avoid to loss any custom change.
 
 2) Set in the DOTCMS_plugin_path/conf/dotmarketing-config-ext.properties file the
-configuration values for your service provider. The Plugin included some examples, however
-you can take a look to DOTCMS_plugin_path/src/com/dotcms/plugin/saml/v3/DotSamlConstants.java, there you can find
-all the properties you can override in the dot CMS properties (we will explain all of them later).
+sites-config.json path service provider, it supports several sites and each site can be associated to an IDP. 
+The Plugin includes some examples, however you can take a look to DOTCMS_plugin_path/src/com/dotcms/plugin/saml/v3/DotSamlConstants.java, there you can find
+all the properties you can override in the configuration (we will explain all of them later).
+All properties described below are for the sites-config.json per site, except those ones mark with a Note for dotmarketing-config.
+
+Here an example of sites-config.json
+
+~~~
+{
+  "config": [
+    {
+      "saml-test.dotcms.com" : {
+        "default":"true",
+        "dotcms.saml.service.provider.issuer": "https://saml-test-.dotcms.com/",
+        "dotcms.saml.keystore.path":"file:///Users/dotcms/dotcms_3.5/plugins/plugin-dotcms-openSAML3/conf/SPKeystore.jks",
+        "dotcms.saml.keystore.password":"password",
+        "dotcms.saml.keyentryid":"SPKey",
+        "dotcms.saml.keystore.entry.password":"password",
+        "dotcms.saml.assertion.customer.endpoint.url":"https://saml-test.dotcms.com/c",
+        "dotcms.saml.idp.metadata.path":"file:///Users/dotcms/dotcms_3.5/plugins/plugin-dotcms-openSAML3/conf/idp1-metadata.xml",
+        "dotcms.saml.want.assertions.signed":"false",
+        "dotcms.saml.authn.requests.signed":"true",
+        "dotcms.saml.assertion.resolver.handler.classname":"com.dotcms.plugin.saml.v3.handler.HttpPostAssertionResolverHandlerImpl",
+        "dotcms.saml.protocol.binding":"urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+      }
+    },
+    {
+      "site2.dotcms.com": {
+        "dotcms.saml.service.provider.issuer": "https://so2.dotcms.com/",
+        "dotcms.saml.keystore.path": "file:///Users/dotcms/dotcms_3.5/plugins/plugin-dotcms-openSAML3/conf/SPKeystore.jks",
+        "dotcms.saml.keystore.password": "password",
+        "dotcms.saml.keyentryid": "SPKey",
+        "dotcms.saml.keystore.entry.password": "password",
+        "dotcms.saml.artifact.resolution.service.url": "https://so2.localdomain:8443/idp/profile/SAML2/SOAP/ArtifactResolution",
+        "dotcms.saml.assertion.customer.endpoint.url": "https://so2.dotcms.com/c",
+        "dotcms.saml.idp.metadata.path": "file:///Users/dotcms/dotcms_3.5/plugins/plugin-dotcms-openSAML3/conf/idp2-metadata.xml",
+        "dotcms.saml.want.assertions.signed": "false",
+        "dotcms.saml.authn.requests.signed": "true"
+      }
+    }
+  ]
+}
+~~~
+
+Here we have two sites (note the root level item is the servername), 
+the first one is associated to the Idp 1 and it is expecting a Http Post back with a SAMLResponse. This is also set as a 
+default configuration, which means that any other site without configuration will use the saml-test.dotcms.com
+
+The second site is configurated to be used with an artifact resolved. The binding and handler are not necessary since they are the 
+default ones.
 
 3) By default we have included the SPKeystore.jks, however you should use/create your own key store file.
 You should take in consideration that the keystore should have a certificate. Here you
@@ -49,23 +96,29 @@ could see and example of how you can create one
 http://blog.tirasa.net/category/codeexp/security/create-a-new-keystore-to.html
 
 In addition here is an example of the properties to override:
+
 ~~~
-dotcms.saml.keystore.path=SPKeystore.jks
-dotcms.saml.keystore.password=password
-dotcms.saml.keyentryid=SPKey
-dotcms.saml.keystore.entry.password=password
+"dotcms.saml.keystore.path":"SPKeystore.jks",
+"dotcms.saml.keystore.password":"password",
+"dotcms.saml.keyentryid":"SPKey",
+"dotcms.saml.keystore.entry.password":"password"
 ~~~
+
 Keep in mind that the dotcms.saml.keystore.path, could be get from the app classpath or from the file system;
 To include a file system just include the prefix file://
 
 For instance:
-dotcms.saml.keystore.path=file:///opt/keystores/myKeystore.jks
+~~~
+"dotcms.saml.keystore.path":"file:///opt/keystores/myKeystore.jks"
+~~~
 
 4) Setting up more configuration:
 
 4.1) dotcms.saml.protocol.binding
 
-By default dotCMS used org.opensaml.saml.common.xml.SAMLConstants.SAML2_ARTIFACT_BINDING_URI, probably you do not need to change it but if you can override it here if needed.
+By default dotCMS used org.opensaml.saml.common.xml.SAMLConstants.SAML2_ARTIFACT_BINDING_URI, the binding tells to the Idp how the SP is expecting the response.
+The default one just wait for SAMLArt parameter with the Artifact Id to Resolve the Artifact via artifact resolver, we have also support for 
+urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST, this one expects a SAMLResponse as part of a post-back witht the Assertion response.
 
 4.2) dotcms.saml.identity.provider.destinationsso.url
 
@@ -74,12 +127,13 @@ edit this property and include the SSO url. (Note, if you set this property and 
 
 4.3) dotcms.saml.artifact.resolution.service.url
 
-This is a mandatory property for the app and it is the SOAP URL for the Artifact Resolution Service (the one that gets the user information, the Assertion).
+This is an optional property for the app and it is the SOAP URL for the Artifact Resolution Service (the one that gets the user information, the Assertion).
+If you use HTTP-POST binding do not need to specified this value.
 
 4.4) dotcms.saml.assertion.customer.endpoint.url
 
 This is the URL where the Idp (the Shibboleth server) will be redirected to dotCMS when the login is made, we suggest to go to http://[domain]/c.
-If this value is not set, will be send a current request as a default, however keep in mind some Idp Server might not admit this configuration.
+If this value is not set, will be send a current request as a default, however keep in mind some Idp Server might not admit this behaviour.
 
 4.5) dotcms.saml.service.provider.issuer
 
@@ -172,7 +226,7 @@ By default "sn" is the field used to fetch the last name from the Idp response, 
 By default "authorisations" is the field used to fetch the roles/groups from the Idp response, however if you are using another one you can override it on the properties.
 
 4.22) dotcms.saml.initializer.classname
-
+NOTE: this property is for the dotmarketing-config.properties
 By default dotcms use: DefaultInitializer it inits the Java Crypto, Saml Services and plugin stuff.
 However if you have a custom implementation of Initializer, you can override by adding a full class name to this property.
 
@@ -225,6 +279,16 @@ By default true, overrides it if you want the authorization requests signed or n
 By default this is the URL to get the dotCMS Service Provider metadata: "/dotsaml3sp/metadata.xml"
 However if you want to use a different path, feel free to override it on the properties file.
 
+4.33) dotcms.saml.assertion.resolver.handler.classname
+By default we use the implementation com.dotcms.plugin.saml.v3.handler.SOAPArtifactAssertionResolverHandlerImpl
+which is in charge of resolve the assertion using the SOAP artifact resolver based on the artifact id pass by the request.
+If you want a different implementation please override with the class here.
+We also offer: com.dotcms.plugin.saml.v3.handler.HttpPostAssertionResolverHandlerImpl which is in charge of processing a HTTP-POST witha SAMLResponse
+
+4.34) dotcms.saml.sites.config.path
+NOTE: this property is for the dotmarketing-config.properties
+This contains the path to resolve the sites-config.jso with the configuration per site.
+
 5) The plugin needs several libraries to run, all of them has been renamed with a prefix called: "opensaml". In case you need to undeploy the plugin you have to manually remove these libraries from the 
  /dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/lib
 
@@ -238,11 +302,11 @@ dotCMS instance.
 To see your service provider metadata by default generated by the plugin use this url:
 
 ~~~
-https://<myhost>/dotsaml3sp/metadata.xml
+https://<site.servername>/dotsaml3sp/metadata.xml
 ~~~
 
-However you can override it on the DOTCMS_plugin_path/conf/dotmarketing-config-ext.properties,
+However you can override it for each site, on the sites-config.json
 using the property: "dotcms.saml.sevice.provider.custom.metadata.path"
 
 Any request on DotCMS will be redirect to the IdP Login Page, if the user is not already login.
-The rule exception will the url's set on DOTCMS_plugin_path/conf/dotmarketing-config-ext.properties, with the property: "dotcms.saml.access.filter.values"
+The rule exception will the url's set on sites-config.json, with the property: "dotcms.saml.access.filter.values"

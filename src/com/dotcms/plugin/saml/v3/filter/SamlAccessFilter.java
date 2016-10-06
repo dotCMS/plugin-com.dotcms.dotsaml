@@ -122,7 +122,7 @@ public class SamlAccessFilter implements Filter {
         final Configuration             configuration = resolver.resolveConfiguration(request);
         String redirectAfterLogin                     = null;
 
-        // If configuration is not, means this site does not need
+        // If configuration is not, means this site does not need SAML processing
         if (null != configuration) {
 
             ThreadLocalConfiguration.setCurrentSiteConfiguration(configuration);
@@ -139,14 +139,14 @@ public class SamlAccessFilter implements Filter {
             if (!this.checkAccessFilters(request.getRequestURI(), configuration.getAccessFilterArray())) {
 
                 // if it is an url to apply the Saml access logic, determine if the autoLogin is possible
-                // the autologin will works if the SAMLArt (Saml artifact id) is in the request query string.
+                // the autologin will works if the SAMLArt (Saml artifact id) is in the request query string
+                // for artifact resolution or SAMLResponse for post resolution.
                 if (!this.autoLogin(request, response, session, configuration)) {
 
-                    return; // no continue. Usually no continue when there is a sendRedirect done.
+                    return; // no continue. Usually no continue when there is a sendRedirect or sendError done.
                 }
 
-
-                // if the auto login couldn't logged the user, then send it to the IdP login page.
+                // if the auto login couldn't logged the user, then send it to the IdP login page (if it is not already logged in).
                 if (null == session || null == session.getAttribute(WebKeys.CMS_USER)) {
 
                     // this is safe, just to make a redirection when the user get's logged.
@@ -253,7 +253,7 @@ public class SamlAccessFilter implements Filter {
             }
         } else {
 
-            // if it was a saml request and could get the user, throw an error
+            // if it was a saml request and could not get the user, throw an error
             if (this.samlAuthenticationService.isValidSamlRequest
                     (request, response, configuration.getSiteName())) {
 
