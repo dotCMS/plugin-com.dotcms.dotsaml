@@ -289,6 +289,14 @@ We also offer: com.dotcms.plugin.saml.v3.handler.HttpPostAssertionResolverHandle
 NOTE: this property is for the dotmarketing-config.properties
 This contains the path to resolve the sites-config.jso with the configuration per site.
 
+4.34) dotcms.saml.include.roles.pattern
+This is an array comma separated, if this array is set. Any role from SAML that does not match with the list of include roles pattern, will be filtered.
+For instance:
+~~~
+"dotcms.saml.include.roles.pattern":"^www_,^xxx_"
+~~~
+The previous example will include only the roles from SAML that starts with www_ or xxx_ 
+
 5) The plugin needs several libraries to run, all of them has been renamed with a prefix called: "opensaml". In case you need to undeploy the plugin you have to manually remove these libraries from the 
  /dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/lib
 

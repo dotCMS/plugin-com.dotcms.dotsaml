@@ -324,4 +324,12 @@ public final class DotSamlConstants {
      * However keep in mind that signed responses are a desire practice.
      */
     public static final String DOTCMS_SAML_CHECKIF_ASSERTION_SIGNED = "dotcms.saml.checkif.assertionsigned";
+
+
+    /**
+     * Key for site-config.json
+     * This is an array comma separated, if this array is set. Any role from SAML that does not match with the
+     * list of include roles pattern, will be filtered.
+     */
+    public static final String DOTCMS_SAML_INCLUDE_ROLES_PATTERN = "dotcms.saml.include.roles.pattern";
 } // E:O:F:DotSamlConstants.

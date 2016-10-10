@@ -12,6 +12,7 @@ import com.dotmarketing.business.UserAPI;
 import com.dotmarketing.cms.factories.PublicEncryptionFactory;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.RegEX;
 import com.dotmarketing.util.UUIDGenerator;
 import com.liferay.portal.model.User;
 import com.liferay.util.InstancePool;
@@ -21,7 +22,6 @@ import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.messaging.encoder.MessageEncodingException;
 import org.opensaml.saml.common.messaging.context.SAMLEndpointContext;
 import org.opensaml.saml.common.messaging.context.SAMLPeerEntityContext;
-import org.opensaml.saml.saml2.binding.encoding.impl.HTTPPostEncoder;
 import org.opensaml.saml.saml2.binding.encoding.impl.HTTPRedirectDeflateEncoder;
 import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.AuthnRequest;
@@ -31,6 +31,9 @@ import org.opensaml.xmlsec.signature.support.SignatureConstants;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.Arrays;
 import java.util.Date;
 
 import static com.dotcms.plugin.saml.v3.SamlUtils.*;
@@ -43,6 +46,7 @@ import static com.dotmarketing.util.UtilMethods.isSet;
 public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationService {
 
 
+    private static final String NULL = "null";
     private final UserAPI userAPI;
     private final RoleAPI roleAPI;
     private final AssertionResolverHandlerFactory assertionResolverHandlerFactory;
@@ -132,7 +136,35 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         return user;
     } // getUser.
 
-    // resolve the artributes from the assertion resolved from the OpenSaml artifact resolver via
+    private boolean isValidRole (final String role, final String [] rolePatterns) {
+
+        boolean isValidRole = false;
+
+        for (String rolePattern : rolePatterns) {
+
+            isValidRole |= this.match(role, rolePattern);
+        }
+
+        return isValidRole;
+    } // isValidRole.
+
+    private boolean match (final String role, final String rolePattern) {
+
+        String uftRole = null;
+
+        try {
+
+            uftRole = URLDecoder.decode(role, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+
+            uftRole = role;
+        }
+
+        return RegEX.contains(uftRole, rolePattern);
+    } // match.
+
+
+    // resolve the attributes from the assertion resolved from the OpenSaml artifact resolver via
     // post soap message.
     private AttributesBean resolveAttributes (final Assertion assertion, final Configuration configuration) {
 
@@ -200,9 +232,14 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         if (user.isActive() && attributesBean.isAddRoles() &&
                 null != attributesBean.getRoles() &&
-                null != attributesBean.getRoles().getAttributeValues()) {
+                null != attributesBean.getRoles().getAttributeValues() &&
+                attributesBean.getRoles().getAttributeValues().size() > 0) {
 
             this.addRoles(user, attributesBean, configuration);
+        } else {
+
+            Logger.info(this, "No roles added, The user " + user.getEmailAddress() +
+                            ", is not active or does not have any role from SAML");
         }
 
         return user;
@@ -213,6 +250,9 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         final String removeRolePrefix = configuration.getStringProperty
                 (DotSamlConstants.DOT_SAML_REMOVE_ROLES_PREFIX, StringUtils.EMPTY);
+        final String [] rolePatterns   = configuration.getStringArray
+                (DotSamlConstants.DOTCMS_SAML_INCLUDE_ROLES_PATTERN, null);
+        String role                    = null;
 
         try {
 
@@ -220,8 +260,23 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             Logger.debug(this, "Removing user previous roles");
             this.roleAPI.removeAllRolesFromUser(user);
 
+            Logger.debug(this, "Role Patterns: " + this.toString (rolePatterns) +
+                            ", remove role prefix: " +  removeRolePrefix);
+
             //add roles
             for(XMLObject roleObject : attributesBean.getRoles().getAttributeValues()){
+
+                if (null != rolePatterns && rolePatterns.length > 0) {
+
+                    role = roleObject.getDOM().getFirstChild().getNodeValue();
+                    if (!this.isValidRole(role, rolePatterns)) {
+                        // when there are role filters and the current roles is not
+                        // a valid role, we have to filter it.
+
+                        Logger.info(this, "Skipping the role: " + role);
+                        continue;
+                    }
+                }
 
                 this.addRole(user, removeRolePrefix, roleObject);
             }
@@ -231,6 +286,11 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             throw new DotSamlException(e.getMessage());
         }
     } // addRoles.
+
+    private String toString(String[] rolePatterns) {
+
+        return null == rolePatterns? NULL : Arrays.asList(rolePatterns).toString();
+    }
 
     private void addRole(final User user, final String removeRolePrefix,
                          final XMLObject roleObject) throws DotDataException {
@@ -347,5 +407,21 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         context.getSubcontext(SecurityParametersContext.class, true)
                 .setSignatureSigningParameters(signatureSigningParameters);
     } // setSignatureSigningParams.
+
+    public static void main(String [] args)
+    {
+        OpenSamlAuthenticationServiceImpl authenticationService =
+                new OpenSamlAuthenticationServiceImpl(null, null, null);
+
+        String[] rolePatterns = {"^www_", "^xxx_"};
+        //String[] rolePatterns = {"www_", "xxx_"};
+        String[] roles        = {"www_CMS Administrator", "www_Login As", "Another_Role", "xxx_Role", "something_www_"};
+
+        for (String role : roles) {
+            System.out.println("is Valid Role:" + role  + ": " +
+                    authenticationService.isValidRole(role, rolePatterns));
+        }
+    }
+
 
 } // E:O:F:OpenSamlAuthenticationServiceImpl.
