@@ -226,7 +226,9 @@ By default "sn" is the field used to fetch the last name from the Idp response, 
 By default "authorisations" is the field used to fetch the roles/groups from the Idp response, however if you are using another one you can override it on the properties.
 
 4.22) dotcms.saml.initializer.classname
+
 NOTE: this property is for the dotmarketing-config.properties
+
 By default dotcms use: DefaultInitializer it inits the Java Crypto, Saml Services and plugin stuff.
 However if you have a custom implementation of Initializer, you can override by adding a full class name to this property.
 
@@ -280,21 +282,29 @@ By default this is the URL to get the dotCMS Service Provider metadata: "/dotsam
 However if you want to use a different path, feel free to override it on the properties file.
 
 4.33) dotcms.saml.assertion.resolver.handler.classname
+
 By default we use the implementation com.dotcms.plugin.saml.v3.handler.SOAPArtifactAssertionResolverHandlerImpl
 which is in charge of resolve the assertion using the SOAP artifact resolver based on the artifact id pass by the request.
+
 If you want a different implementation please override with the class here.
 We also offer: com.dotcms.plugin.saml.v3.handler.HttpPostAssertionResolverHandlerImpl which is in charge of processing a HTTP-POST witha SAMLResponse
 
 4.34) dotcms.saml.sites.config.path
+
 NOTE: this property is for the dotmarketing-config.properties
+
 This contains the path to resolve the sites-config.jso with the configuration per site.
 
 4.34) dotcms.saml.include.roles.pattern
+
 This is an array comma separated, if this array is set. Any role from SAML that does not match with the list of include roles pattern, will be filtered.
+
 For instance:
+
 ~~~
 "dotcms.saml.include.roles.pattern":"^www_,^xxx_"
 ~~~
+
 The previous example will include only the roles from SAML that starts with www_ or xxx_ 
 
 5) The plugin needs several libraries to run, all of them has been renamed with a prefix called: "opensaml". In case you need to undeploy the plugin you have to manually remove these libraries from the 
