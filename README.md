@@ -57,7 +57,7 @@ Here an example of sites-config.json
         "dotcms.saml.keystore.password":"password",
         "dotcms.saml.keyentryid":"SPKey",
         "dotcms.saml.keystore.entry.password":"password",
-        "dotcms.saml.assertion.customer.endpoint.url":"https://saml-test.dotcms.com/c",
+        "dotcms.saml.assertion.customer.endpoint.url":"https://saml-test.dotcms.com/dotsaml3sp",
         "dotcms.saml.idp.metadata.path":"file:///Users/dotcms/dotcms_3.5/plugins/plugin-dotcms-openSAML3/conf/idp1-metadata.xml",
         "dotcms.saml.want.assertions.signed":"false",
         "dotcms.saml.authn.requests.signed":"true",
@@ -73,7 +73,7 @@ Here an example of sites-config.json
         "dotcms.saml.keyentryid": "SPKey",
         "dotcms.saml.keystore.entry.password": "password",
         "dotcms.saml.artifact.resolution.service.url": "https://so2.localdomain:8443/idp/profile/SAML2/SOAP/ArtifactResolution",
-        "dotcms.saml.assertion.customer.endpoint.url": "https://so2.dotcms.com/c",
+        "dotcms.saml.assertion.customer.endpoint.url": "https://so2.dotcms.com/dotsaml3sp",
         "dotcms.saml.idp.metadata.path": "file:///Users/dotcms/dotcms_3.5/plugins/plugin-dotcms-openSAML3/conf/idp2-metadata.xml",
         "dotcms.saml.want.assertions.signed": "false",
         "dotcms.saml.authn.requests.signed": "true"
@@ -132,7 +132,7 @@ If you use HTTP-POST binding do not need to specified this value.
 
 4.4) dotcms.saml.assertion.customer.endpoint.url
 
-This is the URL where the Idp (the Shibboleth server) will be redirected to dotCMS when the login is made, we suggest to go to http://[domain]/c.
+This is the URL where the Idp (the Shibboleth server) will be redirected to dotCMS when the login is made, we suggest to go to http://[domain]/dotsaml3sp.
 If this value is not set, will be send a current request as a default, however keep in mind some Idp Server might not admit this behaviour.
 
 4.5) dotcms.saml.service.provider.issuer
@@ -306,6 +306,22 @@ For instance:
 ~~~
 
 The previous example will include only the roles from SAML that starts with www_ or xxx_ 
+
+
+4.35) dotcms.saml.include.path.values
+
+By default we include:
+~~~
+ ^/dotsaml3sp*$, ^/dotCMS/login.*$, ^/html/portal/login.*$, ^/c/public/login.*$,^/c/portal_public/login.*$,^/c/portal/logout.*$", 
+~~~
+
+If you need to add more into the saml filter you can include the values comma separated.
+
+For instance:
+~~~
+"dotcms.saml.include.path.values":"^/html/portal/login.*$,^/dotCMS/login.*$,^/c/,^/admin"
+~~~
+
 
 5) The plugin needs several libraries to run, all of them has been renamed with a prefix called: "opensaml". In case you need to undeploy the plugin you have to manually remove these libraries from the 
  /dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/lib

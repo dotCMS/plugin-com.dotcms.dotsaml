@@ -114,6 +114,13 @@ public interface Configuration extends Serializable {
     String [] getAccessFilterArray();
 
     /**
+     * Get's the include urls to be analized by the open saml plugin, usually the admin
+     * They can be a pattern
+     * @return String []
+     */
+    String[] getIncludePathArray();
+
+    /**
      * If the user wants to do a verifyAssertionSignature, by default true.
      * There are some testing or diagnostic scenarios where you want to avoid the validation to identified issues, but in general on production this must be true.
      *
@@ -215,6 +222,7 @@ public interface Configuration extends Serializable {
      * @return String
      */
     String getIdentityProviderDestinationSSOURL(Configuration configuration);
+
 
 
 } // E:O:F:Configuration.

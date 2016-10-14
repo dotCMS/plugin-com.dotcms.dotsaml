@@ -94,6 +94,17 @@ public class DefaultDotCMSConfiguration implements Configuration {
     }
 
     @Override
+    public String[] getIncludePathArray() {
+
+        final String accessFilterValues =
+                this.getStringProperty(DotSamlConstants.DOT_SAML_INCLUDE_PATH_VALUES,
+                        "^/dotsaml3sp*$,^/dotCMS/login.*$,^/html/portal/login.*$,^/c/public/login.*$,^/c/portal_public/login.*$,^/c/portal/logout.*$");
+
+        return (UtilMethods.isSet(accessFilterValues))?
+                accessFilterValues.split(","):null;
+    }
+
+    @Override
     public Collection<Credential> getSigningCredentials() {
 
         return (null != this.metadataBean)?

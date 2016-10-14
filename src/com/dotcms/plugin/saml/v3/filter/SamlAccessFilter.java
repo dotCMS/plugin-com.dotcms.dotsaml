@@ -2,20 +2,35 @@ package com.dotcms.plugin.saml.v3.filter;
 
 import com.dotcms.plugin.saml.v3.*;
 import com.dotcms.plugin.saml.v3.config.Configuration;
-import com.dotcms.plugin.saml.v3.config.SiteConfigurationService;
 import com.dotcms.plugin.saml.v3.init.DefaultInitializer;
 import com.dotcms.plugin.saml.v3.init.Initializer;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
+import com.dotmarketing.beans.Host;
+import com.dotmarketing.beans.Identifier;
+import com.dotmarketing.business.APILocator;
+import com.dotmarketing.business.IdentifierAPI;
+import com.dotmarketing.business.PermissionAPI;
+import com.dotmarketing.business.Permissionable;
+import com.dotmarketing.business.web.HostWebAPI;
+import com.dotmarketing.business.web.LanguageWebAPI;
+import com.dotmarketing.business.web.UserWebAPI;
+import com.dotmarketing.business.web.WebAPILocator;
 import com.dotmarketing.cms.factories.PublicEncryptionFactory;
 import com.dotmarketing.cms.login.factories.LoginFactory;
-import com.dotmarketing.util.Config;
-import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.WebKeys;
+import com.dotmarketing.exception.DotDataException;
+import com.dotmarketing.exception.DotSecurityException;
+import com.dotmarketing.filters.CmsUrlUtil;
+import com.dotmarketing.portlets.contentlet.business.ContentletAPI;
+import com.dotmarketing.util.*;
+import com.dotmarketing.velocity.VelocityServlet;
+import com.liferay.portal.PortalException;
+import com.liferay.portal.SystemException;
 import com.liferay.portal.auth.PrincipalThreadLocal;
 import com.liferay.portal.model.User;
 import com.liferay.util.InstancePool;
+import org.apache.velocity.exception.ResourceNotFoundException;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 
@@ -27,8 +42,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.Writer;
-import java.lang.reflect.InvocationTargetException;
+import java.net.URLDecoder;
 import java.util.Collections;
+
+import static com.dotmarketing.business.PermissionAPI.PERMISSION_READ;
 
 /**
  * Access filter for SAML plugin, it does the autologin and also redirect to the
@@ -39,9 +56,17 @@ import java.util.Collections;
 public class SamlAccessFilter implements Filter {
 
     private static final String TEXT_XML = "text/xml";
+    public static final String REFERRER_PARAMETER_KEY = "referrer";
     private final SamlAuthenticationService samlAuthenticationService;
     private final Initializer initializer;
     private final MetaDataXMLPrinter metaDataXMLPrinter;
+    private final HostWebAPI hostWebAPI;
+    private final CmsUrlUtil urlUtil;
+    private final LanguageWebAPI languageWebAPI;
+    private final PermissionAPI permissionAPI;
+    private final IdentifierAPI identifierAPI;
+    private final ContentletAPI contentletAPI;
+    private final UserWebAPI    userWebAPI;
 
     public SamlAccessFilter() {
 
@@ -55,23 +80,42 @@ public class SamlAccessFilter implements Filter {
     public SamlAccessFilter(final SamlAuthenticationService samlAuthenticationService,
                             final Initializer initializer) {
 
-        this.samlAuthenticationService = samlAuthenticationService;
-        this.initializer               = (null == initializer)?
-                new DefaultInitializer():
-                initializer;
-        this.metaDataXMLPrinter = new MetaDataXMLPrinter();
+        this (samlAuthenticationService,
+                (null == initializer)?
+                    new DefaultInitializer():initializer,
+                new MetaDataXMLPrinter(),
+                WebAPILocator.getHostWebAPI(),
+                CmsUrlUtil.getInstance(),
+                WebAPILocator.getLanguageWebAPI(),
+                APILocator.getPermissionAPI(),
+                APILocator.getIdentifierAPI(),
+                APILocator.getContentletAPI(),
+                WebAPILocator.getUserWebAPI());
+
     }
 
     @VisibleForTesting
     public SamlAccessFilter(final SamlAuthenticationService samlAuthenticationService,
                             final Initializer initializer,
-                            final MetaDataXMLPrinter metaDataXMLPrinter) {
+                            final MetaDataXMLPrinter metaDataXMLPrinter,
+                            final HostWebAPI hostWebAPI,
+                            final CmsUrlUtil urlUtil,
+                            final LanguageWebAPI languageWebAPI,
+                            final PermissionAPI permissionAPI,
+                            final IdentifierAPI identifierAPI,
+                            final ContentletAPI contentletAPI,
+                            final UserWebAPI    userWebAPI) {
 
         this.samlAuthenticationService = samlAuthenticationService;
-        this.initializer               = (null == initializer)?
-                new DefaultInitializer():
-                initializer;
-        this.metaDataXMLPrinter = metaDataXMLPrinter;
+        this.initializer               = initializer;
+        this.metaDataXMLPrinter        = metaDataXMLPrinter;
+        this.hostWebAPI                = hostWebAPI;
+        this.urlUtil                   = urlUtil;
+        this.languageWebAPI            = languageWebAPI;
+        this.permissionAPI             = permissionAPI;
+        this.identifierAPI             = identifierAPI;
+        this.contentletAPI             = contentletAPI;
+        this.userWebAPI                = userWebAPI;
     }
 
     @Override
@@ -93,9 +137,10 @@ public class SamlAccessFilter implements Filter {
      * An example of exception might be the destroy.jsp, so on.
      * @param uri {@link String}
      * @param filterPaths {@link String} array
+     *
      * @return boolean
      */
-    private boolean checkAccessFilters (String uri, final String [] filterPaths) {
+    private boolean checkAccessFilters (final String uri, final String [] filterPaths) {
 
         boolean filter = false;
 
@@ -109,6 +154,92 @@ public class SamlAccessFilter implements Filter {
 
         return filter;
     } // checkAccessFilters.
+
+    /**
+     * Determine if the path is Backend Admin, usually it is for /c && /admin or
+     * if the path is a file or path, will check if the user has permission
+     * @param uri {@link String}
+     * @param includePaths {@link String} array
+     * @param request {@link HttpServletRequest}
+     * @return boolean
+     */
+    private boolean checkIncludePath(final String uri, final String [] includePaths, final HttpServletRequest request) {
+
+        boolean include = false;
+
+        // this is the backend uri test.
+        for (String includePath : includePaths) {
+
+            Logger.debug(this, "Evaluating the uri: " + uri +
+                    ", with the pattern: " + includePath);
+
+            include |= RegEX.contains(uri, includePath);
+        }
+
+        // note: by now we are going to
+        /*if (!include) {
+
+            try {
+
+                Logger.debug(this, "The include paths were not included the uri: " + uri
+                                + ", doing the check file page permission");
+                include = this.checkFilePagePermission (uri, request);
+            } catch (Exception e) {
+
+                Logger.error(this, "Unable to check File/Page permission current request host for URI " + uri);
+                include = false;
+            }
+        }*/
+
+        Logger.debug(this, "The uri: " + uri + ", include = " + include);
+
+        return include;
+    }
+
+    /**
+     * If the url represents a file or page, will check if the user needs a permission to access it.
+     * It is for the Front end logic.
+     * @param uriParam String
+     * @return boolean
+     */
+    private boolean checkFilePagePermission(final String uriParam,
+                                            final HttpServletRequest request) throws Exception {
+
+        boolean include             = false;
+        String uri                  = URLDecoder.decode(uriParam, UtilMethods.getCharsetConfiguration());
+        Host host                   = this.hostWebAPI.getCurrentHost(request);
+        Identifier identifier       = null;
+        Permissionable contentlet   = null;
+        final long languageId       = this.languageWebAPI.getLanguage(request).getId();
+
+        if (this.urlUtil.isFileAsset(uri, host, languageId)
+                || this.urlUtil.isPageAsset(uri, host, languageId)) {
+
+            Logger.debug(this, "The uri: " + uri + ", for the site: " + host + ", language: " + languageId +
+                    ". Is a contentlet or file asset");
+            try {
+
+                identifier = this.identifierAPI.find(host, uri);
+                contentlet = this.contentletAPI.findContentletForLanguage(languageId, identifier);
+            } catch(DotDataException | DotSecurityException e) {
+
+                Logger.info(VelocityServlet.class,
+                        "Unable to find live version of contentlet. Identifier: " + identifier.getId());
+                throw new ResourceNotFoundException
+                        (String.format("Resource %s not found in Live mode!", uri));
+            }
+
+            // Check if the contentlet is visible by a CMS Anonymous role
+            include = !this.permissionAPI.doesUserHavePermission(contentlet,
+                                PERMISSION_READ, null, true);
+
+            Logger.debug(this, "The uri: " + uri + ", for the site: " + host + ", language: " + languageId +
+                    ", with the identifier: " + identifier + " is included: " + include
+            );
+        }
+
+        return include;
+    } // checkFilePagePermission.
 
     @Override
     public void doFilter(final ServletRequest req,
@@ -136,7 +267,8 @@ public class SamlAccessFilter implements Filter {
             }
 
             // check if there is any exception filter path, to avoid to apply all the logic.
-            if (!this.checkAccessFilters(request.getRequestURI(), configuration.getAccessFilterArray())) {
+            if (!this.checkAccessFilters(request.getRequestURI(), configuration.getAccessFilterArray())
+                    && this.checkIncludePath(request.getRequestURI(), configuration.getIncludePathArray(), request)) {
 
                 // if it is an url to apply the Saml access logic, determine if the autoLogin is possible
                 // the autologin will works if the SAMLArt (Saml artifact id) is in the request query string
@@ -147,12 +279,16 @@ public class SamlAccessFilter implements Filter {
                 }
 
                 // if the auto login couldn't logged the user, then send it to the IdP login page (if it is not already logged in).
-                if (null == session || null == session.getAttribute(WebKeys.CMS_USER)) {
+                if (null == session || this.isNotLogged(request, session)) {
 
-                    // this is safe, just to make a redirection when the user get's logged.
-                    redirectAfterLogin = request.getRequestURI() +
-                            ((null != request.getQueryString()) ? "?" + request.getQueryString() :
-                                    StringUtils.EMPTY);
+                    Logger.debug(this, "User is not logged, processing saml request");
+
+                    redirectAfterLogin = (UtilMethods.isSet(request.getParameter(REFERRER_PARAMETER_KEY)))?
+                            request.getParameter(REFERRER_PARAMETER_KEY):
+                            // this is safe, just to make a redirection when the user get's logged.
+                            request.getRequestURI() +
+                                    ((null != request.getQueryString()) ? "?" + request.getQueryString() :
+                                            StringUtils.EMPTY);
 
                     Logger.warn(this.getClass(),
                             "Doing Saml Login Redirection when request: " +
@@ -179,6 +315,34 @@ public class SamlAccessFilter implements Filter {
 
         chain.doFilter(request, response);
     } // doFilter.
+
+    /**
+     * Return true if the user is not logged.
+     * Work for FE and BE
+     * @param request {@link HttpServletRequest}
+     * @param session {@link HttpSession}
+     * @return boolean
+     */
+    private boolean isNotLogged(final HttpServletRequest request, final HttpSession session) {
+
+        boolean isNotLogged = true;
+        boolean isBackend   = this.isBackEndAdmin(session, request.getRequestURI());
+        try {
+
+            isNotLogged = (isBackend)?
+                    !this.userWebAPI.isLoggedToBackend(request):
+                    null == this.userWebAPI.getLoggedInFrontendUser(request);
+
+            Logger.debug(this, "The user is in backend: " + isBackend +
+                            ", is not logged: " + isNotLogged);
+        } catch (PortalException | SystemException e) {
+
+            Logger.error(this, e.getMessage(), e);
+            isNotLogged = true;
+        }
+
+        return isNotLogged;
+    } // isNotLogged.
 
     private void printMetaData(final HttpServletRequest request,
                                final HttpServletResponse response,
@@ -243,7 +407,7 @@ public class SamlAccessFilter implements Filter {
                     Logger.info(this, "Setting the user id on the session: " + user.getUserId());
                     session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
 
-                    if(this.isBackEndAdmin(session)) {
+                    if(this.isBackEndAdmin(session, request.getRequestURI())) {
 
                         PrincipalThreadLocal.setName(user.getUserId());
                     }
@@ -266,10 +430,25 @@ public class SamlAccessFilter implements Filter {
         return continueFilter;
     } // autoLogin.
 
-    private boolean isBackEndAdmin(final HttpSession session) {
+    private boolean isBackEndAdmin(final HttpSession session, final String uri) {
 
-        return (session.getAttribute(com.dotmarketing.util.WebKeys.ADMIN_MODE_SESSION) != null);
+        return (session.getAttribute(com.dotmarketing.util.WebKeys.ADMIN_MODE_SESSION) != null) ||
+                // todo: on higher versions this hack should be checked for a better criteria
+                this.isBackEndLoginPage(uri);
     } // isBackEndAdmin.
+
+    private boolean isBackEndLoginPage(final String uri) {
+
+        return  uri.startsWith("/html/portal/login")        ||
+                uri.startsWith("/c/public/login")           ||
+                uri.startsWith("/c/portal_public/login")    ||
+                uri.startsWith("/c/portal/logout");
+    }
+
+    private boolean isFrontEndLoginPage (final String uri) {
+
+        return uri.startsWith("/dotCMS/login");
+    }
 
     private boolean checkRedirection(final HttpServletRequest request,
                                   final HttpServletResponse response,
@@ -289,8 +468,23 @@ public class SamlAccessFilter implements Filter {
 
                 try {
 
-                    Logger.info(this, "Redirecting to: " + redirectAfterLogin);
-                    response.sendRedirect(redirectAfterLogin);
+                    if (this.isBackEndLoginPage(redirectAfterLogin)
+                            || this.isFrontEndLoginPage(redirectAfterLogin)) {
+
+                        if (this.isBackEndAdmin(session, redirectAfterLogin)) {
+
+                            Logger.info(this, "Redirecting to: /c");
+                            response.sendRedirect("/c");
+                        } else { // if it is front end
+
+                            Logger.info(this, "Redirecting to: /");
+                            response.sendRedirect("/");
+                        }
+                    } else {
+
+                        Logger.info(this, "Redirecting to: " + redirectAfterLogin);
+                        response.sendRedirect(redirectAfterLogin);
+                    }
                     return false; // not continue. since it is a redirect.
                 } catch (IOException e) {
 

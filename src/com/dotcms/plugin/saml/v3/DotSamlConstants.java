@@ -215,6 +215,13 @@ public final class DotSamlConstants {
 
     /**
      * Key for  site-config.json
+     * By default we include /c and /admin, if you need to add more into the saml filter you can include the values
+     * comma separated.
+     */
+    public static final String DOT_SAML_INCLUDE_PATH_VALUES = "dotcms.saml.include.path.values";
+
+    /**
+     * Key for  site-config.json
      * By default the system will do the verification of the assertion signature, if for some reason you want to avoid it
      * feel free to set it to "false".
      */

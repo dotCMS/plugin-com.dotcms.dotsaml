@@ -112,7 +112,7 @@ public class SiteConfigurationBean implements Serializable {
 
         if (this.siteConfigMap.containsKey(propertyName)) {
 
-            array = StringUtils.split(propertyName, ARRAY_SEPARATOR_CHAR);
+            array = StringUtils.split(this.siteConfigMap.get(propertyName), ARRAY_SEPARATOR_CHAR);
         }
 
         return array;

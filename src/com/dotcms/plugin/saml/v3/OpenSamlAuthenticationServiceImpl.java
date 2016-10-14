@@ -140,9 +140,17 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         boolean isValidRole = false;
 
-        for (String rolePattern : rolePatterns) {
+        if (null != rolePatterns) {
 
-            isValidRole |= this.match(role, rolePattern);
+            for (String rolePattern : rolePatterns) {
+
+                Logger.debug(this, "Is Valid Role, role: " + role +
+                                ", pattern: " + rolePattern);
+                isValidRole |= this.match(role, rolePattern);
+            }
+        } else {
+
+            isValidRole = true; // if not pattern, role is valid.
         }
 
         return isValidRole;
@@ -408,7 +416,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                 .setSignatureSigningParameters(signatureSigningParameters);
     } // setSignatureSigningParams.
 
-    public static void main(String [] args)
+    /*public static void main(String [] args)
     {
         OpenSamlAuthenticationServiceImpl authenticationService =
                 new OpenSamlAuthenticationServiceImpl(null, null, null);
@@ -420,6 +428,24 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         for (String role : roles) {
             System.out.println("is Valid Role:" + role  + ": " +
                     authenticationService.isValidRole(role, rolePatterns));
+        }
+    }*/
+
+    public static void main(String [] args)
+    {
+        OpenSamlAuthenticationServiceImpl authenticationService =
+                new OpenSamlAuthenticationServiceImpl(null, null, null);
+
+        String rolePatterns = "^/html/portal/login.*$";
+        //String[] rolePatterns = {"www_", "xxx_"};
+        String[] roles        = {"/contentAsset/resize-image/97e2e928-8f6c-4253-a07e-2eb1d5d10e3f/image/h/125",
+                "/c", "/contentAsset/resize-image/97e2e928-8f6c-4253-a07e-2eb1d5d10e3f/image/h/c",
+                "/html/portal/login.do"
+        };
+
+        for (String role : roles) {
+            System.out.println("is Valid Role:" + role  + ": " +
+                    RegEX.contains(role, rolePatterns));
         }
     }
 
