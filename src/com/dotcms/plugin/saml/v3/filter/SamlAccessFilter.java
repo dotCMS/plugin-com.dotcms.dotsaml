@@ -44,6 +44,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.net.URLDecoder;
 import java.util.Collections;
+import java.util.Date;
+import java.util.Map;
 
 import static com.dotmarketing.business.PermissionAPI.PERMISSION_READ;
 
@@ -282,6 +284,7 @@ public class SamlAccessFilter implements Filter {
                 if (null == session || this.isNotLogged(request, session)) {
 
                     Logger.debug(this, "User is not logged, processing saml request");
+                    this.doRequestLoginSecurityLog(request, configuration);
 
                     redirectAfterLogin = (UtilMethods.isSet(request.getParameter(REFERRER_PARAMETER_KEY)))?
                             request.getParameter(REFERRER_PARAMETER_KEY):
@@ -315,6 +318,50 @@ public class SamlAccessFilter implements Filter {
 
         chain.doFilter(request, response);
     } // doFilter.
+
+    private void doRequestLoginSecurityLog(final HttpServletRequest request, final Configuration configuration) {
+
+        try {
+
+            final Host  host    = this.hostWebAPI.getCurrentHost(request);
+            final String env    = this.isFrontEndLoginPage(request.getRequestURI())?
+                    "frontend":"backend";
+            final String log    = new Date() + ": SAML login request for host: (" +
+                    host.getHostname()    + ") site: " +
+                    configuration.getSiteName() + " (" + env + ") from " +
+                    request.getRemoteAddr();
+
+            //“$TIMEDATE: SAML login request for $host (frontend|backend)from $REQUEST_ADDR”
+            SecurityLogger.logInfo(SamlAccessFilter.class, log);
+            Logger.debug(this, log);
+        } catch (Exception e) {
+
+            Logger.error(this, e.getMessage(), e);
+        }
+    } // doRequestLoginSecurityLog.
+
+    private void doAuthenticationLoginSecurityLog(final HttpServletRequest request,
+                                                  final Configuration configuration,
+                                                  final User user) {
+
+        try {
+
+            final Host  host    = this.hostWebAPI.getCurrentHost(request);
+            final String env    = this.isFrontEndLoginPage(request.getRequestURI())?
+                    "frontend":"backend";
+            final String log    = new Date() + ": SAML login success for host: (" +
+                    host.getHostname()    + ") site: " +
+                    configuration.getSiteName() + " (" + env + ") from " +
+                    request.getRemoteAddr() + " for an user: " + user.getEmailAddress();
+
+            //“$TIMEDATE: SAML login success for $host (frontend|backend)from $REQUEST_ADDR for user $username”
+            SecurityLogger.logInfo(SamlAccessFilter.class, log);
+            Logger.debug(this, log);
+        } catch (Exception e) {
+
+            Logger.error(this, e.getMessage(), e);
+        }
+    } // doAuthenticationLoginSecurityLog.
 
     /**
      * Return true if the user is not logged.
@@ -413,6 +460,8 @@ public class SamlAccessFilter implements Filter {
                     }
                     // depending if it is a redirection or not, continue.
                     continueFilter = this.checkRedirection(request, response, session);
+
+                    this.doAuthenticationLoginSecurityLog(request, configuration, user);
                 }
             }
         } else {
@@ -429,6 +478,8 @@ public class SamlAccessFilter implements Filter {
 
         return continueFilter;
     } // autoLogin.
+
+
 
     private boolean isBackEndAdmin(final HttpSession session, final String uri) {
 
