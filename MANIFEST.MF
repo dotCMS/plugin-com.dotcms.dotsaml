@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Plugin-Name: SAML Plugins
+Plugin-Version: 1.1
+Author: dotCMS
