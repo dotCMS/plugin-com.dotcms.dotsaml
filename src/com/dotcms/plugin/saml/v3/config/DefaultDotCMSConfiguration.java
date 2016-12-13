@@ -131,4 +131,24 @@ public class DefaultDotCMSConfiguration implements Configuration {
     } // getIdentityProviderDestinationSSOURL.
 
 
+    @Override
+    public String getIdentityProviderDestinationSLOURL(final Configuration configuration) {
+
+        String url               = null;
+        final String bindingType = configuration.getStringProperty(DotSamlConstants.DOTCMS_SAML_BINDING_TYPE,
+                BindingType.REDIRECT.getBinding());
+
+        if (null != this.metadataBean &&
+                null != this.metadataBean.getSingleLogoutBindingLocationMap() &&
+                this.metadataBean.getSingleLogoutBindingLocationMap().
+                        containsKey(bindingType)) {
+
+            url = this.metadataBean.
+                    getSingleLogoutBindingLocationMap().get(bindingType);
+        }
+
+        return url;
+    } // getIdentityProviderDestinationSLOURL.
+
+
 } // E:O:F:DefaultDotCMSConfiguration.

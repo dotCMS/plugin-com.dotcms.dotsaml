@@ -84,8 +84,24 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         return new MetadataBean(descriptor.getEntityID(),
                 idpDescriptor.getErrorURL(),
                 this.getSingleSignOnMap(idpDescriptor),
+                this.getSingleLogoutMap(idpDescriptor),
                 this.getCredentialSigningList(descriptor.getEntityID(), idpDescriptor));
     } // parse.
+
+    protected Map<String, String> getSingleLogoutMap(IDPSSODescriptor idpDescriptor) {
+        final Map<String, String> singleLogoutBindingLocationMap =
+                new LinkedHashMap<>();
+
+        idpDescriptor.getSingleLogoutServices().stream().forEach( sso -> {
+
+            Logger.info(this,"Add SLO binding " + sso.getBinding()
+                    + "(" + sso.getLocation() + ")");
+            singleLogoutBindingLocationMap.put(sso.getBinding(),
+                    sso.getLocation());
+        } );
+
+        return singleLogoutBindingLocationMap;
+    }
 
     /**
      * This creates from the runtime configuration, the {@link EntityDescriptor} for dotCMS Service Provider.

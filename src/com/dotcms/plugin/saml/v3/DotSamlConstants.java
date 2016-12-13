@@ -25,6 +25,14 @@ public final class DotSamlConstants {
 
     /**
      * Key for  site-config.json
+     * If you have already set a idp-metadata, this value will be taken from it, otherwise you have to set it on the dotCMS properties.
+     * If the value is not present will got an exception on runtime.
+     * This value is the Redirect SLO (Logout) url (usually Shibboleth), which is the one to be redirect when the user does logout on dotCMS.
+     */
+    public static final String DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SLO_URL = "dotcms.saml.identity.provider.destinationslo.url";
+
+    /**
+     * Key for  site-config.json
      * This is a mandatory property, if you do not set it will got an exception
      * This url is the soap endpoint to get the user assertion from the SAML Artifact id.
      */

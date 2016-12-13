@@ -322,6 +322,10 @@ For instance:
 "dotcms.saml.include.path.values":"^/html/portal/login.*$,^/dotCMS/login.*$,^/c/,^/admin"
 ~~~
 
+4.36) dotcms.saml.identity.provider.destinationslo.url
+
+This is url for the logout page on the Shibboleth Server, by default it gets url from the idp-metadata (the file provided from the Shibboleth server), but if it is not any idp-metadata you can
+edit this property and include the SLO url. (Note, if you set this property and set the idp-metadata, the idp-metada will be get by default)
 
 5) The plugin needs several libraries to run, all of them has been renamed with a prefix called: "opensaml". In case you need to undeploy the plugin you have to manually remove these libraries from the 
  /dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/lib

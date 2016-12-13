@@ -317,6 +317,10 @@ public class SamlAccessFilter implements Filter {
         }
 
         chain.doFilter(request, response);
+
+        // todo: if logout, {
+        // this.samlAuthenticationService.logout(request, response, configuration.getSiteName());
+        // }
     } // doFilter.
 
     private void doRequestLoginSecurityLog(final HttpServletRequest request, final Configuration configuration) {

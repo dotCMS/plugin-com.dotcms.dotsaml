@@ -223,6 +223,11 @@ public interface Configuration extends Serializable {
      */
     String getIdentityProviderDestinationSSOURL(Configuration configuration);
 
-
+    /**
+     * Gets the  Identity Provider Destination Single Logout URL
+     * @param configuration {@link Configuration}
+     * @return String
+     */
+    String getIdentityProviderDestinationSLOURL(Configuration configuration);
 
 } // E:O:F:Configuration.

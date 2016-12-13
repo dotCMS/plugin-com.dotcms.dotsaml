@@ -23,8 +23,7 @@ import org.opensaml.messaging.encoder.MessageEncodingException;
 import org.opensaml.saml.common.messaging.context.SAMLEndpointContext;
 import org.opensaml.saml.common.messaging.context.SAMLPeerEntityContext;
 import org.opensaml.saml.saml2.binding.encoding.impl.HTTPRedirectDeflateEncoder;
-import org.opensaml.saml.saml2.core.Assertion;
-import org.opensaml.saml.saml2.core.AuthnRequest;
+import org.opensaml.saml.saml2.core.*;
 import org.opensaml.xmlsec.SignatureSigningParameters;
 import org.opensaml.xmlsec.context.SecurityParametersContext;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
@@ -37,6 +36,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 import static com.dotcms.plugin.saml.v3.SamlUtils.*;
+import static com.dotcms.repackage.org.directwebremoting.ScriptSessions.setAttribute;
 import static com.dotmarketing.util.UtilMethods.isSet;
 
 /**
@@ -44,6 +44,7 @@ import static com.dotmarketing.util.UtilMethods.isSet;
  * @author jsanca
  */
 public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationService {
+
 
 
     private static final String NULL = "null";
@@ -97,6 +98,33 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     } // authentication.
 
     /**
+     * Logout with Open SAML 3 is basically a redirect to the IDP to do the logout
+     * @param request  {@link HttpServletRequest}
+     * @param response {@link HttpServletResponse}
+     */
+    @Override
+    public void logout(final HttpServletRequest request,
+                               final HttpServletResponse response,
+                               final String siteName) {
+
+        final SiteConfigurationResolver resolver      = (SiteConfigurationResolver)InstancePool.get(SiteConfigurationResolver.class.getName());
+        final Configuration             configuration = resolver.resolveConfiguration(request);
+        final MessageContext            context       = new MessageContext(); // main context
+        final String                    sessionNameId = (String)request.getSession().getAttribute(SAML_NAME_ID_SESSION_ATTR);
+        final LogoutRequest            logoutRequest  = buildLogoutRequest(request, configuration, sessionNameId);
+
+        if (null != logoutRequest){
+
+            context.setMessage(logoutRequest);
+            this.setSignatureSigningParams(context, configuration);
+            this.doRedirect(context, response, logoutRequest);
+        } else {
+
+            Logger.info(this, "couldn't do the logout, the request couldn't be created is null");
+        }
+    } // authentication.
+
+    /**
      * When the authentication is performed and redirected to SO (DotCMS) you can call this method.
      * If the request contains a parameter called AMLart, will try to get the {@link org.opensaml.saml.saml2.core.Assertion}
      * with the user information via SOAP.
@@ -121,6 +149,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         final Assertion assertion;
         final SiteConfigurationResolver resolver      = (SiteConfigurationResolver)InstancePool.get(SiteConfigurationResolver.class.getName());
         final Configuration             configuration = resolver.resolveConfiguration(request);
+        Subject subject                               = null;
 
         if (this.isValidSamlRequest (request, response, siteName)) {
 
@@ -131,6 +160,16 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             user      = this.resolveUser(assertion, configuration);
 
             Logger.info (this, "Resolved user: " + user);
+            if (null != user) {
+
+                subject = assertion.getSubject();
+                if (null != subject && null != subject.getNameID()) {
+
+                    request.getSession().setAttribute(
+                                SAML_NAME_ID_SESSION_ATTR,
+                                subject.getNameID().getValue());
+                }
+            }
         }
 
         return user;
@@ -377,7 +416,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     // this makes the redirect to the IdP
     private void doRedirect (final MessageContext context,
                              final HttpServletResponse response,
-                             final AuthnRequest authnRequest) {
+                             final RequestAbstractType samlRequest) {
 
         final HTTPRedirectDeflateEncoder encoder;
 
@@ -391,7 +430,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
             encoder.initialize();
 
-            Logger.info(this, "AuthnRequest: " + toXMLObjectString(authnRequest));
+            Logger.info(this, "SamlRequest: " + toXMLObjectString(samlRequest));
             Logger.info(this, "Redirecting to IDP");
 
             encoder.encode();
