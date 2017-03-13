@@ -39,6 +39,8 @@ import java.util.Date;
 import static com.dotcms.plugin.saml.v3.SamlUtils.*;
 import static com.dotmarketing.util.UtilMethods.isSet;
 
+import com.dotmarketing.business.NoSuchUserException;
+
 /**
  * Authentication with Open SAML
  * @author jsanca
@@ -189,19 +191,19 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         assertion.getAttributeStatements().get(0).getAttributes().forEach(attribute -> {
 
-            if (attribute.getFriendlyName().equals(emailField)) {
+            if (attribute.getName().equals(emailField)) {
 
                 attrBuilder.email
                         (attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-            } else if (attribute.getFriendlyName().equals(lastNameField)) {
+            } else if (attribute.getName().equals(lastNameField)) {
 
                 attrBuilder.lastName
                         (attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-            } else if(attribute.getFriendlyName().equals(firstNameField)){
+            } else if(attribute.getName().equals(firstNameField)){
 
                 attrBuilder.firstName
                         (attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-            }else if (attribute.getFriendlyName().equals(rolesField)) {
+            }else if (attribute.getName().equals(rolesField)) {
 
                 attrBuilder.addRoles(true).roles(attribute);
             }
@@ -227,9 +229,11 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
             systemUser = this.userAPI.getSystemUser();
             user       = this.userAPI.loadByUserByEmail(attributesBean.getEmail(), systemUser, false);
+        } catch (NoSuchUserException e) {
+            Logger.info(this, "No matching user, creating");
+            user = null;
         } catch (Exception e) {
-
-            Logger.error(this, "No matching user, creating", e);
+            Logger.error(this, "Unknown exception", e);
             user = null;
         }
 
