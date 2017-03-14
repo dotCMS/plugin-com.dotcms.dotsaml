@@ -21,7 +21,9 @@
         "dotcms.saml.remove.roles.prefix":"dotCMS_",
         "dotcms.saml.include.roles.pattern":"^dotCMS_",
         "dotcms.saml.roles.attribute":"authorizations"
-      },
+      }
+    },
+    {
       "site2.dotcmstest.net" : {
         "default":"false",
         "dotcms.saml.service.provider.issuer": "http://site2.dotcmstest.net",
