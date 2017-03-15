@@ -1,7 +1,7 @@
 package com.dotcms.plugin.saml.v3.meta;
 
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
-import com.dotcms.plugin.saml.v3.DotSamlException;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.SamlUtils;
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationBean;

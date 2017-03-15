@@ -1,6 +1,7 @@
 package com.dotcms.plugin.saml.v3;
 
 import com.dotcms.plugin.saml.v3.config.Configuration;
+import com.dotcms.plugin.saml.v3.exception.*;
 import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandler;
 import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandlerFactory;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
@@ -176,7 +177,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
     // resolve the attributes from the assertion resolved from the OpenSaml artifact resolver via
     // post soap message.
-    private AttributesBean resolveAttributes (final Assertion assertion, final Configuration configuration) {
+    private AttributesBean resolveAttributes (final Assertion assertion, final Configuration configuration) throws AttributesNotFoundException {
 
         final String emailField       = configuration.getStringProperty
                 (DotSamlConstants.DOT_SAML_EMAIL_ATTRIBUTE, "mail");
@@ -188,6 +189,10 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                 (DotSamlConstants.DOT_SAML_ROLES_ATTRIBUTE, "authorizations");
 
         final AttributesBean.Builder attrBuilder = new AttributesBean.Builder();
+
+        if (validateAttributes(assertion)){
+            throw new AttributesNotFoundException("No attributes found");
+        }
 
         assertion.getAttributeStatements().get(0).getAttributes().forEach(attribute -> {
 
@@ -212,6 +217,11 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         return attrBuilder.build();
     } // resolveAttributes.
 
+    private boolean validateAttributes(Assertion assertion) {
+        return
+            assertion == null ||  assertion.getAttributeStatements() == null ||  assertion.getAttributeStatements().isEmpty();
+    }
+
     // Gets the attributes from the Assertion, based on the attributes
     // see if the user exists return it from the dotCMS records, if does not exist then, tries to create it.
     // the existing or created user, will be updated the roles if they present on the assertion.
@@ -219,16 +229,20 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         User systemUser  = null;
         User user        = null;
-        final AttributesBean attributesBean =
-                this.resolveAttributes(assertion, configuration);
+        AttributesBean attributesBean = null;
 
         try {
 
+            attributesBean = this.resolveAttributes(assertion, configuration);
+
             Logger.debug(this,
-                    "Validating user - " + attributesBean);
+                "Validating user - " + attributesBean);
 
             systemUser = this.userAPI.getSystemUser();
-            user       = this.userAPI.loadByUserByEmail(attributesBean.getEmail(), systemUser, false);
+            user = this.userAPI.loadByUserByEmail(attributesBean.getEmail(), systemUser, false);
+        } catch (AttributesNotFoundException e){
+            Logger.error(this, e.getMessage());
+            return null;
         } catch (NoSuchUserException e) {
             Logger.info(this, "No matching user, creating");
             user = null;
