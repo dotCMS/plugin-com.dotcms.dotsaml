@@ -189,6 +189,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         final AttributesBean.Builder attrBuilder = new AttributesBean.Builder();
 
+        attrBuilder.nameID(assertion.getSubject().getNameID());
+
         assertion.getAttributeStatements().get(0).getAttributes().forEach(attribute -> {
 
             if (attribute.getName().equals(emailField)) {
@@ -228,7 +230,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                     "Validating user - " + attributesBean);
 
             systemUser = this.userAPI.getSystemUser();
-            user       = this.userAPI.loadByUserByEmail(attributesBean.getEmail(), systemUser, false);
+            user       = this.userAPI.loadByUserByEmail(attributesBean.getNameID().getValue(), systemUser, false);
         } catch (NoSuchUserException e) {
             Logger.info(this, "No matching user, creating");
             user = null;
@@ -331,8 +333,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         try {
 
-            userId = UUIDGenerator.generateUuid();
-            user   = this.userAPI.createUser(userId, attributesBean.getEmail());
+            user   = this.userAPI.createUser(attributesBean.getNameID().getValue(), attributesBean.getEmail());
 
             user.setFirstName(attributesBean.getFirstName());
             user.setLastName (attributesBean.getLastName());
