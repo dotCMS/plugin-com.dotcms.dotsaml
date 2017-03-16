@@ -190,9 +190,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         final AttributesBean.Builder attrBuilder = new AttributesBean.Builder();
 
-        if (validateAttributes(assertion)){
-            throw new AttributesNotFoundException("No attributes found");
-        }
+        validateAttributes(assertion);
 
         assertion.getAttributeStatements().get(0).getAttributes().forEach(attribute -> {
 
@@ -217,9 +215,12 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         return attrBuilder.build();
     } // resolveAttributes.
 
-    private boolean validateAttributes(Assertion assertion) {
-        return
-            assertion == null ||  assertion.getAttributeStatements() == null ||  assertion.getAttributeStatements().isEmpty();
+    private void validateAttributes(Assertion assertion) throws AttributesNotFoundException {
+        if (assertion == null || assertion.getAttributeStatements() == null || assertion.getAttributeStatements()
+            .isEmpty()) {
+            throw new AttributesNotFoundException("No attributes found");
+        }
+
     }
 
     // Gets the attributes from the Assertion, based on the attributes
