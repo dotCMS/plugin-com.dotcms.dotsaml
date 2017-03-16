@@ -25,13 +25,6 @@ public final class DotSamlConstants {
 
     /**
      * Key for  site-config.json
-     * This is a mandatory property, if you do not set it will got an exception
-     * This url is the soap endpoint to get the user assertion from the SAML Artifact id.
-     */
-    public static final String DOT_SAML_ARTIFACT_RESOLUTION_SERVICE_URL  = "dotcms.saml.artifact.resolution.service.url";
-
-    /**
-     * Key for  site-config.json
      * This is the customer endpoint url, which means the url where to be redirected when the user gets log back to dotcms.
      * You can set it for instance to http://[domain]/c in order to get back to the landing page, dotCMS will redirect as soon as do the
      * artificial login with the SAML information, to the original request.
@@ -142,28 +135,28 @@ public final class DotSamlConstants {
     /**
      * Key for  site-config.json
      * By default dotcms use: "mail", but you can override it just adding the mail attribute name you want.
-     * "mail" will be the expected field name from the SOAP Artifact comming from the OpenSaml resolution artifact.
+     * "mail" will be the expected field name from the Response comming from the OpenSaml post call.
      */
     public static final String DOT_SAML_EMAIL_ATTRIBUTE = "dotcms.saml.email.attribute";
 
     /**
      * Key for  site-config.json
      * By default dotcms use: "givenName", but you can override it just adding the first name attribute name you want.
-     * "givenName" will be the expected field name from the SOAP Artifact comming from the OpenSaml resolution artifact.
+     * "givenName" will be the expected field name from the Response comming from the OpenSaml post call.
      */
     public static final String DOT_SAML_FIRSTNAME_ATTRIBUTE = "dotcms.saml.firstname.attribute";
 
     /**
      * Key for  site-config.json
      * By default dotcms use: "sn", but you can override it just adding the last name attribute name you want.
-     * "sn" will be the expected field name from the SOAP Artifact comming from the OpenSaml resolution artifact.
+     * "sn" will be the expected field name from the Response comming from the OpenSaml post call.
      */
     public static final String DOT_SAML_LASTNAME_ATTRIBUTE = "dotcms.saml.lastname.attribute";
 
     /**
      * Key for  site-config.json
      * By default dotcms use: "authorisations", but you can override it just adding the roles attribute name you want.
-     * "authorisations" will be the expected field name from the SOAP Artifact comming from the OpenSaml resolution artifact.
+     * "authorisations" will be the expected field name from the Response comming from the OpenSaml post call.
      */
     public static final String DOT_SAML_ROLES_ATTRIBUTE = "dotcms.saml.roles.attribute";
 
@@ -318,8 +311,7 @@ public final class DotSamlConstants {
 
     /**
      * Key for site-config.json
-     * By default we use the implementation {@link com.dotcms.plugin.saml.v3.handler.SOAPArtifactAssertionResolverHandlerImpl}
-     * which is in charge of resolve the assertion using the SOAP artifact resolver based on the artifact id pass by the request.
+     * By default we use the implementation {@link com.dotcms.plugin.saml.v3.handler.HttpPostAssertionResolverHandlerImpl}
      *
      * If you want a different implementation please override with the class here.
      */

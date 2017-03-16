@@ -72,7 +72,6 @@ Here an example of sites-config.json
         "dotcms.saml.keystore.password": "password",
         "dotcms.saml.keyentryid": "SPKey",
         "dotcms.saml.keystore.entry.password": "password",
-        "dotcms.saml.artifact.resolution.service.url": "https://so2.localdomain:8443/idp/profile/SAML2/SOAP/ArtifactResolution",
         "dotcms.saml.assertion.customer.endpoint.url": "https://so2.dotcms.com/dotsaml3sp",
         "dotcms.saml.idp.metadata.path": "file:///Users/dotcms/dotcms_3.5/plugins/plugin-dotcms-openSAML3/conf/idp2-metadata.xml",
         "dotcms.saml.want.assertions.signed": "false",
@@ -124,11 +123,6 @@ urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST, this one expects a SAMLResponse 
 
 This is url for the login page on the Shibboleth Server, by default it gets url from the idp-metadata (the file provided from the Shibboleth server), but if it is not any idp-metadata you can
 edit this property and include the SSO url. (Note, if you set this property and set the idp-metadata, the idp-metada will be get by default)
-
-4.3) dotcms.saml.artifact.resolution.service.url
-
-This is an optional property for the app and it is the SOAP URL for the Artifact Resolution Service (the one that gets the user information, the Assertion).
-If you use HTTP-POST binding do not need to specified this value.
 
 4.4) dotcms.saml.assertion.customer.endpoint.url
 
@@ -283,8 +277,7 @@ However if you want to use a different path, feel free to override it on the pro
 
 4.33) dotcms.saml.assertion.resolver.handler.classname
 
-By default we use the implementation com.dotcms.plugin.saml.v3.handler.SOAPArtifactAssertionResolverHandlerImpl
-which is in charge of resolve the assertion using the SOAP artifact resolver based on the artifact id pass by the request.
+By default we use the implementation com.dotcms.plugin.saml.v3.handler.HttpPostAssertionResolverHandlerImpl
 
 If you want a different implementation please override with the class here.
 We also offer: com.dotcms.plugin.saml.v3.handler.HttpPostAssertionResolverHandlerImpl which is in charge of processing a HTTP-POST witha SAMLResponse
