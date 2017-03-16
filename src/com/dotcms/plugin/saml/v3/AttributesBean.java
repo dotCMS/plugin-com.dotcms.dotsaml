@@ -1,6 +1,8 @@
 package com.dotcms.plugin.saml.v3;
 
 import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.NameID;
+
 import java.io.Serializable;
 
 /**
@@ -24,12 +26,16 @@ public class AttributesBean implements Serializable {
     // Saml object with the roles info.
     private final Attribute roles;
 
+    // Saml object with the NameID.
+    private final NameID nameID;
+
     private AttributesBean(final Builder builder) {
         this.email     = builder.email;
         this.lastName  = builder.lastName;
         this.firstName = builder.firstName;
         this.addRoles  = builder.addRoles;
         this.roles     = builder.roles;
+        this.nameID    = builder.nameID;
     }
 
     public String getEmail() {
@@ -52,10 +58,15 @@ public class AttributesBean implements Serializable {
         return roles;
     }
 
+    public NameID getNameID() {
+        return nameID;
+    }
+
     @Override
     public String toString() {
         return "AttributesBean{" +
-                "email='" + email + '\'' +
+                "nameID='" + nameID.getValue() + '\'' +
+                ", email='" + email + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", addRoles=" + addRoles +
@@ -70,6 +81,7 @@ public class AttributesBean implements Serializable {
         String firstName = "";
         boolean addRoles = false;
         Attribute roles  = null;
+        NameID nameID    = null;
 
         public Builder email(String email) {
             this.email = email;
@@ -93,6 +105,11 @@ public class AttributesBean implements Serializable {
 
         public Builder roles(Attribute roles) {
             this.roles = roles;
+            return this;
+        }
+
+        public Builder nameID(NameID nameID) {
+            this.nameID = nameID;
             return this;
         }
 

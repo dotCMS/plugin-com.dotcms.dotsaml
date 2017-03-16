@@ -192,6 +192,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         validateAttributes(assertion);
 
+        attrBuilder.nameID(assertion.getSubject().getNameID());
+
         assertion.getAttributeStatements().get(0).getAttributes().forEach(attribute -> {
 
             if (attribute.getName().equals(emailField)) {
@@ -216,8 +218,13 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     } // resolveAttributes.
 
     private void validateAttributes(Assertion assertion) throws AttributesNotFoundException {
-        if (assertion == null || assertion.getAttributeStatements() == null || assertion.getAttributeStatements()
-            .isEmpty()) {
+        if (assertion == null
+            || assertion.getAttributeStatements() == null
+            || assertion.getAttributeStatements().isEmpty()
+            || assertion.getSubject() == null
+            || assertion.getSubject().getNameID() == null
+            || assertion.getSubject().getNameID().getValue().isEmpty()) {
+
             throw new AttributesNotFoundException("No attributes found");
         }
 
@@ -240,7 +247,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                 "Validating user - " + attributesBean);
 
             systemUser = this.userAPI.getSystemUser();
-            user = this.userAPI.loadByUserByEmail(attributesBean.getEmail(), systemUser, false);
+
+            user = this.userAPI.loadByUserByEmail(attributesBean.getNameID().getValue(), systemUser, false);
         } catch (AttributesNotFoundException e){
             Logger.error(this, e.getMessage());
             return null;
@@ -346,8 +354,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         try {
 
-            userId = UUIDGenerator.generateUuid();
-            user   = this.userAPI.createUser(userId, attributesBean.getEmail());
+            user   = this.userAPI.createUser(attributesBean.getNameID().getValue(), attributesBean.getEmail());
 
             user.setFirstName(attributesBean.getFirstName());
             user.setLastName (attributesBean.getLastName());
@@ -434,21 +441,6 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         context.getSubcontext(SecurityParametersContext.class, true)
                 .setSignatureSigningParameters(signatureSigningParameters);
     } // setSignatureSigningParams.
-
-    /*public static void main(String [] args)
-    {
-        OpenSamlAuthenticationServiceImpl authenticationService =
-                new OpenSamlAuthenticationServiceImpl(null, null, null);
-
-        String[] rolePatterns = {"^www_", "^xxx_"};
-        //String[] rolePatterns = {"www_", "xxx_"};
-        String[] roles        = {"www_CMS Administrator", "www_Login As", "Another_Role", "xxx_Role", "something_www_"};
-
-        for (String role : roles) {
-            System.out.println("is Valid Role:" + role  + ": " +
-                    authenticationService.isValidRole(role, rolePatterns));
-        }
-    }*/
 
     public static void main(String [] args)
     {
