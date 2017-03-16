@@ -4,11 +4,16 @@ import com.dotcms.plugin.saml.v3.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.DotSamlException;
 import com.dotcms.plugin.saml.v3.InstanceUtil;
 import com.dotcms.plugin.saml.v3.SiteConfigurationResolver;
-import com.dotcms.plugin.saml.v3.config.*;
-import com.dotcms.repackage.org.json.JSONException;
-import com.dotmarketing.util.Config;
+import com.dotcms.plugin.saml.v3.config.Configuration;
+import com.dotcms.plugin.saml.v3.config.DefaultDotCMSConfiguration;
+import com.dotcms.plugin.saml.v3.config.SiteConfigurationBean;
+import com.dotcms.plugin.saml.v3.config.SiteConfigurationParser;
+import com.dotcms.plugin.saml.v3.config.SiteConfigurationService;
+import com.dotmarketing.exception.DotDataException;
+import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.util.Logger;
 import com.liferay.util.InstancePool;
+
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.config.InitializationService;
 import org.opensaml.xmlsec.config.JavaCryptoValidationInitializer;
@@ -68,22 +73,17 @@ public class DefaultInitializer implements Initializer {
         final SiteConfigurationService siteConfigurationService;
         final Map<String, Configuration> configurationMap = new HashMap<>();
         final  Map<String, SiteConfigurationBean> configurationBeanMap;
-        final String sitesConfigPath = Config.getStringProperty(
-                DotSamlConstants.DOTCMS_SAML_SITES_CONFIG_PATH,
-                DotSamlConstants.DOTCMS_SAML_SITES_CONFIG_PATH_DEFAULT_VALUE
-        );
+
         final SiteConfigurationResolver siteConfigurationResolver =
                 new SiteConfigurationResolver();
 
         try {
 
-            Logger.debug(this, "Parsing the json site config file: " + sitesConfigPath);
-
             configurationBeanMap =
-                    this.siteConfigurationParser.parser(sitesConfigPath);
+                    this.siteConfigurationParser.getConfiguration();
 
             Logger.debug(this, "Json Site Config parsed, result: " + configurationBeanMap);
-        } catch (IOException | JSONException e) {
+        } catch (IOException | DotDataException | DotSecurityException e) {
 
             Logger.error(this, e.getMessage(), e);
             throw new DotSamlException(e.getMessage(), e);

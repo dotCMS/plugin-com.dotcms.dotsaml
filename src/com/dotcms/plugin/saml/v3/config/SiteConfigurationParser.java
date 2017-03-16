@@ -1,76 +1,105 @@
 package com.dotcms.plugin.saml.v3.config;
 
-import com.dotcms.plugin.saml.v3.InputStreamUtils;
-import com.dotcms.repackage.org.apache.commons.io.IOUtils;
-import com.dotcms.repackage.org.json.JSONArray;
-import com.dotcms.repackage.org.json.JSONException;
-import com.dotcms.repackage.org.json.JSONObject;
+import com.dotcms.plugin.saml.v3.DotSamlConstants;
+import com.dotmarketing.beans.Host;
+import com.dotmarketing.business.APILocator;
+import com.dotmarketing.business.UserAPI;
+import com.dotmarketing.exception.DotDataException;
+import com.dotmarketing.exception.DotSecurityException;
+import com.dotmarketing.portlets.contentlet.business.HostAPI;
+import com.dotmarketing.util.Config;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * Take a json and creates a SiteConfigurationBean
+ * Take a host field and creates a SiteConfigurationBean
+ *
  * @author jsanca
  */
 public class SiteConfigurationParser implements Serializable {
 
+    private HostAPI hostAPI = APILocator.getHostAPI();
+    private UserAPI userAPI = APILocator.getUserAPI();
+
     /**
-     * Parser a json into a map String -> {@link SiteConfigurationBean}
-     * @param resourceName {@link String}
+     * Read the SAML configuration field from each host and
+     * put it into a map String -> {@link SiteConfigurationBean}
+     * Each configuration is read as a pattern of key=value
+     *
      * @return Map
      */
-    public Map<String, SiteConfigurationBean> parser (final String resourceName) throws IOException, JSONException {
+    public Map<String, SiteConfigurationBean> getConfiguration()
+        throws IOException, DotDataException, DotSecurityException {
 
-        final JSONObject config     = new JSONObject(this.getSource(resourceName));
-        final JSONArray sitesArray  = config.getJSONArray("config");
-        final Map<String, SiteConfigurationBean> configurationMap = new HashMap<>();
+        Host defaultHost = null;
+        List<Host> hosts = hostAPI.findAll(userAPI.getSystemUser(), false);
+        String fallbackSite = Config.getStringProperty(DotSamlConstants.DOTCMS_SAML_FALLBACK_SITE, null);
+        Map<String, SiteConfigurationBean> configurationMap = new HashMap<>();
 
-        for (int i = 0; i < sitesArray.length(); ++i) {
+        //Verify if a fallback site is configured and get its SAML configuration
+        if (fallbackSite != null) {
+            defaultHost = hostAPI.findByName(fallbackSite, userAPI.getSystemUser(), false);
+        }
 
-            final JSONObject site          = sitesArray.getJSONObject(i);
-            this.populateSite(site, configurationMap);
+        //Save in a map the configuration for each site
+        for (Host host : hosts) {
+            this.populateSite(host, configurationMap, getConfigurationToUse(host, defaultHost));
         }
 
         return Collections.unmodifiableMap(configurationMap);
-    } // parser.
-
-    private void populateSite(final JSONObject site,
-                              final Map<String, SiteConfigurationBean> configurationMap) throws JSONException {
-
-        final Map<String, String> siteMap = new HashMap<>();
-        final JSONArray siteNames         = site.names();
-        final String     siteName         = siteNames.getString(0);
-        final JSONObject siteData         = site.getJSONObject(siteName);
-        final JSONArray  siteDataNames    = siteData.names();
-        for (int j = 0; j < siteDataNames.length(); ++j) {
-
-            siteMap.put(siteDataNames.getString(j), siteData.getString(siteDataNames.getString(j)));
-        }
-
-        configurationMap.put(siteName, new SiteConfigurationBean(siteMap));
-    } // populateSite.
+    } // getConfiguration.
 
     /**
-     * Get the config as String
-     * @param resourceName String, could be a class path resource or filesyste,=m
-     * @return String
-     * @throws IOException
+     * Verify if a host has a configuration. Otherwise, the default one will be consider, if exists
+     * (see {@link org.opensaml.saml.common.xml.SAMLConstants}.DOTCMS_SAML_FALLBACK_SITE)
+     *
+     * @return String with the configuration to be used (multiple lines following a key=value pattern)
      */
-    private String getSource(final String resourceName) throws IOException {
+    private String getConfigurationToUse(Host hostToConfigure, Host fallbackHost) {
+        Object hostConf = hostToConfigure.getMap().get(DotSamlConstants.DOTCMS_SAML_FIELD_NAME);
 
-        return IOUtils.toString(InputStreamUtils.getInputStream(resourceName));
-    } // getSource.
+        if ((hostConf != null && !hostConf.toString().isEmpty()) || (fallbackHost != null)) {
 
+            //if a configuration is set for the host, that one will be used
+            if (hostConf != null && !hostConf.toString().isEmpty()) {
+                return hostConf.toString();
+            } else {
+                //otherwise, a default configuration is taken from the fallback site, if exists
+                hostConf = fallbackHost.getMap().get(DotSamlConstants.DOTCMS_SAML_FIELD_NAME);
+                if (hostConf != null && !hostConf.toString().isEmpty()) {
+                    return hostConf.toString();
+                }
+            }
+        }
+        return null;
+    } // hostHasConfiguration.
 
-    public static void main(String[] args) throws Exception {
+    private void populateSite(Host site,
+                              final Map<String, SiteConfigurationBean> configurationMap, String configurationToUse)
+        throws DotDataException, DotSecurityException {
 
-        final SiteConfigurationParser parser =
-                new SiteConfigurationParser();
+        if (configurationToUse != null) {
+            String[] properties = configurationToUse.split(System.getProperty("line.separator"));
 
-        System.out.println(parser.parser("file://sites-config.json"));
-    }
+            final Map<String, String> siteMap = new HashMap<>();
+
+            for (String property : properties) {
+                siteMap.put(property.split("=")[0], property.split("=")[1]);
+            }
+
+            //save the configuration map for the host
+            final SiteConfigurationBean siteBean = new SiteConfigurationBean(siteMap);
+            configurationMap.put(site.getHostname(), siteBean);
+
+            //save the same map for each host alias
+            hostAPI.parseHostAliases(site).forEach(alias -> configurationMap.put(alias, siteBean));
+        }
+
+    } // populateSite.
+
 } // E:O:F:SiteConfigurationParser.

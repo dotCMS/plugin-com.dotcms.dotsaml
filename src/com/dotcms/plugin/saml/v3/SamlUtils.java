@@ -130,7 +130,7 @@ public class SamlUtils {
 
             Logger.error(SamlUtils.class, "The ipDSSODestination is not set in the idp metadata, neither the configuration files");
             throw new DotSamlException ("The property: " + DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL +
-                " must be set on the sites-config.json");
+                " must be set on the host");
         }
 
         authnRequest.setDestination(ipDSSODestination);

@@ -10,19 +10,8 @@ import java.util.Map;
 
 /**
  * This bean encapsulates just the configuration for a site.
- *
- * <pre>
- * config: {
- *
- *     "site1.dotcms.com": {
- *
- *         "key1": "value2",
- *         "key2": "value2"
- *     }
- *
- * }
- * </pre>
- *
+ * The configuration for each site must by defined in a field
+ * of the Host content type
  *
  * @author jsanca
  */
