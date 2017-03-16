@@ -1,4 +1,4 @@
-package com.dotcms.plugin.saml.v3;
+package com.dotcms.plugin.saml.v3.exception;
 
 /**
  * Exception to report things related to the dot saml exception
