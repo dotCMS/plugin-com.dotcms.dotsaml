@@ -1,13 +1,16 @@
 package com.dotcms.plugin.saml.v3;
 
 import com.dotcms.plugin.saml.v3.config.Configuration;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotmarketing.util.Logger;
+
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.resolver.Criterion;
 import net.shibboleth.utilities.java.support.resolver.ResolverException;
 import net.shibboleth.utilities.java.support.security.RandomIdentifierGenerationStrategy;
+
 import org.joda.time.DateTime;
 import org.opensaml.core.criterion.EntityIdCriterion;
 import org.opensaml.core.xml.XMLObject;
@@ -19,11 +22,23 @@ import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.messaging.handler.MessageHandlerException;
 import org.opensaml.messaging.handler.impl.BasicMessageHandlerChain;
-import org.opensaml.saml.common.SAMLObject;
 import org.opensaml.saml.common.SAMLVersion;
 import org.opensaml.saml.common.SignableSAMLObject;
 import org.opensaml.saml.common.xml.SAMLConstants;
-import org.opensaml.saml.saml2.core.*;
+import org.opensaml.saml.saml2.core.Artifact;
+import org.opensaml.saml.saml2.core.ArtifactResolve;
+import org.opensaml.saml.saml2.core.ArtifactResponse;
+import org.opensaml.saml.saml2.core.Assertion;
+import org.opensaml.saml.saml2.core.AuthnContext;
+import org.opensaml.saml.saml2.core.AuthnContextClassRef;
+import org.opensaml.saml.saml2.core.AuthnContextComparisonTypeEnumeration;
+import org.opensaml.saml.saml2.core.AuthnRequest;
+import org.opensaml.saml.saml2.core.EncryptedAssertion;
+import org.opensaml.saml.saml2.core.Issuer;
+import org.opensaml.saml.saml2.core.NameIDPolicy;
+import org.opensaml.saml.saml2.core.NameIDType;
+import org.opensaml.saml.saml2.core.RequestedAuthnContext;
+import org.opensaml.saml.saml2.core.Response;
 import org.opensaml.saml.saml2.encryption.Decrypter;
 import org.opensaml.saml.saml2.metadata.Endpoint;
 import org.opensaml.saml.saml2.metadata.SingleSignOnService;
@@ -39,14 +54,6 @@ import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.SignatureValidator;
 import org.w3c.dom.Element;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.xml.namespace.QName;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.security.KeyPair;
@@ -57,6 +64,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.namespace.QName;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import static com.dotmarketing.util.UtilMethods.isSet;
 
@@ -129,7 +145,7 @@ public class SamlUtils {
         if (!isSet(ipDSSODestination)) {
 
             Logger.error(SamlUtils.class, "The ipDSSODestination is not set in the idp metadata, neither the configuration files");
-            throw new DotSamlException ("The property: " + DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL +
+            throw new DotSamlException("The property: " + DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL +
                 " must be set on the host");
         }
 
@@ -343,7 +359,7 @@ public class SamlUtils {
 
         if (!isSet(artifactResolutionService)) {
 
-            throw new DotSamlException ("The property: " + DotSamlConstants.DOT_SAML_ARTIFACT_RESOLUTION_SERVICE_URL +
+            throw new DotSamlException("The property: " + DotSamlConstants.DOT_SAML_ARTIFACT_RESOLUTION_SERVICE_URL +
                     " must be set on the dotmarketing-config.properties");
         }
 
