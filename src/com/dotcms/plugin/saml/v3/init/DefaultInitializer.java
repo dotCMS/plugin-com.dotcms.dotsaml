@@ -9,9 +9,17 @@ import com.dotcms.plugin.saml.v3.config.DefaultDotCMSConfiguration;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationBean;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationParser;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationService;
+import com.dotmarketing.business.APILocator;
+import com.dotmarketing.business.UserAPI;
+import com.dotmarketing.cache.FieldsCache;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
+import com.dotmarketing.portlets.structure.business.StructureAPI;
+import com.dotmarketing.portlets.structure.factories.FieldFactory;
+import com.dotmarketing.portlets.structure.model.Field;
+import com.dotmarketing.portlets.structure.model.Structure;
 import com.dotmarketing.util.Logger;
+import com.liferay.portal.model.User;
 import com.liferay.util.InstancePool;
 
 import org.opensaml.core.config.InitializationException;
@@ -22,6 +30,7 @@ import java.io.IOException;
 import java.security.Provider;
 import java.security.Security;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -44,6 +53,9 @@ public class DefaultInitializer implements Initializer {
     @Override
     public void init(final Map<String, Object> context) {
 
+        Logger.info(this, "About to create SAML field under Host Content Type");
+        this.createSAMLField();
+
         Logger.info(this, "Init java crypto");
         this.initJavaCrypto();
 
@@ -60,6 +72,56 @@ public class DefaultInitializer implements Initializer {
 
         this.initDone.set(true);
     } // init.
+
+    private void createSAMLField() {
+
+        try {
+            final StructureAPI structureAPI = APILocator.getStructureAPI();
+            final UserAPI userAPI = APILocator.getUserAPI();
+            final User systemUser = userAPI.getSystemUser();
+            final String hostVariableName = "Host";
+            final Structure hostStructure = structureAPI.findByVarName(hostVariableName, systemUser);
+
+            if ( !hasSAMLField(hostStructure) ) {
+
+                Logger.info(this, "Creating SAML field under Host with inode: " + hostStructure.getInode());
+                Field samlField = new Field(DotSamlConstants.DOTCMS_SAML_FIELD_NAME,
+                    Field.FieldType.TEXT_AREA,
+                    Field.DataType.LONG_TEXT,
+                    hostStructure,
+                    false,
+                    false,
+                    true,
+                    1,
+                    false,
+                    false,
+                    true);
+
+                FieldFactory.saveField(samlField);
+            } else {
+
+                Logger.info(this, "SAML field already exists under Host with inode: " + hostStructure.getInode());
+            }
+        } catch (DotDataException | DotSecurityException e){
+
+            Logger.error(this, e.getMessage(), e);
+            throw new DotSamlException(e.getMessage(), e);
+        }
+
+    }
+
+    private boolean hasSAMLField(Structure hostStructure) {
+
+        final List<Field> fieldsByHost = FieldsCache.getFieldsByStructureInode(hostStructure.getInode());
+
+        boolean exists = false;
+        for (Field field : fieldsByHost) {
+            if (DotSamlConstants.DOTCMS_SAML_FIELD_NAME.equals(field.getVelocityVarName())){
+                exists = true;
+            }
+        }
+        return exists;
+    }
 
     /**
      * Inits the app configuration.
