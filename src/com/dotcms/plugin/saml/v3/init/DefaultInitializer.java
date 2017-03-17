@@ -11,14 +11,17 @@ import com.dotcms.plugin.saml.v3.config.SiteConfigurationService;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
 import com.dotmarketing.business.APILocator;
+import com.dotmarketing.business.CacheLocator;
 import com.dotmarketing.business.UserAPI;
 import com.dotmarketing.cache.FieldsCache;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.structure.business.StructureAPI;
 import com.dotmarketing.portlets.structure.factories.FieldFactory;
+import com.dotmarketing.portlets.structure.factories.StructureFactory;
 import com.dotmarketing.portlets.structure.model.Field;
 import com.dotmarketing.portlets.structure.model.Structure;
+import com.dotmarketing.services.StructureServices;
 import com.dotmarketing.util.Logger;
 import com.liferay.util.InstancePool;
 
@@ -116,7 +119,13 @@ public class DefaultInitializer implements Initializer {
                     false,
                     true);
 
+                // Logic from EditFieldAction.java, method: _saveField().
                 FieldFactory.saveField(samlField);
+                FieldsCache.removeFields(hostStructure);
+                CacheLocator.getContentTypeCache().remove(hostStructure);
+                StructureServices.removeStructureFile(hostStructure);
+                StructureFactory.saveStructure(hostStructure);
+                FieldsCache.addFields(hostStructure, hostStructure.getFields());
             } else {
 
                 Logger.info(this, "SAML field already exists under Host with inode: " + hostStructure.getInode());
