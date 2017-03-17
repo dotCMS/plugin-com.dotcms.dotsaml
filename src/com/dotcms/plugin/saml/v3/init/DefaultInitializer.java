@@ -1,7 +1,6 @@
 package com.dotcms.plugin.saml.v3.init;
 
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
-import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.InstanceUtil;
 import com.dotcms.plugin.saml.v3.SiteConfigurationResolver;
 import com.dotcms.plugin.saml.v3.config.Configuration;
@@ -9,6 +8,8 @@ import com.dotcms.plugin.saml.v3.config.DefaultDotCMSConfiguration;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationBean;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationParser;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationService;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
+import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.UserAPI;
 import com.dotmarketing.cache.FieldsCache;
@@ -19,7 +20,6 @@ import com.dotmarketing.portlets.structure.factories.FieldFactory;
 import com.dotmarketing.portlets.structure.model.Field;
 import com.dotmarketing.portlets.structure.model.Structure;
 import com.dotmarketing.util.Logger;
-import com.liferay.portal.model.User;
 import com.liferay.util.InstancePool;
 
 import org.opensaml.core.config.InitializationException;
@@ -49,6 +49,22 @@ public class DefaultInitializer implements Initializer {
 
     private final AtomicBoolean initDone = new AtomicBoolean(false);
     private final SiteConfigurationParser siteConfigurationParser = new SiteConfigurationParser();
+    private final String hostVariableName = "Host";
+
+    private final StructureAPI structureAPI;
+    private final UserAPI userAPI;
+
+    public DefaultInitializer(){
+
+        this(APILocator.getStructureAPI(), APILocator.getUserAPI());
+    }
+
+    @VisibleForTesting
+    public DefaultInitializer(StructureAPI structureAPI, UserAPI userAPI) {
+
+        this.structureAPI = structureAPI;
+        this.userAPI = userAPI;
+    }
 
     @Override
     public void init(final Map<String, Object> context) {
@@ -73,14 +89,17 @@ public class DefaultInitializer implements Initializer {
         this.initDone.set(true);
     } // init.
 
+    /**
+     * 1. Get the Host Structure.
+     * 2. Create a SAML field if the Structure doesn't have one.
+     *
+     * We need a SAML field(textare) under the Host structure in order
+     * to have a place to configure SAML for each Site.
+     */
     private void createSAMLField() {
 
         try {
-            final StructureAPI structureAPI = APILocator.getStructureAPI();
-            final UserAPI userAPI = APILocator.getUserAPI();
-            final User systemUser = userAPI.getSystemUser();
-            final String hostVariableName = "Host";
-            final Structure hostStructure = structureAPI.findByVarName(hostVariableName, systemUser);
+            final Structure hostStructure = structureAPI.findByVarName(hostVariableName, userAPI.getSystemUser());
 
             if ( !hasSAMLField(hostStructure) ) {
 
@@ -107,9 +126,14 @@ public class DefaultInitializer implements Initializer {
             Logger.error(this, e.getMessage(), e);
             throw new DotSamlException(e.getMessage(), e);
         }
+    }// createSAMLField.
 
-    }
-
+    /**
+     * Check is the Structure has a SAML Field. {@link DotSamlConstants}
+     *
+     * @param hostStructure
+     * @return true is the strcture has a SAML fields, false else.
+     */
     private boolean hasSAMLField(Structure hostStructure) {
 
         final List<Field> fieldsByHost = FieldsCache.getFieldsByStructureInode(hostStructure.getInode());
@@ -121,7 +145,7 @@ public class DefaultInitializer implements Initializer {
             }
         }
         return exists;
-    }
+    }// hasSAMLField.
 
     /**
      * Inits the app configuration.
