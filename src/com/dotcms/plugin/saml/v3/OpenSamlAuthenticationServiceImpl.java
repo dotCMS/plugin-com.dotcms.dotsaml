@@ -2,6 +2,7 @@ package com.dotcms.plugin.saml.v3;
 
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.exception.AttributesNotFoundException;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandler;
 import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandlerFactory;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
