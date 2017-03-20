@@ -45,11 +45,14 @@ public class SamlHostPostHook extends ContentletAPIPostHookAbstractImp {
 
             //Loading current configuration
             siteConfiguration = siteConfigurationParser.getConfigurationByHost(host);
-            siteConfigurationService =
-                (SiteConfigurationService) InstancePool.get(SiteConfigurationService.class.getName());
 
-            //Updating configuration
-            siteConfigurationService.setConfigurationBySite(host.getHostname(), siteConfiguration);
+            if (siteConfiguration != null) {
+                siteConfigurationService =
+                    (SiteConfigurationService) InstancePool.get(SiteConfigurationService.class.getName());
+
+                //Updating configuration
+                siteConfigurationService.setConfigurationBySite(host.getHostname(), siteConfiguration);
+            }
         } catch (IOException | DotDataException | DotSecurityException e) {
             Logger.error(this, "Error updating Saml configuration", e);
         }

@@ -124,31 +124,37 @@ public class SiteConfigurationParser implements Serializable {
     public SiteConfigurationBean getSiteBean(String configurationToUse)
         throws DotDataException, DotSecurityException {
 
-        SiteConfigurationBean siteBean;
+        SiteConfigurationBean siteBean = null;
 
-        String[] properties = configurationToUse.split(System.getProperty("line.separator"));
+        if (configurationToUse!=null) {
 
-        final Map<String, String> siteMap = new HashMap<>();
+            String[] properties = configurationToUse.split(System.getProperty("line.separator"));
 
-        for (String property : properties) {
-            siteMap.put(property.split("=")[0], property.split("=")[1]);
+            final Map<String, String> siteMap = new HashMap<>();
+
+            for (String property : properties) {
+                siteMap.put(property.split("=")[0], property.split("=")[1]);
+            }
+
+            siteBean = new SiteConfigurationBean(siteMap);
         }
-
-        siteBean = new SiteConfigurationBean(siteMap);
-
         return siteBean;
     } // getSiteBean.
 
     private Configuration createConfiguration(final String siteName,
                                               final SiteConfigurationBean siteConfigurationBean) {
 
-        final String configInstance = siteConfigurationBean
-            .getString(DotSamlConstants.DOT_SAML_CONFIGURATION_CLASS_NAME, null);
+        if (siteConfigurationBean != null) {
 
-        final Configuration configuration = InstanceUtil.newInstance
-            (configInstance, DefaultDotCMSConfiguration.class, siteConfigurationBean, siteName);
+            final String configInstance = siteConfigurationBean
+                .getString(DotSamlConstants.DOT_SAML_CONFIGURATION_CLASS_NAME, null);
 
-        return configuration;
+            final Configuration configuration = InstanceUtil.newInstance
+                (configInstance, DefaultDotCMSConfiguration.class, siteConfigurationBean, siteName);
+
+            return configuration;
+        }
+        return null;
     }
 
 } // E:O:F:SiteConfigurationParser.

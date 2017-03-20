@@ -3,7 +3,6 @@ package com.dotcms.plugin.saml.v3.config;
 import com.dotmarketing.util.Logger;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,6 +46,10 @@ public class SiteConfigurationService implements Serializable {
     } // getConfigurationBySite.
 
     public void setConfigurationBySite (final String site, final Configuration conf){
-        this.configurationBySiteMap.put(site,conf);
+        this.configurationBySiteMap.remove(site);
+
+        if (conf != null) {
+            this.configurationBySiteMap.put(site, conf);
+        }
     }
 } // E:O:F:SiteConfigurationService.

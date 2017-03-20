@@ -1,11 +1,9 @@
 package com.dotcms.plugin.saml.v3.init;
 
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
-import com.dotcms.plugin.saml.v3.InstanceUtil;
 import com.dotcms.plugin.saml.v3.SiteConfigurationResolver;
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.config.DefaultDotCMSConfiguration;
-import com.dotcms.plugin.saml.v3.config.SiteConfigurationBean;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationParser;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationService;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
@@ -34,8 +32,6 @@ import org.opensaml.xmlsec.config.JavaCryptoValidationInitializer;
 import java.io.IOException;
 import java.security.Provider;
 import java.security.Security;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
