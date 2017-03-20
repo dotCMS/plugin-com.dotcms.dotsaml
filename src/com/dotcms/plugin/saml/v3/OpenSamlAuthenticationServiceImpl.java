@@ -254,7 +254,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
             systemUser = this.userAPI.getSystemUser();
 
-            user = this.userAPI.loadByUserByEmail(attributesBean.getNameID().getValue(), systemUser, false);
+            user = this.userAPI.loadUserById(attributesBean.getNameID().getValue(), systemUser, false);
         } catch (AttributesNotFoundException e){
             Logger.error(this, e.getMessage());
             return null;

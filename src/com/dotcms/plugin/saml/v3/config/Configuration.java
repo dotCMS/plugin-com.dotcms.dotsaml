@@ -18,20 +18,6 @@ import java.util.Collection;
 public interface Configuration extends Serializable {
 
     /**
-     * Key to get from the configuration a boolean that determine if the site configuration is the default one.
-     */
-    public static final String DEFAULT_SITE_KEY = "default";
-
-    /**
-     * Returns true if this configuration encapsulates the default site
-     * @return Boolean
-     */
-    public default boolean isDefault() {
-
-        return this.getSiteConfiguration().getBoolean(DEFAULT_SITE_KEY);
-    } // isDefault.
-
-    /**
      * Returns the site name associated to this configuration
      * @return String
      */

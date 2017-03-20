@@ -9,9 +9,11 @@ import com.dotcms.plugin.saml.v3.config.SiteConfigurationBean;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationParser;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationService;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
+import com.dotcms.plugin.saml.v3.hooks.SamlHostPostHook;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.CacheLocator;
+import com.dotmarketing.business.Interceptor;
 import com.dotmarketing.business.UserAPI;
 import com.dotmarketing.cache.FieldsCache;
 import com.dotmarketing.exception.DotDataException;
@@ -32,6 +34,7 @@ import org.opensaml.xmlsec.config.JavaCryptoValidationInitializer;
 import java.io.IOException;
 import java.security.Provider;
 import java.security.Security;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +77,18 @@ public class DefaultInitializer implements Initializer {
 
         Logger.info(this, "About to create SAML field under Host Content Type");
         this.createSAMLField();
+        SamlHostPostHook postHook = new SamlHostPostHook();
+        Interceptor interceptor = (Interceptor)APILocator.getContentletAPIntercepter();
+        interceptor.delPostHookByClassName(postHook.getClass().getName());
+        try {
+            interceptor.addPostHook(postHook);
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
         Logger.info(this, "Init java crypto");
         this.initJavaCrypto();
@@ -166,28 +181,20 @@ public class DefaultInitializer implements Initializer {
     protected void initConfiguration() {
 
         final SiteConfigurationService siteConfigurationService;
-        final Map<String, Configuration> configurationMap = new HashMap<>();
-        final  Map<String, SiteConfigurationBean> configurationBeanMap;
+        final Map<String, Configuration> configurationMap;
 
         final SiteConfigurationResolver siteConfigurationResolver =
                 new SiteConfigurationResolver();
 
         try {
 
-            configurationBeanMap =
+            configurationMap =
                     this.siteConfigurationParser.getConfiguration();
 
-            Logger.debug(this, "Json Site Config parsed, result: " + configurationBeanMap);
         } catch (IOException | DotDataException | DotSecurityException e) {
 
             Logger.error(this, e.getMessage(), e);
             throw new DotSamlException(e.getMessage(), e);
-        }
-
-        for (Map.Entry<String, SiteConfigurationBean> configEntry : configurationBeanMap.entrySet()) {
-
-            configurationMap.put(configEntry.getKey(), this.createConfigurationBean
-                    (configEntry.getKey(), configEntry.getValue()));
         }
 
         siteConfigurationService = new SiteConfigurationService(configurationMap);
@@ -196,16 +203,7 @@ public class DefaultInitializer implements Initializer {
         InstancePool.put(SiteConfigurationResolver.class.getName(), siteConfigurationResolver);
     } // initConfiguration.
 
-    public Configuration createConfigurationBean (final String siteName, final SiteConfigurationBean siteConfigurationBean) {
 
-        final String configInstance = siteConfigurationBean
-                .getString(DotSamlConstants.DOT_SAML_CONFIGURATION_CLASS_NAME, null);
-
-        final Configuration configuration = InstanceUtil.newInstance
-                (configInstance, DefaultDotCMSConfiguration.class, siteConfigurationBean, siteName);
-
-        return configuration;
-    }
 
     /**
      * Inits the OpenSaml service.
