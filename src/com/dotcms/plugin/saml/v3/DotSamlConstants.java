@@ -368,4 +368,6 @@ public final class DotSamlConstants {
             + "keystore.path=${keystore.path}\n"
             + "keystore.password=${keystore.password}\n"
             + "keystore.entry.password=${keystore.entry.password}";
+
+    public static final String DEFAULT_SAML_CONFIG_FILE_NAME = "dotcms-saml-default.properties";
 } // E:O:F:DotSamlConstants.

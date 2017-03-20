@@ -9,14 +9,18 @@ import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.contentlet.business.HostAPI;
 import com.dotmarketing.util.Config;
+import com.dotmarketing.util.Logger;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import static com.dotcms.plugin.saml.v3.DotSamlConstants.DOTCMS_SAML_DEFAULT_CONF_FIELD_CONTENT;
+import static com.dotcms.plugin.saml.v3.DotSamlConstants.DEFAULT_SAML_CONFIG_FILE_NAME;
 
 /**
  * Take a host field and creates a SiteConfigurationBean
@@ -128,19 +132,42 @@ public class SiteConfigurationParser implements Serializable {
 
     } // populateSite.
 
+    /**
+     * Read the default configuration file, override properties with values from site/host SAML field and
+     * create {@link SiteConfigurationBean} from there.
+     *
+     * @param configurationToUse
+     * @return
+     * @throws DotDataException
+     * @throws DotSecurityException
+     */
     public SiteConfigurationBean getSiteBean(String configurationToUse)
         throws DotDataException, DotSecurityException {
 
         SiteConfigurationBean siteBean = null;
 
         if (configurationToUse!=null) {
+            Properties samlProperties = new Properties();
 
-            String[] properties = configurationToUse.split(System.getProperty("line.separator"));
+            //Reading default SAML properties.
+            try {
+                samlProperties.load( this.getClass().getClassLoader().getResourceAsStream(DEFAULT_SAML_CONFIG_FILE_NAME) );
+            } catch (IOException e) {
+                Logger.warn(this, "Error reading dotCMS default properties file.");
+            }
+
+            //Reading SAML properties from the SAML filed on the host,
+            //these properties will override the default ones.
+            try {
+                samlProperties.load( new StringReader(configurationToUse));
+            } catch (IOException e) {
+                Logger.error(this, "Error reading SAML properties from Site Field.", e);
+            }
 
             final Map<String, String> siteMap = new HashMap<>();
 
-            for (String property : properties) {
-                siteMap.put(property.split("=")[0], property.split("=")[1]);
+            for (final String key : samlProperties.stringPropertyNames()) {
+                siteMap.put(key, samlProperties.getProperty(key));
             }
 
             siteBean = new SiteConfigurationBean(siteMap);
