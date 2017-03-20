@@ -36,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.dotcms.plugin.saml.v3.DotSamlConstants.DOTCMS_SAML_DEFAULT_CONF_FIELD_CONTENT;
+
 /**
  * Default initializer
  * Responsibilities:
@@ -126,6 +128,9 @@ public class DefaultInitializer implements Initializer {
                     false,
                     true,
                     1,
+                    "",
+                    DOTCMS_SAML_DEFAULT_CONF_FIELD_CONTENT,
+                    "",
                     false,
                     false,
                     true);

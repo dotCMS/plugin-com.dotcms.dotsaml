@@ -311,7 +311,7 @@ public final class DotSamlConstants {
     public static final String DOTCMS_SAML_FIELD_NAME = "saml";
 
     /**
-     * Key for host field configuration (see DOTCMS_SAML_FIELD_NAME var)
+     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * By default we use: urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect {@link BindingType}.REDIRECT
      * But if you want to use a diff mechanism from the Single Sign On Service (see SingleSignOnService tag on the idp-metadata) please override it
      *
@@ -320,19 +320,19 @@ public final class DotSamlConstants {
     public static final String DOTCMS_SAML_BINDING_TYPE = "dotcms.saml.bindingtype";
 
     /**
-     * Key for host field configuration (see DOTCMS_SAML_FIELD_NAME var)
+     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * By default false, you can override as a true if you want to force the authentication.
      */
     public static final String DOTCMS_SAML_FORCE_AUTHN = "dotcms.saml.force.authn";
 
     /**
-     * Key for host field configuration (see DOTCMS_SAML_FIELD_NAME var)
+     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * By default true, you can override as a false if your assertions are returned non-encrypted.
      */
     public static final String DOTCMS_SAML_IS_ASSERTION_ENCRYPTED = "dotcms.saml.isassertion.encrypted";
 
     /**
-     * Key for host field configuration (see DOTCMS_SAML_FIELD_NAME var)
+     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * By default we use the implementation {@link com.dotcms.plugin.saml.v3.handler.SOAPArtifactAssertionResolverHandlerImpl}
      * which is in charge of resolve the assertion using the SOAP artifact resolver based on the artifact id pass by the request.
      *
@@ -343,7 +343,7 @@ public final class DotSamlConstants {
         "dotcms.saml.assertion.resolver.handler.classname";
 
     /**
-     * Key for host field configuration (see DOTCMS_SAML_FIELD_NAME var)
+     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * By default the plugin checks if the assertion is signed, if for some reason you IdP sends an unsigned messages, you can set this property as false.
      * However keep in mind that signed responses are a desire practice.
      */
@@ -351,9 +351,21 @@ public final class DotSamlConstants {
 
 
     /**
-     * Key for host field configuration (see DOTCMS_SAML_FIELD_NAME var)
+     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * This is an array comma separated, if this array is set. Any role from SAML that does not match with the
      * list of include roles pattern, will be filtered.
      */
     public static final String DOTCMS_SAML_INCLUDE_ROLES_PATTERN = "dotcms.saml.include.roles.pattern";
+
+    /**
+     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
+     * Default value for text_area field
+     */
+    public static final String
+        DOTCMS_SAML_DEFAULT_CONF_FIELD_CONTENT =
+        "service.provider.issuer=${service.provider.issuer}\n"
+            + "idp.metadata.path=${idp.metadata.path}\n"
+            + "keystore.path=${keystore.path}\n"
+            + "keystore.password=${keystore.password}\n"
+            + "keystore.entry.password=${keystore.entry.password}";
 } // E:O:F:DotSamlConstants.

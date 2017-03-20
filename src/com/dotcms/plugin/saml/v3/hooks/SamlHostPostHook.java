@@ -5,10 +5,12 @@ import com.dotcms.plugin.saml.v3.config.SiteConfigurationParser;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationService;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.beans.Permission;
+import com.dotmarketing.business.APILocator;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.categories.model.Category;
 import com.dotmarketing.portlets.contentlet.business.ContentletAPIPostHookAbstractImp;
+import com.dotmarketing.portlets.contentlet.business.HostAPI;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.portlets.structure.model.ContentletRelationships;
 import com.dotmarketing.util.Logger;
@@ -23,6 +25,8 @@ import java.util.List;
  * Created by nollymar on 3/17/17.
  */
 public class SamlHostPostHook extends ContentletAPIPostHookAbstractImp {
+
+    private HostAPI hostAPI = APILocator.getHostAPI();
 
     public SamlHostPostHook() {
         super();
@@ -52,6 +56,9 @@ public class SamlHostPostHook extends ContentletAPIPostHookAbstractImp {
 
                 //Updating configuration
                 siteConfigurationService.setConfigurationBySite(host.getHostname(), siteConfiguration);
+
+                //save the same map for each host alias
+                hostAPI.parseHostAliases(host).forEach(alias -> siteConfigurationService.setConfigurationBySite(alias, siteConfiguration));
             }
         } catch (IOException | DotDataException | DotSecurityException e) {
             Logger.error(this, "Error updating Saml configuration", e);

@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.dotcms.plugin.saml.v3.DotSamlConstants.DOTCMS_SAML_DEFAULT_CONF_FIELD_CONTENT;
+
 /**
  * Take a host field and creates a SiteConfigurationBean
  *
@@ -86,21 +88,26 @@ public class SiteConfigurationParser implements Serializable {
     private String getConfigurationToUse(Host hostToConfigure, Host fallbackHost) {
         Object hostConf = hostToConfigure.getMap().get(DotSamlConstants.DOTCMS_SAML_FIELD_NAME);
 
-        if ((hostConf != null && !hostConf.toString().isEmpty()) || (fallbackHost != null)) {
+        if (isValidConfiguration(hostConf) || (fallbackHost != null)) {
 
             //if a configuration is set for the host, that one will be used
-            if (hostConf != null && !hostConf.toString().isEmpty()) {
+            if (isValidConfiguration(hostConf)) {
                 return hostConf.toString();
             } else {
                 //otherwise, a default configuration is taken from the fallback site, if exists
                 hostConf = fallbackHost.getMap().get(DotSamlConstants.DOTCMS_SAML_FIELD_NAME);
-                if (hostConf != null && !hostConf.toString().isEmpty()) {
+                if (isValidConfiguration(hostConf)) {
                     return hostConf.toString();
                 }
             }
         }
         return null;
     } // getConfigurationToUse.
+
+    private boolean isValidConfiguration(Object hostConf){
+        return (hostConf != null && !hostConf.toString().isEmpty() && !hostConf.toString()
+            .equals(DOTCMS_SAML_DEFAULT_CONF_FIELD_CONTENT));
+    } // isValidConfiguration
 
     private void populateSite(Host site,
                               final Map<String, Configuration> configurationMap, String configurationToUse)
