@@ -3,6 +3,7 @@ package com.dotcms.plugin.saml.v3.config;
 import com.dotcms.plugin.saml.v3.CredentialProvider;
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.InstanceUtil;
+import com.dotcms.plugin.saml.v3.SamlUtils;
 import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
 import com.dotmarketing.util.UtilMethods;
 import org.opensaml.security.credential.Credential;
@@ -159,11 +160,13 @@ public interface Configuration extends Serializable {
     public default String getAssertionConsumerEndpoint() {
 
         final String assertionConsumerEndpoint =
-                this.getSiteConfiguration().
-                        getString(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL, null);
+            this.getSiteConfiguration().
+                getString(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL,
+                    SamlUtils.getSPIssuerValue(this).concat("/" + this.getStringProperty(
+                        DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID, "dotsaml3sp")));
 
-        return UtilMethods.isSet(assertionConsumerEndpoint)?
-                assertionConsumerEndpoint: null;
+        return UtilMethods.isSet(assertionConsumerEndpoint) ?
+            assertionConsumerEndpoint : null;
     } // getAssertionConsumerEndpoint.
 
     /**

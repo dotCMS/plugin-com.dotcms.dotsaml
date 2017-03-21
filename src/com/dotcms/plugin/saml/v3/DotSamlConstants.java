@@ -50,11 +50,6 @@ public final class DotSamlConstants {
     public static final String DOTCMS_SAML_SERVICE_PROVIDER_ISSUER = "dotcms.saml.service.provider.issuer";
 
     /**
-     * Default value for the DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER
-     */
-    public static final String DOTCMS_SAML_SERVICE_PROVIDER_ISSUER_DEFAULT_VALUE = "com.dotcms.plugin.saml.v3.issuer";
-
-    /**
      * If you want to allow to create an user that does not exists on the IdP, set this to true, otherwise false.
      * By default it is false, so won't allow to create the user, however the Idp will be the final responsable to decided if the user could be or not created.
      */
@@ -255,6 +250,11 @@ public final class DotSamlConstants {
     public static final String
         DOT_SAML_SERVICE_PROVIDER_CUSTOM_CREDENTIAL_PROVIDER_CLASSNAME =
         "dotcms.saml.service.provider.custom.credential.provider.classname";
+
+    /**
+     * Protocol used as default in case the DOTCMS_SAML_SERVICE_PROVIDER_ISSUER is not defined
+     */
+    public static final String DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL = "dotcms.saml.service.provider.protocol";
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
