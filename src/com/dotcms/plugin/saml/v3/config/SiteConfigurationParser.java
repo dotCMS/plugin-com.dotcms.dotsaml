@@ -2,6 +2,8 @@ package com.dotcms.plugin.saml.v3.config;
 
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.InstanceUtil;
+import com.dotcms.plugin.saml.v3.SamlUtils;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.UserAPI;
@@ -19,6 +21,7 @@ import java.io.Serializable;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -124,6 +127,7 @@ public class SiteConfigurationParser implements Serializable {
                 Properties samlProperties = new Properties();
                 samlProperties.load( new StringReader(configurationToUse));
 
+                //Validate that these properties exist.
                 Set<String> fieldsToValidate = new HashSet<>();
                 fieldsToValidate.add(DotSamlConstants.DOTCMS_SAML_IDP_METADATA_PATH);
                 fieldsToValidate.add(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
@@ -172,6 +176,24 @@ public class SiteConfigurationParser implements Serializable {
                     }
                 }
 
+                Set<String> otherErrors = new HashSet<>();
+
+                //Validate Keystore.
+                if ( samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH) != null
+                    && samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD) != null
+                    && samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType()) != null) {
+
+                    final String pathToKeyStore = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
+                    final String keyStorePassword = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD);
+                    final String keyStoreType = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
+
+                    try {
+                        SamlUtils.readKeyStoreFromFile(pathToKeyStore, keyStorePassword, keyStoreType);
+                    } catch (DotSamlException e){
+                        otherErrors.add("Error reading Key Store");
+                    }
+                }
+
                 StringBuilder error = new StringBuilder();
 
                 if ( !missingFields.isEmpty() ) {
@@ -182,6 +204,10 @@ public class SiteConfigurationParser implements Serializable {
                 if ( !missingFiles.isEmpty() ) {
                     error.append("Can NOT open Files: ");
                     error.append(org.apache.commons.lang.StringUtils.join(missingFiles, ','));
+                    error.append("\n");
+                }
+                if ( !otherErrors.isEmpty() ) {
+                    error.append(org.apache.commons.lang.StringUtils.join(otherErrors, ','));
                 }
 
                 //If error has any message, throw the Exception with it.
