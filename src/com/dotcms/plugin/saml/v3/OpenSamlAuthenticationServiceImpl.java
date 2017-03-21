@@ -115,7 +115,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     /**
      * When the authentication is performed and redirected to SO (DotCMS) you can call this method.
      * If the request contains a parameter called AMLart, will try to get the {@link org.opensaml.saml.saml2.core.Assertion}
-     * with the user information via SOAP.
+     * with the user information via the Resolver Implementation.
      *
      * - If the user exists, will just return the instance of it.
      *
@@ -189,7 +189,6 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
 
     // resolve the attributes from the assertion resolved from the OpenSaml artifact resolver via
-    // post soap message.
     private AttributesBean resolveAttributes (final Assertion assertion, final Configuration configuration) throws AttributesNotFoundException {
 
         final String emailField       = configuration.getStringProperty

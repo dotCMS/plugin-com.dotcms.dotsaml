@@ -346,35 +346,6 @@ public class SamlUtils {
     } // getIdentityProviderDestinationEndpoint.
 
     /**
-     * Builds the artifact resolver using the resolution service url from the
-     * dotmarketing-config.properties, if it is not set will throw an exception.
-     *
-     * @param artifact {@link Artifact}
-     * @return ArtifactResolve
-     */
-    public static ArtifactResolve buildArtifactResolve(final Artifact artifact,
-                                                       final Configuration configuration) {
-
-        final ArtifactResolve artifactResolve = buildSAMLObject(ArtifactResolve.class);
-        final String artifactResolutionService = configuration.getStringProperty(
-                DotSamlConstants.DOT_SAML_ARTIFACT_RESOLUTION_SERVICE_URL, null);
-
-        if (!isSet(artifactResolutionService)) {
-
-            throw new DotSamlException("The property: " + DotSamlConstants.DOT_SAML_ARTIFACT_RESOLUTION_SERVICE_URL +
-                    " must be set on the dotmarketing-config.properties");
-        }
-
-        artifactResolve.setIssuer(buildIssuer(configuration));
-        artifactResolve.setIssueInstant(new DateTime());
-        artifactResolve.setID(generateSecureRandomId());
-        artifactResolve.setDestination(artifactResolutionService);
-        artifactResolve.setArtifact(artifact);
-
-        return artifactResolve;
-    } // buildArtifactResolve
-
-    /**
      * Get the Assertion decrypted
      * @param artifactResponse {@link ArtifactResponse}
      * @return Assertion
