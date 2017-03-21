@@ -535,16 +535,12 @@ public class SamlUtils {
      */
     public static KeyStore readKeyStoreFromFile(final String pathToKeyStore,
                                                 final String keyStorePassword,
-                                                final Configuration configuration) {
+                                                final String keyStoreType) {
 
         final KeyStore keystore;
-        final String keyStoreType;
         InputStream inputStream = null;
 
         try {
-
-            keyStoreType = configuration.getStringProperty(
-                    DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
             keystore = KeyStore.getInstance(keyStoreType);
             inputStream = InputStreamUtils.getInputStream(pathToKeyStore);
             keystore.load(inputStream, keyStorePassword.toCharArray());
@@ -594,8 +590,11 @@ public class SamlUtils {
                 Logger.info(SamlUtils.class, "Creating the credentials, using: " + password +
                         ", key store path: " + keyStorePath);
 
+                final String keyStoreType = configuration.getStringProperty(
+                    DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
+
                 keystore = readKeyStoreFromFile
-                        (keyStorePath, password, configuration);
+                        (keyStorePath, password, keyStoreType);
 
                 passwordMap.put(keyEntryId, keyStoreEntryPassword);
                 resolver = new KeyStoreCredentialResolver(keystore, passwordMap);
