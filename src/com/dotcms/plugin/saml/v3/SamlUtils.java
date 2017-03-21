@@ -74,6 +74,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import static com.dotcms.plugin.saml.v3.DotSamlConstants.DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL;
 import static com.dotmarketing.util.UtilMethods.isSet;
 
 /**
@@ -238,8 +239,9 @@ public class SamlUtils {
     public static String getSPIssuerValue(final Configuration configuration) {
 
         return configuration.getStringProperty(
-                DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER,
-                    DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER_DEFAULT_VALUE);
+            DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER,
+            configuration.getStringProperty(DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, null) + "://"
+                + SPIIssuerResolver.getDefaultServiceProviderIssuer().getHostname());
     } // getSPIssuerValue.
 
     /**
