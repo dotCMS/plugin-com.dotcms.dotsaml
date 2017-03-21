@@ -8,15 +8,21 @@ import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandlerFactory;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
 import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
 import com.dotmarketing.business.APILocator;
+import com.dotmarketing.business.DotStateException;
 import com.dotmarketing.business.NoSuchUserException;
 import com.dotmarketing.business.Role;
 import com.dotmarketing.business.RoleAPI;
 import com.dotmarketing.business.UserAPI;
 import com.dotmarketing.cms.factories.PublicEncryptionFactory;
 import com.dotmarketing.exception.DotDataException;
+import com.dotmarketing.exception.RoleNameException;
+import com.dotmarketing.util.ActivityLogger;
+import com.dotmarketing.util.AdminLogger;
+import com.dotmarketing.util.DateUtil;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.RegEX;
 import com.dotmarketing.util.UUIDGenerator;
+import com.liferay.portal.language.LanguageUtil;
 import com.liferay.portal.model.User;
 import com.liferay.util.InstancePool;
 
@@ -42,6 +48,7 @@ import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static com.dotcms.plugin.saml.v3.DotSamlConstants.*;
 import static com.dotcms.plugin.saml.v3.SamlUtils.buildAuthnRequest;
 import static com.dotcms.plugin.saml.v3.SamlUtils.getCredential;
 import static com.dotcms.plugin.saml.v3.SamlUtils.getIdentityProviderDestinationEndpoint;
@@ -186,13 +193,13 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     private AttributesBean resolveAttributes (final Assertion assertion, final Configuration configuration) throws AttributesNotFoundException {
 
         final String emailField       = configuration.getStringProperty
-                (DotSamlConstants.DOT_SAML_EMAIL_ATTRIBUTE, "mail");
+                (DOT_SAML_EMAIL_ATTRIBUTE, "mail");
         final String firstNameField   = configuration.getStringProperty
-                (DotSamlConstants.DOT_SAML_FIRSTNAME_ATTRIBUTE, "givenName");
+                (DOT_SAML_FIRSTNAME_ATTRIBUTE, "givenName");
         final String lastNameField    = configuration.getStringProperty
-                (DotSamlConstants.DOT_SAML_LASTNAME_ATTRIBUTE, "sn");
+                (DOT_SAML_LASTNAME_ATTRIBUTE, "sn");
         final String rolesField       = configuration.getStringProperty
-                (DotSamlConstants.DOT_SAML_ROLES_ATTRIBUTE, "authorizations");
+                (DOT_SAML_ROLES_ATTRIBUTE, "authorizations");
 
         final AttributesBean.Builder attrBuilder = new AttributesBean.Builder();
 
@@ -271,16 +278,13 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             user = this.createNewUser(systemUser, attributesBean);
         }
 
-        if (user.isActive() && attributesBean.isAddRoles() &&
-                null != attributesBean.getRoles() &&
-                null != attributesBean.getRoles().getAttributeValues() &&
-                attributesBean.getRoles().getAttributeValues().size() > 0) {
+        if (user.isActive()) {
 
             this.addRoles(user, attributesBean, configuration);
         } else {
 
-            Logger.info(this, "No roles added, The user " + user.getEmailAddress() +
-                            ", is not active or does not have any role from SAML");
+            Logger.info(this, "The user " + user.getEmailAddress() +
+                            " is not active");
         }
 
         return user;
@@ -289,11 +293,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     private void addRoles(final User user,
                           final AttributesBean attributesBean, final Configuration configuration) {
 
-        final String removeRolePrefix = configuration.getStringProperty
-                (DotSamlConstants.DOT_SAML_REMOVE_ROLES_PREFIX, StringUtils.EMPTY);
-        final String [] rolePatterns   = configuration.getStringArray
-                (DotSamlConstants.DOTCMS_SAML_INCLUDE_ROLES_PATTERN, null);
-        String role                    = null;
+        String role;
 
         try {
 
@@ -301,26 +301,45 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             Logger.debug(this, "Removing user previous roles");
             this.roleAPI.removeAllRolesFromUser(user);
 
-            Logger.debug(this, "Role Patterns: " + this.toString (rolePatterns) +
-                            ", remove role prefix: " +  removeRolePrefix);
+            if (attributesBean.isAddRoles() &&
+                null != attributesBean.getRoles() &&
+                null != attributesBean.getRoles().getAttributeValues() &&
+                attributesBean.getRoles().getAttributeValues().size() > 0) {
 
-            //add roles
-            for(XMLObject roleObject : attributesBean.getRoles().getAttributeValues()){
+                final String removeRolePrefix = configuration.getStringProperty
+                    (DOT_SAML_REMOVE_ROLES_PREFIX, StringUtils.EMPTY);
+                final String [] rolePatterns   = configuration.getStringArray
+                    (DOTCMS_SAML_INCLUDE_ROLES_PATTERN, null);
 
-                if (null != rolePatterns && rolePatterns.length > 0) {
+                Logger.debug(this, "Role Patterns: " + this.toString(rolePatterns) +
+                    ", remove role prefix: " + removeRolePrefix);
 
-                    role = roleObject.getDOM().getFirstChild().getNodeValue();
-                    if (!this.isValidRole(role, rolePatterns)) {
-                        // when there are role filters and the current roles is not
-                        // a valid role, we have to filter it.
+                //add roles
+                for (XMLObject roleObject : attributesBean.getRoles().getAttributeValues()) {
 
-                        Logger.info(this, "Skipping the role: " + role);
-                        continue;
+                    if (null != rolePatterns && rolePatterns.length > 0) {
+
+                        role = roleObject.getDOM().getFirstChild().getNodeValue();
+                        if (!this.isValidRole(role, rolePatterns)) {
+                            // when there are role filters and the current roles is not
+                            // a valid role, we have to filter it.
+
+                            Logger.info(this, "Skipping the role: " + role);
+                            continue;
+                        }
                     }
-                }
 
-                this.addRole(user, removeRolePrefix, roleObject);
+                    this.addRole(user, removeRolePrefix, roleObject);
+                }
             }
+            //Add SAML User role
+            addRole(user, configuration.getStringProperty(DOTCMS_SAML_USER_ROLE, "SAML User"), true, true);
+
+            //Add DOTCMS_SAML_OPTIONAL_USER_ROLE
+            if (configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null) != null) {
+                addRole(user, configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null), false, false);
+            }
+
         } catch (DotDataException e) {
 
             Logger.error(this, "Error creating user:" + e.getMessage(), e);
@@ -333,6 +352,23 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         return null == rolePatterns? NULL : Arrays.asList(rolePatterns).toString();
     }
 
+    private void addRole(final User user, final String roleKey, final boolean createRole, final boolean isSystem) throws DotDataException{
+
+        Role role = this.roleAPI.loadRoleByKey(roleKey);
+
+        //create the role, in case it does not exist
+        if (role == null && createRole){
+            role = createNewRole(roleKey, isSystem);
+        }
+
+        if(null != role && !this.roleAPI.doesUserHaveRole(user, role)) {
+
+            this.roleAPI.addRoleToUser(role, user);
+            Logger.debug(this, "Added role: " + role.getName() +
+                " to user:" + user.getEmailAddress());
+        }
+    } // addRole.
+
     private void addRole(final User user, final String removeRolePrefix,
                          final XMLObject roleObject) throws DotDataException {
 
@@ -342,15 +378,39 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                         .replaceFirst(removeRolePrefix, StringUtils.EMPTY):
                 roleObject.getDOM().getFirstChild().getNodeValue();
 
-        final Role role = this.roleAPI.loadRoleByKey(roleKey);
-
-        if(null != role && !this.roleAPI.doesUserHaveRole(user, role)) {
-
-            this.roleAPI.addRoleToUser(role, user);
-            Logger.debug(this, "Added role: " + role.getName() +
-                    " to user:" + user.getEmailAddress());
-        }
+        addRole(user, roleKey, false, false);
     } // addRole.
+
+    private Role createNewRole(String roleKey, boolean isSystem) throws DotDataException {
+        Role role = new Role();
+        role.setName(roleKey);
+        role.setRoleKey(roleKey);
+        role.setEditUsers(true);
+        role.setEditPermissions(false);
+        role.setEditLayouts(false);
+        role.setDescription("");
+        role.setId(UUIDGenerator.generateUuid());
+
+        //Setting SYSTEM role as a parent
+        role.setSystem(isSystem);
+        Role parentRole = roleAPI.loadRoleByKey(Role.SYSTEM);
+        role.setParent(parentRole.getId());
+
+        String date = DateUtil.getCurrentDate();
+
+        ActivityLogger.logInfo(getClass(), "Adding Role", "Date: " + date + "; " + "Role:" + roleKey);
+        AdminLogger.log(getClass(), "Adding Role", "Date: " + date + "; " + "Role:" + roleKey);
+
+        try {
+            role = roleAPI.save(role, role.getId());
+        } catch (DotDataException | DotStateException e) {
+            ActivityLogger.logInfo(getClass(), "Error Adding Role", "Date: " + date + ";  " + "Role:" + roleKey);
+            AdminLogger.log(getClass(), "Error Adding Role", "Date: " + date + ";  " + "Role:" + roleKey);
+            throw e;
+        }
+
+        return role;
+    }
 
     private User createNewUser(final User systemUser,
                                final AttributesBean attributesBean) {

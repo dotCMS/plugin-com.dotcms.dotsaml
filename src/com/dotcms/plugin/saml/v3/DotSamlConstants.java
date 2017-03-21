@@ -358,6 +358,17 @@ public final class DotSamlConstants {
     public static final String DOTCMS_SAML_INCLUDE_ROLES_PATTERN = "dotcms.saml.include.roles.pattern";
 
     /**
+     * Optional key set on host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
+     * Role to be assigned to a logged user besides the default DOTCMS_SAML_USER_ROLE
+     */
+    public static final String DOTCMS_SAML_OPTIONAL_USER_ROLE = "saml_user_role";
+
+    /**
+     * Default SAML User role
+     */
+    public static final String DOTCMS_SAML_USER_ROLE = "SAML User";
+
+    /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * Default value for text_area field
      */
