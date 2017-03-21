@@ -40,7 +40,7 @@ public class AssertionResolverHandlerFactory implements Serializable {
 
     private AssertionResolverHandler getDefaultAssertionResolverHandler() {
 
-        return this.getAssertionResolverHandler(SOAPArtifactAssertionResolverHandlerImpl.class.getName());
+        return this.getAssertionResolverHandler(HttpPostAssertionResolverHandlerImpl.class.getName());
     }
 
     private AssertionResolverHandler getAssertionResolverHandler(final String className) {

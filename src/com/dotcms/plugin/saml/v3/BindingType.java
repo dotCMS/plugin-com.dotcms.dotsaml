@@ -8,8 +8,7 @@ public enum BindingType {
 
     AUTHN_REQUEST("urn:mace:shibboleth:1.0:profiles:AuthnRequest"),
     POST("urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"),
-    REDIRECT("urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"),
-    SOAP("urn:oasis:names:tc:SAML:2.0:bindings:SOAP");
+    REDIRECT("urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect");
 
     private final String binding;
 
