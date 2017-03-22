@@ -6,14 +6,12 @@ frontend, backend or both.
 
 The plugin will add the user in dotcms if the user doesn't exist
 and for every user logging from SAML the ROLEs will be reassigned if the roles 
-are sent by the SAML response message. In addition, a system role will be assigned to the user (*SAML User* role), as well as any other role defined in the configuration (for further information, refer to saml_user_role usage)
+are sent by the SAML response message. In addition, a system role will be assigned to the user (*SAML User* role), as well as any other role defined in the configuration (for further information, refer to *saml_user_role* usage in the [Configuration](#configuration) section)
 
 The SAML Response should always send the user email, firstname and
 lastname. The roles are optional.
 
-########################################
 ##  <a name="how-to-use">HOW TO USE</a>
-########################################
 
 **Before installation:** Be sure your DB schema was previously initialized (dotCMS' DB tables were created). Having started the application at least once without the plugin is enough.
 
@@ -54,9 +52,7 @@ For more details about properties configuration, please refer to the [Configurat
 	~~~
 
 
-########################################
 ##  <a name="configuration">CONFIGURATION</a>
-########################################
 
 In this section we describe all the properties that can be set in your SAML configuration:
 
