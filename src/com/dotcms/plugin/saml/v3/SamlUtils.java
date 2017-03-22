@@ -25,8 +25,6 @@ import org.opensaml.messaging.handler.impl.BasicMessageHandlerChain;
 import org.opensaml.saml.common.SAMLVersion;
 import org.opensaml.saml.common.SignableSAMLObject;
 import org.opensaml.saml.common.xml.SAMLConstants;
-import org.opensaml.saml.saml2.core.Artifact;
-import org.opensaml.saml.saml2.core.ArtifactResolve;
 import org.opensaml.saml.saml2.core.ArtifactResponse;
 import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.AuthnContext;
@@ -54,15 +52,21 @@ import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.SignatureValidator;
 import org.w3c.dom.Element;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpServletRequest;
@@ -722,5 +726,82 @@ public class SamlUtils {
         }
     } // invokeMessageHandlerChain.
 
+    /**
+     * Check if we can read the KeyStore from file using the SAML properties.
+     *
+     * @param samlProperties {@link Properties} with the values needed.
+     * @return
+     */
+    public static Set<String> validateKeyStore(Properties samlProperties) {
+        Set<String> otherErrors = new HashSet<>();
+        if ( samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH) != null
+            && samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD) != null
+            && samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType()) != null) {
+
+            final String pathToKeyStore = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
+            final String keyStorePassword = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD);
+            final String keyStoreType = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
+
+            try {
+                SamlUtils.readKeyStoreFromFile(pathToKeyStore, keyStorePassword, keyStoreType);
+            } catch (DotSamlException e){
+                otherErrors.add("Error reading Key Store");
+            }
+        }
+        return otherErrors;
+    } // validateKeyStore.
+
+    /**
+     * Check if the File Path exists, can access and read.
+     *
+     * @param properties {@link Properties} (Key, Value) = (PropertyName, FilePath).
+     * @param filePathPropertyKeys keys name that have File path in the value.
+     * @return
+     */
+    public static Set<String> validateFiles(Properties properties, Set<String> filePathPropertyKeys) {
+        Set<String> missingFiles = new HashSet<>();
+
+        for (String fileField : filePathPropertyKeys) {
+            //If field is missing we don't need to validate.
+            if ( properties.getProperty(fileField) == null ) {
+                continue;
+            }
+
+            //Check if the file exists.
+            String filePath = properties.getProperty(fileField);
+            File file = new File(filePath);
+            if ( !file.exists() && !file.canRead() ) {
+                try {
+                    //Let's try with the URI.
+                    URI uri = new URI(filePath);
+                    file = new File(uri);
+                    if ( !file.exists() && !file.canRead() ) {
+                        missingFiles.add(filePath);
+                    }
+                } catch (URISyntaxException e){
+                    Logger.debug(SamlUtils.class, "Problem reading file from URI: " + filePath, e);
+                    missingFiles.add(filePath);
+                }
+            }
+        }
+        return missingFiles;
+    } // validateFiles.
+
+    /**
+     * Validates that properties contains the keys required.
+     *
+     * @param properties {@link Properties} (Key, Value) = (PropertyName, FilePath).
+     * @param keysRequired Property keys required to be in the samlProperties.
+     * @return
+     */
+    public static Set<String> getMissingProperties(Properties properties, Set<String> keysRequired) {
+        Set<String> missingProperties = new HashSet<>();
+        for (String s : keysRequired) {
+            if ( properties.getProperty(s) == null ) {
+                missingProperties.add(s);
+            }
+        }
+        return missingProperties;
+    } // getMissingProperties.
 
 } // E:O:F:SamlUtils.
