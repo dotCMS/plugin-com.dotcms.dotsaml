@@ -3,7 +3,6 @@ package com.dotcms.plugin.saml.v3.config;
 import com.dotmarketing.util.Logger;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,51 +13,12 @@ import java.util.Set;
 public class SiteConfigurationService implements Serializable {
 
     private final Map<String, Configuration> configurationBySiteMap;
-    private final Configuration siteDefaultConfiguration;
-    private final String        siteNameDefaultConfiguration;
 
     public SiteConfigurationService(final Map<String, Configuration> configurationBySiteMap) {
 
+        this.configurationBySiteMap = configurationBySiteMap;
 
-        Configuration defaultConfiguration = null;
-        String        siteNameDefaultConfiguration = null;
-        this.configurationBySiteMap = Collections.
-                unmodifiableMap(configurationBySiteMap);
-
-        Logger.debug(this, "Processing the site configuration, with the value: " + this.configurationBySiteMap);
-
-        for (Map.Entry<String, Configuration> configuration : this.configurationBySiteMap.entrySet()) {
-
-            if (configuration.getValue().isDefault()) {
-
-                defaultConfiguration            = configuration.getValue();
-                siteNameDefaultConfiguration    = configuration.getKey();
-
-                Logger.debug(this, "Using as a default site: " + defaultConfiguration);
-            }
-        }
-
-        this.siteDefaultConfiguration     = defaultConfiguration;
-        this.siteNameDefaultConfiguration = siteNameDefaultConfiguration;
     } // SiteConfigurationService.
-
-    /**
-     * Get the name of the default site
-     * @return String
-     */
-    public String getDefaultSiteName () {
-
-        return this.siteNameDefaultConfiguration;
-    }
-
-    /**
-     * Get the default site configuration
-     * @return Configuration
-     */
-    public Configuration getDefaultSiteConfiguration () {
-
-        return this.siteDefaultConfiguration;
-    }
 
     /**
      * Get the site names
@@ -79,12 +39,17 @@ public class SiteConfigurationService implements Serializable {
         Logger.debug(this, ((this.configurationBySiteMap.containsKey(site))?
                         "Found a configuration for the site: " + site:
                         "Could not find a configuration for the site: " + site
-                                + ", using the default site: " + this.getDefaultSiteName()
                     ));
 
-        return  (this.configurationBySiteMap.containsKey(site))?
-                this.configurationBySiteMap.get(site):
-                this.siteDefaultConfiguration;
+        return this.configurationBySiteMap.get(site);
 
     } // getConfigurationBySite.
+
+    public void setConfigurationBySite (final String site, final Configuration conf){
+        this.configurationBySiteMap.remove(site);
+
+        if (conf != null) {
+            this.configurationBySiteMap.put(site, conf);
+        }
+    }
 } // E:O:F:SiteConfigurationService.
