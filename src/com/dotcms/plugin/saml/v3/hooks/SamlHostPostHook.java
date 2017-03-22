@@ -36,8 +36,6 @@ public class SamlHostPostHook extends ContentletAPIPostHookAbstractImp {
     public void checkin(Contentlet currentContentlet, ContentletRelationships relationshipsData, List<Category> cats,
                         List<Permission> selectedPermissions, User user, boolean respectFrontendRoles,
                         Contentlet returnValue) {
-        super.checkin(currentContentlet, relationshipsData, cats, selectedPermissions, user, respectFrontendRoles,
-            returnValue);
 
         Host host = new Host(currentContentlet);
         Configuration siteConfiguration;
