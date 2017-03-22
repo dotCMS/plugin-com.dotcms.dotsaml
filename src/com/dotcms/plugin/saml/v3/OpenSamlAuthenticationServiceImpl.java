@@ -357,6 +357,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         //create the role, in case it does not exist
         if (role == null && createRole){
+            Logger.info(this, "Role not found. Creating Role with key: " + roleKey);
             role = createNewRole(roleKey, isSystem);
         }
 

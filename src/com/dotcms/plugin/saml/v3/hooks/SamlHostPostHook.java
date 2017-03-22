@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class SamlHostPostHook extends ContentletAPIPostHookAbstractImp {
 
-    private HostAPI hostAPI = APILocator.getHostAPI();
+    private final HostAPI hostAPI = APILocator.getHostAPI();
 
     public SamlHostPostHook() {
         super();
