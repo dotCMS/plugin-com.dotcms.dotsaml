@@ -3,7 +3,6 @@ package com.dotcms.plugin.saml.v3.config;
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.InstanceUtil;
 import com.dotcms.plugin.saml.v3.SamlUtils;
-import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.UserAPI;
@@ -15,13 +14,9 @@ import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -105,6 +100,10 @@ public class SiteConfigurationParser implements Serializable {
      * dotcms.saml.remove.roles.prefix
      * dotcms.saml.include.roles.pattern
      *
+     * 1. Validate that the properties exist.
+     * 2. Validate that the File properties exist, can access and read.
+     * 3. Validate we can read the Key Store.
+     *
      * @param host
      * @throws DotDataException
      * @throws DotSecurityException
@@ -137,62 +136,16 @@ public class SiteConfigurationParser implements Serializable {
                 fieldsToValidate.add(DotSamlConstants.DOT_SAML_REMOVE_ROLES_PREFIX);
                 fieldsToValidate.add(DotSamlConstants.DOTCMS_SAML_INCLUDE_ROLES_PATTERN);
 
-                Set<String> missingFields = new HashSet<>();
-
-                for (String fieldToValidate : fieldsToValidate) {
-                    if ( samlProperties.getProperty(fieldToValidate) == null ) {
-                        missingFields.add(fieldToValidate);
-                    }
-                }
+                Set<String> missingFields = SamlUtils.getMissingProperties(samlProperties, fieldsToValidate);
 
                 //Specific Validations for Files.
                 Set<String> fileFields = new HashSet<>();
                 fileFields.add(DotSamlConstants.DOTCMS_SAML_IDP_METADATA_PATH);
                 fileFields.add(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
 
-                Set<String> missingFiles = new HashSet<>();
+                Set<String> missingFiles = SamlUtils.validateFiles(samlProperties, fileFields);
 
-                for (String fileField : fileFields) {
-                    //If field is missing we don't need to validate.
-                    if ( samlProperties.getProperty(fileField) == null ) {
-                        continue;
-                    }
-
-                    //Check if the file exists.
-                    String filePath = samlProperties.getProperty(fileField);
-                    File file = new File(filePath);
-                    if ( !file.exists() && !file.canRead() ) {
-                        try {
-                            //Let's try with the URI.
-                            URI uri = new URI(filePath);
-                            file = new File(uri);
-                            if ( !file.exists() && !file.canRead() ) {
-                                missingFiles.add(filePath);
-                            }
-                        } catch (URISyntaxException e){
-                            Logger.debug(this, "Problem reading file from URI: " + filePath, e);
-                            missingFiles.add(filePath);
-                        }
-                    }
-                }
-
-                Set<String> otherErrors = new HashSet<>();
-
-                //Validate Keystore.
-                if ( samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH) != null
-                    && samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD) != null
-                    && samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType()) != null) {
-
-                    final String pathToKeyStore = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
-                    final String keyStorePassword = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD);
-                    final String keyStoreType = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
-
-                    try {
-                        SamlUtils.readKeyStoreFromFile(pathToKeyStore, keyStorePassword, keyStoreType);
-                    } catch (DotSamlException e){
-                        otherErrors.add("Error reading Key Store");
-                    }
-                }
+                Set<String> keyStoreErrors = SamlUtils.validateKeyStore(samlProperties);
 
                 StringBuilder error = new StringBuilder();
 
@@ -206,8 +159,8 @@ public class SiteConfigurationParser implements Serializable {
                     error.append(org.apache.commons.lang.StringUtils.join(missingFiles, ','));
                     error.append("\n");
                 }
-                if ( !otherErrors.isEmpty() ) {
-                    error.append(org.apache.commons.lang.StringUtils.join(otherErrors, ','));
+                if ( !keyStoreErrors.isEmpty() ) {
+                    error.append(org.apache.commons.lang.StringUtils.join(keyStoreErrors, ','));
                 }
 
                 //If error has any message, throw the Exception with it.
