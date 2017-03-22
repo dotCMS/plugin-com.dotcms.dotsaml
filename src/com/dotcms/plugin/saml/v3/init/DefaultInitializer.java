@@ -80,12 +80,8 @@ public class DefaultInitializer implements Initializer {
         interceptor.delPostHookByClassName(postHook.getClass().getName());
         try {
             interceptor.addPostHook(postHook);
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            Logger.error(this, "Error adding SamlHostPostHook", e);
         }
 
         Logger.info(this, "Init java crypto");
