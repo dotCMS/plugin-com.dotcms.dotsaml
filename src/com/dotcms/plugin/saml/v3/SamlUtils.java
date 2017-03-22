@@ -733,14 +733,16 @@ public class SamlUtils {
      * @return
      */
     public static Set<String> validateKeyStore(Properties samlProperties) {
-        Set<String> otherErrors = new HashSet<>();
-        if ( samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH) != null
-            && samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD) != null
-            && samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType()) != null) {
 
-            final String pathToKeyStore = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
-            final String keyStorePassword = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD);
-            final String keyStoreType = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
+        Set<String> otherErrors = new HashSet<>();
+
+        final String pathToKeyStore = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
+        final String keyStorePassword = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD);
+        final String keyStoreType = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
+
+        if ( pathToKeyStore != null
+            && keyStorePassword != null
+            && keyStoreType != null) {
 
             try {
                 SamlUtils.readKeyStoreFromFile(pathToKeyStore, keyStorePassword, keyStoreType);
