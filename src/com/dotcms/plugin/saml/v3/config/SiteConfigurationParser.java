@@ -143,7 +143,7 @@ public class SiteConfigurationParser implements Serializable {
                 fileFields.add(DotSamlConstants.DOTCMS_SAML_IDP_METADATA_PATH);
                 fileFields.add(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
 
-                Set<String> missingFiles = SamlUtils.validateFileFields(samlProperties, fileFields);
+                Set<String> missingFiles = SamlUtils.validateFiles(samlProperties, fileFields);
 
                 Set<String> keyStoreErrors = SamlUtils.validateKeyStore(samlProperties);
 
