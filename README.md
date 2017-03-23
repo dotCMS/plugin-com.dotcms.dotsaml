@@ -56,6 +56,11 @@ For more details about properties configuration, please refer to the [Configurat
 
 In this section we describe all the properties that can be set in your SAML configuration:
 
+**Important Considerations:** 
+1. We ship with default values for some of the properties below. You can find, add or remove those default values in the file ROOT/dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/classes/dotcms-saml-default.properties.
+2. The default values will be used for each of the Sites (Hosts) SAML Field (if configured). 
+3. You can override those values by setting key=value pairs on the SAML Field. (See [How to use](#how-to-use))
+
 **dotcms.saml.protocol.binding**
 
 By default, dotCMS uses *org.opensaml.saml.common.xml.SAMLConstants.SAML2_ARTIFACT_BINDING_URI*. The binding tells to the Idp how the SP is expecting the response.
