@@ -57,7 +57,7 @@ public final class DotSamlConstants {
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
-     * By default dotcms use: {@link org.opensaml.saml.saml2.core.AuthnContextComparisonTypeEnumeration}.MINIMUM, but you can set any different you setting the value (non-case sensitive)
+     * By default dotCMS uses: {@link org.opensaml.saml.saml2.core.AuthnContextComparisonTypeEnumeration}.MINIMUM, but you can set any different you setting the value (non-case sensitive)
      * For instance:
      *
      * <code>
@@ -70,7 +70,7 @@ public final class DotSamlConstants {
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
-     * By default dotcms use: {@link org.opensaml.saml.saml2.core.AuthnContext}.PASSWORD_AUTHN_CTX, but you can override it just adding the context class ref you want.
+     * By default dotCMS uses: {@link org.opensaml.saml.saml2.core.AuthnContext}.PASSWORD_AUTHN_CTX, but you can override it just adding the context class ref you want.
      */
     public static final String DOTCMS_SAML_AUTHN_CONTEXT_CLASS_REF = "dotcms.saml.authn.context.class.ref";
 
@@ -107,14 +107,6 @@ public final class DotSamlConstants {
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
-     * By default dotcms use: {@link org.opensaml.xmlsec.signature.support.SignatureConstants}.ALGO_ID_C14N_EXCL_OMIT_COMMENTS, but you can override it just adding the algorithm you want.
-     */
-    public static final String
-        DOTCMS_SAML_SIGNATURE_CANONICALIZATION_ALGORITHM =
-        "dotcms.saml.signature.canonicalization.algorithm";
-
-    /**
-     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * By default dotcms use: 1000, but you can override it just adding the new time you want.
      */
     public static final String DOT_SAML_CLOCK_SKEW = "dotcms.saml.clock.skew";
@@ -136,7 +128,7 @@ public final class DotSamlConstants {
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * By default dotcms use: "mail", but you can override it just adding the mail attribute name you want.
-     * "mail" will be the expected field name from the Response comming from the OpenSaml post call.
+     * "mail" will be the expected field name from the Response coming from the OpenSaml post call.
      */
     public static final String DOT_SAML_EMAIL_ATTRIBUTE = "dotcms.saml.email.attribute";
 
@@ -195,7 +187,7 @@ public final class DotSamlConstants {
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
-     * By default {@link DefaultMetaDescriptorServiceImpl} is what we use to parser the idp metadata XML file
+     * By default {@link DefaultMetaDescriptorServiceImpl} is what we use to parse the idp metadata XML file
      * however if you have you own implementation of {@link MetaDescriptorService} you can override it.
      */
     public static final String DOT_SAML_IDP_METADATA_PARSER_CLASS_NAME = "dotcms.saml.idp.metadata.parser.classname";
@@ -326,7 +318,7 @@ public final class DotSamlConstants {
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
-     * By default we use the implementation {@link com.dotcms.plugin.saml.v3.handler.SOAPArtifactAssertionResolverHandlerImpl}
+     * By default we use the implementation {@link com.dotcms.plugin.saml.v3.handler.HttpPostAssertionResolverHandlerImpl}
      * which is in charge of resolve the assertion using the SOAP artifact resolver based on the artifact id pass by the request.
      *
      * If you want a different implementation please override with the class here.
@@ -367,11 +359,13 @@ public final class DotSamlConstants {
      */
     public static final String
         DOTCMS_SAML_DEFAULT_CONF_FIELD_CONTENT =
-        "service.provider.issuer=${service.provider.issuer}\n"
-            + "idp.metadata.path=${idp.metadata.path}\n"
-            + "keystore.path=${keystore.path}\n"
-            + "keystore.password=${keystore.password}\n"
-            + "keystore.entry.password=${keystore.entry.password}";
+            "dotcms.saml.idp.metadata.path=\n"
+            + "dotcms.saml.keystore.path=\n"
+            + "dotcms.saml.keystore.password=\n"
+            + "dotcms.saml.keystore.entry.password=\n"
+            + "dotcms.saml.remove.roles.prefix=\n"
+            + "dotcms.saml.keyentryid=\n"
+            + "dotcms.saml.include.roles.pattern=";
 
     public static final String DEFAULT_SAML_CONFIG_FILE_NAME = "dotcms-saml-default.properties";
 } // E:O:F:DotSamlConstants.
