@@ -20,7 +20,7 @@ dotCMS instance.
 
 Once the plugin is deployed, the SAML configuration can be set for each host through the application, using the SAML field created for this purpose (Go to System --> Sites --> Edit Host)
 
-![Edit Host](https://github.com/dotCMS/plugin-dotcms-openSAML3/blob/master/images/edit-host-saml.png)
+![Edit Host](https://github.com/dotCMS/plugin-dotcms-openSAML3/blob/master/images/edit-saml-host.png)
 
 SAML properties must be configured using key=value pairs, for example:
 

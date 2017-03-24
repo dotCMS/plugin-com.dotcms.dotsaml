@@ -170,7 +170,7 @@ public interface Configuration extends Serializable {
     } // getAssertionConsumerEndpoint.
 
     /**
-     * In case you need a custom credentials for the Service Provider (DotCMS) overrides the
+     * In case you need custom credentials for the Service Provider (DotCMS) overwrites the
      * implementation class on the configuration.
      * By default it uses a Trust Storage to get the keys and creates the credential.
      * @return CredentialProvider
@@ -187,7 +187,7 @@ public interface Configuration extends Serializable {
     } // getServiceProviderCustomCredentialProvider.
 
     /**
-     * In case you need a custom credentials for the ID Provider (DotCMS) overrides the
+     * In case you need a custom credentials for the ID Provider (dotCMS) overrides the
      * implementation class on the configuration.
      *
      * By default it uses the Idp metadata credentials info, from the XML to figure out this info.
