@@ -499,11 +499,6 @@ public class SamlUtils {
         }
     } // verifyAssertionSignature.
 
-    private static final String KEY_STORE_PASSWORD = "password";
-    private static final String KEY_STORE_ENTRY_PASSWORD = "password";
-    private static final String KEY_STORE_PATH = "/SPKeystore.jks";
-    private static final String KEY_ENTRY_ID = "SPKey";
-
     /**
      * Read from the key store using a given password
      * @param pathToKeyStore {@link String}
@@ -556,13 +551,13 @@ public class SamlUtils {
             } else {
 
                 keyStorePath = configuration.getStringProperty(
-                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH, KEY_STORE_PATH);
+                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH, "");
                 password = configuration.getStringProperty(
-                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD, KEY_STORE_PASSWORD);
+                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD, "");
                 keyEntryId = configuration.getStringProperty(
-                        DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID, KEY_ENTRY_ID);
+                        DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID, "");
                 keyStoreEntryPassword = configuration.getStringProperty(
-                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD, KEY_STORE_ENTRY_PASSWORD);
+                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD, "");
 
                 Logger.info(SamlUtils.class, "Creating the credentials, using: " + password +
                         ", key store path: " + keyStorePath);
@@ -739,15 +734,33 @@ public class SamlUtils {
         final String pathToKeyStore = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
         final String keyStorePassword = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD);
         final String keyStoreType = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
+        final String keyEntryId = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID);
+        final String keyStoreEntryPassword = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD);
 
         if ( pathToKeyStore != null
             && keyStorePassword != null
-            && keyStoreType != null) {
+            && keyStoreType != null
+            && keyEntryId != null
+            && keyStoreEntryPassword != null) {
 
             try {
-                SamlUtils.readKeyStoreFromFile(pathToKeyStore, keyStorePassword, keyStoreType);
+                final KeyStore keystore = readKeyStoreFromFile(pathToKeyStore, keyStorePassword, keyStoreType);
+
+                final Map<String, String> passwordMap = new HashMap<>();
+                passwordMap.put(keyEntryId, keyStoreEntryPassword);
+
+                final KeyStoreCredentialResolver resolver =
+                    new KeyStoreCredentialResolver(keystore, passwordMap);
+
+                final Criterion criterion = new EntityIdCriterion(keyEntryId);
+                final CriteriaSet criteriaSet = new CriteriaSet();
+                criteriaSet.add(criterion);
+                resolver.resolveSingle(criteriaSet);
+
             } catch (DotSamlException e){
                 otherErrors.add("Error reading Key Store");
+            } catch (ResolverException e) {
+                otherErrors.add("Error reading credentials");
             }
         }
         return otherErrors;
@@ -799,7 +812,7 @@ public class SamlUtils {
     public static Set<String> getMissingProperties(Properties properties, Set<String> keysRequired) {
         Set<String> missingProperties = new HashSet<>();
         for (String s : keysRequired) {
-            if ( properties.getProperty(s) == null ) {
+            if ( properties.getProperty(s) == null || properties.getProperty(s).equals("") ) {
                 missingProperties.add(s);
             }
         }

@@ -163,7 +163,7 @@ public interface Configuration extends Serializable {
             this.getSiteConfiguration().
                 getString(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL,
                     SamlUtils.getSPIssuerValue(this).concat("/" + this.getStringProperty(
-                        DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID, "dotsaml3sp")));
+                        DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID, "")));
 
         return UtilMethods.isSet(assertionConsumerEndpoint) ?
             assertionConsumerEndpoint : null;
