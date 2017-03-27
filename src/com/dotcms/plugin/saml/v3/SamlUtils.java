@@ -734,15 +734,33 @@ public class SamlUtils {
         final String pathToKeyStore = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
         final String keyStorePassword = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD);
         final String keyStoreType = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
+        final String keyEntryId = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID);
+        final String keyStoreEntryPassword = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD);
 
         if ( pathToKeyStore != null
             && keyStorePassword != null
-            && keyStoreType != null) {
+            && keyStoreType != null
+            && keyEntryId != null
+            && keyStoreEntryPassword != null) {
 
             try {
-                SamlUtils.readKeyStoreFromFile(pathToKeyStore, keyStorePassword, keyStoreType);
+                final KeyStore keystore = readKeyStoreFromFile(pathToKeyStore, keyStorePassword, keyStoreType);
+
+                final Map<String, String> passwordMap = new HashMap<>();
+                passwordMap.put(keyEntryId, keyStoreEntryPassword);
+
+                final KeyStoreCredentialResolver resolver =
+                    new KeyStoreCredentialResolver(keystore, passwordMap);
+
+                final Criterion criterion = new EntityIdCriterion(keyEntryId);
+                final CriteriaSet criteriaSet = new CriteriaSet();
+                criteriaSet.add(criterion);
+                resolver.resolveSingle(criteriaSet);
+
             } catch (DotSamlException e){
                 otherErrors.add("Error reading Key Store");
+            } catch (ResolverException e) {
+                otherErrors.add("Error reading credentials");
             }
         }
         return otherErrors;
