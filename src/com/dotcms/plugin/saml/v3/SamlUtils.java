@@ -499,11 +499,6 @@ public class SamlUtils {
         }
     } // verifyAssertionSignature.
 
-    private static final String KEY_STORE_PASSWORD = "password";
-    private static final String KEY_STORE_ENTRY_PASSWORD = "password";
-    private static final String KEY_STORE_PATH = "/SPKeystore.jks";
-    private static final String KEY_ENTRY_ID = "SPKey";
-
     /**
      * Read from the key store using a given password
      * @param pathToKeyStore {@link String}
@@ -556,13 +551,13 @@ public class SamlUtils {
             } else {
 
                 keyStorePath = configuration.getStringProperty(
-                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH, KEY_STORE_PATH);
+                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH, "");
                 password = configuration.getStringProperty(
-                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD, KEY_STORE_PASSWORD);
+                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD, "");
                 keyEntryId = configuration.getStringProperty(
-                        DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID, KEY_ENTRY_ID);
+                        DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID, "");
                 keyStoreEntryPassword = configuration.getStringProperty(
-                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD, KEY_STORE_ENTRY_PASSWORD);
+                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD, "");
 
                 Logger.info(SamlUtils.class, "Creating the credentials, using: " + password +
                         ", key store path: " + keyStorePath);
@@ -799,7 +794,7 @@ public class SamlUtils {
     public static Set<String> getMissingProperties(Properties properties, Set<String> keysRequired) {
         Set<String> missingProperties = new HashSet<>();
         for (String s : keysRequired) {
-            if ( properties.getProperty(s) == null ) {
+            if ( properties.getProperty(s) == null || properties.getProperty(s).equals("") ) {
                 missingProperties.add(s);
             }
         }
