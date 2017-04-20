@@ -191,7 +191,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                         (NameIDFormat.DEFAULT_ELEMENT_NAME);
 
         final String [] formats = configuration.getStringArray (DotSamlConstants.DOTCMS_SAML_NAME_ID_FORMATS,
-                new String[] { NameIDType.TRANSIENT, NameIDType.PERSISTENT });
+                new String[] {  NameIDType.PERSISTENT });
 
         for (String format : formats) {
 

@@ -4,6 +4,7 @@ import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.UtilMethods;
 
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
@@ -242,11 +243,21 @@ public class SamlUtils {
      */
     public static String getSPIssuerValue(final Configuration configuration) {
 
+        final String defaultHost = configuration.getSiteName();
+
         return configuration.getStringProperty(
             DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER,
-            configuration.getStringProperty(DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, null) + "://"
-                + SPIIssuerResolver.getDefaultServiceProviderIssuer().getHostname());
+            getSiteName(configuration));
     } // getSPIssuerValue.
+
+    private static String getSiteName (final Configuration configuration) {
+
+        final String defaultHost = configuration.getSiteName();
+
+        return UtilMethods.isSet (defaultHost) ? defaultHost :
+                configuration.getStringProperty(DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, null) + "://"
+                    + SPIIssuerResolver.getDefaultServiceProviderIssuer().getHostname();
+    } // getSiteName.
 
     /**
      * Return the policy for the Name ID (which is the IdP identifier for the user)
@@ -263,7 +274,7 @@ public class SamlUtils {
         nameIDPolicy.setFormat(configuration.getStringProperty(
                 DotSamlConstants.DOTCMS_SAML_POLICY_FORMAT,
                 // “The transient identifier is a random identifier that does not have any connection to the user. A transient identifier will be different for every time the user signs in.”
-                NameIDType.TRANSIENT));
+                NameIDType.PERSISTENT));
 
         return nameIDPolicy;
     } // buildNameIdPolicy.
