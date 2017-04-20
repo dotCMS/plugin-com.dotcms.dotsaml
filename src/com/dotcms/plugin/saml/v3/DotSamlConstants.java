@@ -368,4 +368,9 @@ public final class DotSamlConstants {
             + "dotcms.saml.include.roles.pattern=";
 
     public static final String DEFAULT_SAML_CONFIG_FILE_NAME = "dotcms-saml-default.properties";
+
+    /**
+     * By default we do not include the encryptor in the metadata, if you want to include it set this to true.
+     */
+    public static final String DOTCMS_SAML_USE_ENCRYPTED_DESCRIPTOR = "use.encrypted.descriptor";
 } // E:O:F:DotSamlConstants.

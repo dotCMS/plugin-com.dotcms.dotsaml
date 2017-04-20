@@ -222,11 +222,13 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
      */
     protected void setKeyDescriptors(final SPSSODescriptor spssoDescriptor, final Configuration configuration) {
 
+        final boolean isEncryptedDescriptor =
+                configuration.getBooleanProperty(DotSamlConstants.DOTCMS_SAML_USE_ENCRYPTED_DESCRIPTOR, false);
         final SAMLObjectBuilder<KeyDescriptor> keyDescriptorBuilder =
                 (SAMLObjectBuilder<KeyDescriptor>) this.xmlObjectBuilderFactory.
                         getBuilder(KeyDescriptor.DEFAULT_ELEMENT_NAME);
         final KeyDescriptor signKeyDescriptor;
-        final KeyDescriptor encryptedKeyDescriptor;
+        KeyDescriptor encryptedKeyDescriptor = null;
         final Credential credential = this.getCredential(configuration);
         final EncryptionMethodBuilder encryptionMethodBuilder = new EncryptionMethodBuilder();
         final EncryptionMethod encryptionMethod;
@@ -234,22 +236,27 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         try {
 
             signKeyDescriptor = keyDescriptorBuilder.buildObject();
-            encryptedKeyDescriptor = keyDescriptorBuilder.buildObject();
-
             signKeyDescriptor.setUse(UsageType.SIGNING);
-            encryptedKeyDescriptor.setUse(UsageType.ENCRYPTION);
+
+            if (isEncryptedDescriptor) {
+                encryptedKeyDescriptor = keyDescriptorBuilder.buildObject();
+                encryptedKeyDescriptor.setUse(UsageType.ENCRYPTION);
+            }
 
             try {
 
                 signKeyDescriptor.setKeyInfo(getKeyInfo(credential));
-                encryptedKeyDescriptor.setKeyInfo(getKeyInfo(credential));
 
                 encryptionMethod = encryptionMethodBuilder.buildObject();
                 encryptionMethod.setAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
                 signKeyDescriptor.getEncryptionMethods().add(encryptionMethod);
 
                 spssoDescriptor.getKeyDescriptors().add(signKeyDescriptor);
-                spssoDescriptor.getKeyDescriptors().add(encryptedKeyDescriptor);
+
+                if (isEncryptedDescriptor) {
+                    encryptedKeyDescriptor.setKeyInfo(getKeyInfo(credential));
+                    spssoDescriptor.getKeyDescriptors().add(encryptedKeyDescriptor);
+                }
             } catch (org.opensaml.xml.security.SecurityException e) {
 
                 Logger.error(this, "Error generating credentials", e);
