@@ -137,17 +137,17 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         this.setFormat(configuration, spssoDescriptor);
 
         // set's the assertion customer services, this will be a fixed url on dotCMS.
-        spssoDescriptor.getAssertionConsumerServices().add
+        /*spssoDescriptor.getAssertionConsumerServices().add
                 (this.createAssertionConsumerService(0, SAMLConstants.SAML2_ARTIFACT_BINDING_URI,
-                        configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));
+                        configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));*/
 
         spssoDescriptor.getAssertionConsumerServices().add
                 (this.createAssertionConsumerService(1, SAMLConstants.SAML2_POST_BINDING_URI,
                         configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));
 
-        spssoDescriptor.getAssertionConsumerServices().add
+        /*spssoDescriptor.getAssertionConsumerServices().add
                 (this.createAssertionConsumerService(2, SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI,
-                        configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));
+                        configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));*/
 
         spssoDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
         descriptor.getRoleDescriptors().add(spssoDescriptor);
