@@ -1,10 +1,10 @@
 package com.dotcms.plugin.saml.v3.meta;
 
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
-import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.SamlUtils;
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationBean;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotmarketing.util.Logger;
 import net.shibboleth.utilities.java.support.xml.ParserPool;
@@ -167,6 +167,8 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                                                                       final String binding,
                                                                       final String location,
                                                                       final SAMLObjectBuilder<AssertionConsumerService> assertionConsumerServiceBuilder) {
+
+        Logger.info(this, "Assertion consumer service, location: " + location);
 
         final AssertionConsumerService assertionConsumerServiceArtifact =
                 assertionConsumerServiceBuilder.buildObject();
