@@ -166,20 +166,15 @@ public interface Configuration extends Serializable {
     public default String getAssertionConsumerEndpoint() {
 
         String spIssuerValue = SamlUtils.getSPIssuerValue(this);
-        Logger.info(this, "Assertion consumer service, spIssuerValue: " + spIssuerValue);
 
         if (null != spIssuerValue && (!spIssuerValue.startsWith(HTTP_SCHEMA) || !spIssuerValue.startsWith(HTTPS_SCHEMA))) {
 
             final String protocol = this.getStringProperty(DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, "https");
-            Logger.info(this, "Assertion consumer service, protocol: " + protocol);
-            spIssuerValue = protocol + "://" + spIssuerValue;
-            Logger.info(this, "Assertion consumer service, spIssuerValue: " + spIssuerValue);
+            spIssuerValue = protocol + "://" + spIssuerValue + "/dotsaml3sp";
         }
 
         final String assertionConsumerEndpoint =
-            this.getSiteConfiguration().
-                getString(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL,
-                    spIssuerValue.concat("/dotsaml3sp"));
+            this.getSiteConfiguration().getString(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL, spIssuerValue);
 
         return UtilMethods.isSet(assertionConsumerEndpoint) ?
             assertionConsumerEndpoint : null;
