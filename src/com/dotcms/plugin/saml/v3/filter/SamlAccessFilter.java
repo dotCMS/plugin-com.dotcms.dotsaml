@@ -59,6 +59,7 @@ public class SamlAccessFilter implements Filter {
 
     private static final String TEXT_XML = "text/xml";
     public static final String REFERRER_PARAMETER_KEY = "referrer";
+    public static final String ORIGINAL_REQUEST = "original_request";
     private final SamlAuthenticationService samlAuthenticationService;
     private final Initializer initializer;
     private final MetaDataXMLPrinter metaDataXMLPrinter;
@@ -286,12 +287,14 @@ public class SamlAccessFilter implements Filter {
                     Logger.debug(this, "User is not logged, processing saml request");
                     this.doRequestLoginSecurityLog(request, configuration);
 
+                    final String originalRequest = request.getRequestURI() +
+                        ((null != request.getQueryString()) ? "?" + request.getQueryString() :
+                            StringUtils.EMPTY);
+
                     redirectAfterLogin = (UtilMethods.isSet(request.getParameter(REFERRER_PARAMETER_KEY)))?
                             request.getParameter(REFERRER_PARAMETER_KEY):
                             // this is safe, just to make a redirection when the user get's logged.
-                            request.getRequestURI() +
-                                    ((null != request.getQueryString()) ? "?" + request.getQueryString() :
-                                            StringUtils.EMPTY);
+                            originalRequest;
 
                     Logger.warn(this.getClass(),
                             "Doing Saml Login Redirection when request: " +
@@ -302,6 +305,7 @@ public class SamlAccessFilter implements Filter {
 
                         session.setAttribute(WebKeys.REDIRECT_AFTER_LOGIN,
                                 redirectAfterLogin);
+                        session.setAttribute(ORIGINAL_REQUEST, originalRequest);
                     }
 
                     // this will redirect the user to the IdP Login Page.
@@ -452,10 +456,13 @@ public class SamlAccessFilter implements Filter {
                 if (null != session && null != user.getUserId()) {
                     // this is what the PortalRequestProcessor needs to check the login.
                     Logger.info(this, "Setting the user id on the session: " + user.getUserId());
-                    session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
 
-                    if(this.isBackEndAdmin(session, request.getRequestURI())) {
+                    final String uri = session.getAttribute(ORIGINAL_REQUEST) != null ? (String)session.getAttribute(ORIGINAL_REQUEST) : request.getRequestURI();
+                    session.removeAttribute(ORIGINAL_REQUEST);
 
+                    if(this.isBackEndAdmin(session, uri)) {
+
+                        session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
                         PrincipalThreadLocal.setName(user.getUserId());
                     }
                     // depending if it is a redirection or not, continue.
@@ -498,7 +505,8 @@ public class SamlAccessFilter implements Filter {
 
     private boolean isFrontEndLoginPage (final String uri) {
 
-        return uri.startsWith("/dotCMS/login");
+        return uri.startsWith("/dotCMS/login") ||
+            uri.startsWith("/application/login");
     }
 
     private boolean checkRedirection(final HttpServletRequest request,
