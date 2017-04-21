@@ -11,6 +11,8 @@ import org.opensaml.security.credential.Credential;
 import java.io.Serializable;
 import java.util.Collection;
 
+import static com.dotcms.plugin.saml.v3.DotSamlConstants.DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL;
+
 /**
  * The configuration encapsulates all the info necessary for the open saml plugin
  * Note: an implementation of {@link Configuration} must has a constructor with {@link SiteConfigurationBean} arguments and a {@link String} siteName
@@ -165,8 +167,8 @@ public interface Configuration extends Serializable {
         String spIssuerValue = SamlUtils.getSPIssuerValue(this);
         if (null != spIssuerValue && (!spIssuerValue.startsWith(HTTP_SCHEMA) || !spIssuerValue.startsWith(HTTPS_SCHEMA))) {
 
-            final String schema = getStringProperty(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_SCHEMA, HTTPS_SCHEMA);
-            spIssuerValue = schema + spIssuerValue;
+            spIssuerValue = this.getStringProperty(DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, "https")
+                    + "://" + spIssuerValue;
         }
 
         final String assertionConsumerEndpoint =

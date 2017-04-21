@@ -35,11 +35,6 @@ public final class DotSamlConstants {
      */
     public static final String DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL = "dotcms.saml.assertion.customer.endpoint.url";
 
-    /**
-     * By default the schema on the default assertion customer endpoint is https (if the entityId does not have any http at the begin of course)
-     * So if you wan to change it, you can override this value
-     */
-    public static final String DOT_SAML_ASSERTION_CUSTOMER_SCHEMA = "dotcms.saml.assertion.customer.schema";
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
