@@ -36,6 +36,12 @@ public final class DotSamlConstants {
     public static final String DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL = "dotcms.saml.assertion.customer.endpoint.url";
 
     /**
+     * By default the schema on the default assertion customer endpoint is https (if the entityId does not have any http at the begin of course)
+     * So if you wan to change it, you can override this value
+     */
+    public static final String DOT_SAML_ASSERTION_CUSTOMER_SCHEMA = "dotcms.saml.assertion.customer.schema";
+
+    /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * For the provider issue which is the identifier for the sender, by default is: DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER_DEFAULT_VALUE
      * Usually you overrides it to your host domain, for instance our id could be http://dotcms.com.
@@ -373,4 +379,5 @@ public final class DotSamlConstants {
      * By default we do not include the encryptor in the metadata, if you want to include it set this to true.
      */
     public static final String DOTCMS_SAML_USE_ENCRYPTED_DESCRIPTOR = "use.encrypted.descriptor";
+
 } // E:O:F:DotSamlConstants.

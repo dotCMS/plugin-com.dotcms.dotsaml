@@ -142,7 +142,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                         configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));*/
 
         spssoDescriptor.getAssertionConsumerServices().add
-                (this.createAssertionConsumerService(1, SAMLConstants.SAML2_POST_BINDING_URI,
+                (this.createAssertionConsumerService(0, SAMLConstants.SAML2_POST_BINDING_URI,
                         configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));
 
         /*spssoDescriptor.getAssertionConsumerServices().add
