@@ -18,8 +18,8 @@ import java.util.Collection;
  */
 public interface Configuration extends Serializable {
 
-    public static final String HTTP_SCHEMA = "http://";
-    public static final  HTTPS_SCHEMA = "https://";
+    public static final String HTTP_SCHEMA  = "http://";
+    public static final String HTTPS_SCHEMA = "https://";
 
     /**
      * Returns the site name associated to this configuration
