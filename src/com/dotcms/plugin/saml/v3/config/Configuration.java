@@ -7,7 +7,6 @@ import com.dotcms.plugin.saml.v3.SamlUtils;
 import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
 import com.dotmarketing.util.UtilMethods;
 import org.opensaml.security.credential.Credential;
-import com.dotmarketing.util.Logger;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -167,17 +166,17 @@ public interface Configuration extends Serializable {
 
         String spIssuerValue = SamlUtils.getSPIssuerValue(this);
 
-        if (null != spIssuerValue && (!spIssuerValue.startsWith(HTTP_SCHEMA) || !spIssuerValue.startsWith(HTTPS_SCHEMA))) {
+        if (null != spIssuerValue && !(spIssuerValue.trim().startsWith(HTTP_SCHEMA) || spIssuerValue.trim().startsWith(HTTPS_SCHEMA))) {
 
             final String protocol = this.getStringProperty(DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, "https");
             spIssuerValue = protocol + "://" + spIssuerValue + "/dotsaml3sp";
         }
 
         final String assertionConsumerEndpoint =
-            this.getSiteConfiguration().getString(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL, spIssuerValue);
+                this.getSiteConfiguration().getString(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL, spIssuerValue);
 
         return UtilMethods.isSet(assertionConsumerEndpoint) ?
-            assertionConsumerEndpoint : null;
+                assertionConsumerEndpoint : null;
     } // getAssertionConsumerEndpoint.
 
     /**
