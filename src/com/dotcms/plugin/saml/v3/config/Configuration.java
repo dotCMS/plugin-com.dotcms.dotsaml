@@ -170,8 +170,7 @@ public interface Configuration extends Serializable {
 
         if (null != spIssuerValue && !(spIssuerValue.trim().startsWith(HTTP_SCHEMA) || spIssuerValue.trim().startsWith(HTTPS_SCHEMA))) {
 
-            final String protocol = this.getStringProperty(DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, HTTPS_SCHEMA_PREFIX);
-            spIssuerValue = protocol + "://" + spIssuerValue;
+            throw new InvalidIssuerValueException ("The issuer: " + spIssuerValue + " should starts with http:// or https:// to be valid");
         }
 
         spIssuerValue += ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP;
