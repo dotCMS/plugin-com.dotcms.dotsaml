@@ -94,9 +94,9 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                                final String siteName) {
 
         final SiteConfigurationResolver resolver      = (SiteConfigurationResolver)InstancePool.get(SiteConfigurationResolver.class.getName());
-        final Configuration             configuration = resolver.resolveConfiguration(request);
-        final MessageContext            context       = new MessageContext(); // main context
-        final AuthnRequest              authnRequest  = buildAuthnRequest(request, configuration);
+        final Configuration configuration = resolver.resolveConfiguration(request);
+        final MessageContext context       = new MessageContext(); // main context
+        final AuthnRequest authnRequest  = buildAuthnRequest(request, configuration);
 
         context.setMessage(authnRequest);
 

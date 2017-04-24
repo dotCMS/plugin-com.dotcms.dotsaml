@@ -254,8 +254,14 @@ public class SamlUtils {
 
         final String defaultHost = configuration.getSiteName();
 
-        return UtilMethods.isSet (defaultHost) ? defaultHost :
-                configuration.getStringProperty(DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, null) + "://"
+        if (UtilMethods.isSet (defaultHost))  {
+
+            return !(defaultHost.trim().startsWith(Configuration.HTTP_SCHEMA) || defaultHost.trim().startsWith(Configuration.HTTPS_SCHEMA)?
+                    Configuration.HTTPS_SCHEMA + defaultHost: defaultHost;
+        }
+
+        return
+                configuration.getStringProperty(DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, Configuration.HTTPS_SCHEMA) + "://"
                     + SPIIssuerResolver.getDefaultServiceProviderIssuer().getHostname();
     } // getSiteName.
 

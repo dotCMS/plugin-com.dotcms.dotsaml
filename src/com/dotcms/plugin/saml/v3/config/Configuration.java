@@ -22,6 +22,8 @@ public interface Configuration extends Serializable {
 
     public static final String HTTP_SCHEMA  = "http://";
     public static final String HTTPS_SCHEMA = "https://";
+    String HTTPS_SCHEMA_PREFIX = "https";
+    String ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP = "/dotsaml3sp";
 
     /**
      * Returns the site name associated to this configuration
@@ -168,15 +170,14 @@ public interface Configuration extends Serializable {
 
         if (null != spIssuerValue && !(spIssuerValue.trim().startsWith(HTTP_SCHEMA) || spIssuerValue.trim().startsWith(HTTPS_SCHEMA))) {
 
-            final String protocol = this.getStringProperty(DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, "https");
-            spIssuerValue = protocol + "://" + spIssuerValue + "/dotsaml3sp";
+            final String protocol = this.getStringProperty(DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, HTTPS_SCHEMA_PREFIX);
+            spIssuerValue = protocol + "://" + spIssuerValue;
         }
 
-        final String assertionConsumerEndpoint =
-                this.getSiteConfiguration().getString(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL, spIssuerValue);
+        spIssuerValue += ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP;
 
-        return UtilMethods.isSet(assertionConsumerEndpoint) ?
-                assertionConsumerEndpoint : null;
+        return
+                this.getSiteConfiguration().getString(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL, spIssuerValue);
     } // getAssertionConsumerEndpoint.
 
     /**
