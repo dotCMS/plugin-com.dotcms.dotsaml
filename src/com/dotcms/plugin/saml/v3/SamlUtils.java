@@ -256,7 +256,7 @@ public class SamlUtils {
 
         if (UtilMethods.isSet (defaultHost))  {
 
-            return !(defaultHost.trim().startsWith(Configuration.HTTP_SCHEMA) || defaultHost.trim().startsWith(Configuration.HTTPS_SCHEMA)?
+            return !(defaultHost.trim().startsWith(Configuration.HTTP_SCHEMA) || defaultHost.trim().startsWith(Configuration.HTTPS_SCHEMA))?
                     Configuration.HTTPS_SCHEMA + defaultHost: defaultHost;
         }
 
