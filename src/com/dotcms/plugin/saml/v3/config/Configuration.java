@@ -11,12 +11,19 @@ import org.opensaml.security.credential.Credential;
 import java.io.Serializable;
 import java.util.Collection;
 
+import static com.dotcms.plugin.saml.v3.DotSamlConstants.DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL;
+
 /**
  * The configuration encapsulates all the info necessary for the open saml plugin
  * Note: an implementation of {@link Configuration} must has a constructor with {@link SiteConfigurationBean} arguments and a {@link String} siteName
  * @author jsanca
  */
 public interface Configuration extends Serializable {
+
+    public static final String HTTP_SCHEMA  = "http://";
+    public static final String HTTPS_SCHEMA = "https://";
+    String HTTPS_SCHEMA_PREFIX = "https";
+    String ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP = "/dotsaml3sp";
 
     /**
      * Returns the site name associated to this configuration
@@ -159,14 +166,17 @@ public interface Configuration extends Serializable {
      */
     public default String getAssertionConsumerEndpoint() {
 
-        final String assertionConsumerEndpoint =
-            this.getSiteConfiguration().
-                getString(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL,
-                    SamlUtils.getSPIssuerValue(this).concat("/" + this.getStringProperty(
-                        DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID, "")));
+        String spIssuerValue = SamlUtils.getSPIssuerValue(this);
 
-        return UtilMethods.isSet(assertionConsumerEndpoint) ?
-            assertionConsumerEndpoint : null;
+        if (null != spIssuerValue && !(spIssuerValue.trim().startsWith(HTTP_SCHEMA) || spIssuerValue.trim().startsWith(HTTPS_SCHEMA))) {
+
+            throw new InvalidIssuerValueException ("The issuer: " + spIssuerValue + " should starts with http:// or https:// to be valid");
+        }
+
+        spIssuerValue += ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP;
+
+        return
+                this.getSiteConfiguration().getString(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL, spIssuerValue);
     } // getAssertionConsumerEndpoint.
 
     /**

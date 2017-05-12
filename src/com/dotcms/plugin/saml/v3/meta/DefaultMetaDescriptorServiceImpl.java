@@ -1,10 +1,10 @@
 package com.dotcms.plugin.saml.v3.meta;
 
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
-import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.SamlUtils;
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationBean;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotmarketing.util.Logger;
 import net.shibboleth.utilities.java.support.xml.ParserPool;
@@ -137,17 +137,17 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         this.setFormat(configuration, spssoDescriptor);
 
         // set's the assertion customer services, this will be a fixed url on dotCMS.
-        spssoDescriptor.getAssertionConsumerServices().add
+        /*spssoDescriptor.getAssertionConsumerServices().add
                 (this.createAssertionConsumerService(0, SAMLConstants.SAML2_ARTIFACT_BINDING_URI,
-                        configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));
+                        configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));*/
 
         spssoDescriptor.getAssertionConsumerServices().add
-                (this.createAssertionConsumerService(1, SAMLConstants.SAML2_POST_BINDING_URI,
+                (this.createAssertionConsumerService(0, SAMLConstants.SAML2_POST_BINDING_URI,
                         configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));
 
-        spssoDescriptor.getAssertionConsumerServices().add
+        /*spssoDescriptor.getAssertionConsumerServices().add
                 (this.createAssertionConsumerService(2, SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI,
-                        configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));
+                        configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));*/
 
         spssoDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
         descriptor.getRoleDescriptors().add(spssoDescriptor);
@@ -167,6 +167,8 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                                                                       final String binding,
                                                                       final String location,
                                                                       final SAMLObjectBuilder<AssertionConsumerService> assertionConsumerServiceBuilder) {
+
+        Logger.info(this, "Assertion consumer service, location: " + location);
 
         final AssertionConsumerService assertionConsumerServiceArtifact =
                 assertionConsumerServiceBuilder.buildObject();
@@ -191,7 +193,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                         (NameIDFormat.DEFAULT_ELEMENT_NAME);
 
         final String [] formats = configuration.getStringArray (DotSamlConstants.DOTCMS_SAML_NAME_ID_FORMATS,
-                new String[] { NameIDType.TRANSIENT, NameIDType.PERSISTENT });
+                new String[] {  NameIDType.PERSISTENT });
 
         for (String format : formats) {
 
@@ -222,11 +224,13 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
      */
     protected void setKeyDescriptors(final SPSSODescriptor spssoDescriptor, final Configuration configuration) {
 
+        final boolean isEncryptedDescriptor =
+                configuration.getBooleanProperty(DotSamlConstants.DOTCMS_SAML_USE_ENCRYPTED_DESCRIPTOR, false);
         final SAMLObjectBuilder<KeyDescriptor> keyDescriptorBuilder =
                 (SAMLObjectBuilder<KeyDescriptor>) this.xmlObjectBuilderFactory.
                         getBuilder(KeyDescriptor.DEFAULT_ELEMENT_NAME);
         final KeyDescriptor signKeyDescriptor;
-        final KeyDescriptor encryptedKeyDescriptor;
+        KeyDescriptor encryptedKeyDescriptor = null;
         final Credential credential = this.getCredential(configuration);
         final EncryptionMethodBuilder encryptionMethodBuilder = new EncryptionMethodBuilder();
         final EncryptionMethod encryptionMethod;
@@ -234,22 +238,27 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         try {
 
             signKeyDescriptor = keyDescriptorBuilder.buildObject();
-            encryptedKeyDescriptor = keyDescriptorBuilder.buildObject();
-
             signKeyDescriptor.setUse(UsageType.SIGNING);
-            encryptedKeyDescriptor.setUse(UsageType.ENCRYPTION);
+
+            if (isEncryptedDescriptor) {
+                encryptedKeyDescriptor = keyDescriptorBuilder.buildObject();
+                encryptedKeyDescriptor.setUse(UsageType.ENCRYPTION);
+            }
 
             try {
 
                 signKeyDescriptor.setKeyInfo(getKeyInfo(credential));
-                encryptedKeyDescriptor.setKeyInfo(getKeyInfo(credential));
 
                 encryptionMethod = encryptionMethodBuilder.buildObject();
                 encryptionMethod.setAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
                 signKeyDescriptor.getEncryptionMethods().add(encryptionMethod);
 
                 spssoDescriptor.getKeyDescriptors().add(signKeyDescriptor);
-                spssoDescriptor.getKeyDescriptors().add(encryptedKeyDescriptor);
+
+                if (isEncryptedDescriptor) {
+                    encryptedKeyDescriptor.setKeyInfo(getKeyInfo(credential));
+                    spssoDescriptor.getKeyDescriptors().add(encryptedKeyDescriptor);
+                }
             } catch (org.opensaml.xml.security.SecurityException e) {
 
                 Logger.error(this, "Error generating credentials", e);
