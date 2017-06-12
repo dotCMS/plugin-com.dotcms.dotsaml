@@ -5,6 +5,7 @@ import org.opensaml.saml.saml2.core.Assertion;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.Serializable;
 
 /**
@@ -38,6 +39,17 @@ public interface SamlAuthenticationService extends Serializable {
                         final String siteName);
 
     /**
+     * Do the logout call for SAML
+     * @param request {@link HttpServletRequest}
+     * @param response {@link HttpServletResponse}
+     * @param siteName {@link String}
+     */
+    void logout (final HttpServletRequest request,
+                 final HttpServletResponse response,
+                 final String siteName);
+
+
+    /**
      * Pre: the request parameter SAML_ART_PARAM_KEY must exists
      * Resolve the assertion by making a  call to the idp.
      * @param request  {@link HttpServletRequest}
@@ -59,4 +71,20 @@ public interface SamlAuthenticationService extends Serializable {
      */
     User getUser(final HttpServletRequest request, final HttpServletResponse response,
                  final String siteName);
+
+
+    /**
+     * Perform the logic to get or create the user from the SAML and DotCMS
+     * If the SAML_ART_PARAM_KEY, will resolve the Assertion by calling a Resolver
+     * and will create/get/update the user on the dotcms data.
+     * @param request  {@link HttpServletRequest}
+     * @param response {@link HttpServletResponse}
+     * @param loginHttpSession {@link HttpSession} session to store the
+     * @param siteName {@link String}
+     * @return User
+     */
+    User getUser(final HttpServletRequest request, final HttpServletResponse response,
+                 final HttpSession loginHttpSession,
+                 final String siteName);
+
 } // E:O:F:SamlAuthenticationService.

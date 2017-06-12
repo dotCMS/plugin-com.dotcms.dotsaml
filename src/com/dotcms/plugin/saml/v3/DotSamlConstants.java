@@ -27,6 +27,17 @@ public final class DotSamlConstants {
         DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL =
         "dotcms.saml.identity.provider.destinationsso.url";
 
+
+    /**
+     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
+     * If you have already set a idp-metadata, this value will be taken from it, otherwise you have to set it on the dotCMS properties.
+     * If the value is not present will got an exception on runtime.
+     * This value is the IDP logout url (usually Shibboleth), which is the one used to logout the saml session.
+     */
+    public static final String
+            DOTCMS_SAML_IDENTITY_PROVIDER_LOGOUT_DESTINATION_URL =
+            "dotcms.saml.identity.provider.logout.url";
+
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * This is the customer endpoint url, which means the url where to be redirected when the user gets log back to dotcms.

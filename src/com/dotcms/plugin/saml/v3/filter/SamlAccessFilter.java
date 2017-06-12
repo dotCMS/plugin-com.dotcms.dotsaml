@@ -430,7 +430,7 @@ public class SamlAccessFilter implements Filter {
 
         final User user =
                 this.samlAuthenticationService.getUser
-                        (request, response, configuration.getSiteName());
+                        (request, response, session, configuration.getSiteName());
         boolean continueFilter = true; // by default continue with the filter
 
         if (null != user) {
