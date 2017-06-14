@@ -3,6 +3,7 @@ package com.dotcms.plugin.saml.v3;
 import com.dotcms.plugin.saml.v3.init.DefaultInitializer;
 import com.dotcms.plugin.saml.v3.meta.DefaultMetaDescriptorServiceImpl;
 import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
+import com.dotmarketing.util.Config;
 
 /**
  * Encapsulates constants for the dot SAML SP
@@ -32,11 +33,11 @@ public final class DotSamlConstants {
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * If you have already set a idp-metadata, this value will be taken from it, otherwise you have to set it on the dotCMS properties.
      * If the value is not present will got an exception on runtime.
-     * This value is the IDP logout url (usually Shibboleth), which is the one used to logout the saml session.
+     * This value is the Redirect SLO (Logout) url (usually Shibboleth), which is the one to be redirect when the user does logout on dotCMS.
      */
-    public static final String
-            DOTCMS_SAML_IDENTITY_PROVIDER_LOGOUT_DESTINATION_URL =
-            "dotcms.saml.identity.provider.logout.url";
+    public static final String DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SLO_URL = "dotcms.saml.identity.provider.destinationslo.url";
+
+
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
@@ -171,6 +172,14 @@ public final class DotSamlConstants {
      */
     public static final String DOT_SAML_INITIALIZER_CLASS_NAME = "dotcms.saml.initializer.classname";
 
+
+    /**
+     * By default we use the {@link OpenSamlAuthenticationServiceImpl}, however if you want to create or customize your own it is possible by implementing {@link SamlAuthenticationService}
+     * or just extending {@link OpenSamlAuthenticationServiceImpl}
+     * If you need to override it, just set the classname with this property
+     */
+    public static final String DOT_SAML_AUTHENTICATION_SERVICE_CLASS_NAME = "dotcms.saml.authentication.service.classname";
+
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * By default dotcms use: {@link com.dotcms.plugin.saml.v3.config.DefaultDotCMSConfiguration} but you can override by addding a full class name to this property.
@@ -217,6 +226,13 @@ public final class DotSamlConstants {
      * comma separated.
      */
     public static final String DOT_SAML_INCLUDE_PATH_VALUES = "dotcms.saml.include.path.values";
+
+    /**
+     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
+     * By default we include "/c/portal/logout,/dotCMS/logout", if you need to add more into the saml more path you can include the values
+     * comma separated.
+     */
+    public static final String DOT_SAML_LOGOUT_PATH_VALUES =  "dotcms.saml.include.path.values";
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
@@ -385,5 +401,59 @@ public final class DotSamlConstants {
      * By default we do not include the encryptor in the metadata, if you want to include it set this to true.
      */
     public static final String DOTCMS_SAML_USE_ENCRYPTED_DESCRIPTOR = "use.encrypted.descriptor";
+
+    /**
+     * Prefix for the {@link ToleranceOpenSamlAuthenticationServiceImpl} email when the email is empty or null
+     */
+    public static final String DOTCMS_SAML_EMAIL_PREFIX = "dotcms.saml.tolerance.samlauthservice.email.prefix";
+
+    /**
+     * Prefix for the {@link ToleranceOpenSamlAuthenticationServiceImpl} first name when the first name is empty or null
+     */
+    public static final String DOTCMS_SAML_NAME_PREFIX = "dotcms.saml.tolerance.samlauthservice.name.prefix";
+
+    /**
+     * Prefix for the {@link ToleranceOpenSamlAuthenticationServiceImpl} last name when the last name is empty or null
+     */
+    public static final String DOTCMS_SAML_LASTNAME_PREFIX = "dotcms.saml.tolerance.samlauthservice.lastname.prefix";
+
+    /**
+     * Postfix for the {@link ToleranceOpenSamlAuthenticationServiceImpl} email when the email is empty or null
+     */
+    public static final String DOTCMS_SAML_EMAIL_POSTFIX = "dotcms.saml.tolerance.samlauthservice.email.postfix";
+
+    /**
+     * Postfix for the {@link ToleranceOpenSamlAuthenticationServiceImpl} first name when the first name is empty or null
+     */
+    public static final String DOTCMS_SAML_NAME_POSTFIX = "dotcms.saml.tolerance.samlauthservice.name.postfix";
+
+    /**
+     * Postfix for the {@link ToleranceOpenSamlAuthenticationServiceImpl} last name when the last name is empty or null
+     */
+    public static final String DOTCMS_SAML_LASTNAME_POSTFIX = "dotcms.saml.tolerance.samlauthservice.lastname.postfix";
+
+
+    /**
+     * Default for the {@link ToleranceOpenSamlAuthenticationServiceImpl} email when the email is empty or null
+     * If the default is set, the prefix and postfix will be ignore
+     */
+    public static final String DOTCMS_SAML_EMAIL_DEFAULT = "dotcms.saml.tolerance.samlauthservice.email.default";
+
+    /**
+     * Default for the {@link ToleranceOpenSamlAuthenticationServiceImpl} first name when the first name is empty or null
+     * If the default is set, the prefix and postfix will be ignore
+     */
+    public static final String DOTCMS_SAML_NAME_DEFAULT = "dotcms.saml.tolerance.samlauthservice.name.default";
+
+    /**
+     * Default for the {@link ToleranceOpenSamlAuthenticationServiceImpl} last name when the last name is empty or null
+     * If the default is set, the prefix and postfix will be ignore
+     */
+    public static final String DOTCMS_SAML_LASTNAME_DEFAULT = "dotcms.saml.tolerance.samlauthservice.lastname.default";
+
+    /**
+     * By default the app will try to logout on any site, however you can override this property per site in order to avoid the plugin to handle the logout.
+     */
+    public static final String DOTCMS_SAML_IS_LOGOUT_NEED = "dotcms.saml.islogoutneed";
 
 } // E:O:F:DotSamlConstants.

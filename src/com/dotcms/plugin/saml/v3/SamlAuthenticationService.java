@@ -15,6 +15,7 @@ import java.io.Serializable;
  */
 public interface SamlAuthenticationService extends Serializable {
 
+    public static final String SAML_NAME_ID_SESSION_ATTR = "SAML_NAME_ID";
     public static final String SAML_ART_PARAM_KEY = "SAMLart";
 
     /**
@@ -47,7 +48,6 @@ public interface SamlAuthenticationService extends Serializable {
     void logout (final HttpServletRequest request,
                  final HttpServletResponse response,
                  final String siteName);
-
 
     /**
      * Pre: the request parameter SAML_ART_PARAM_KEY must exists

@@ -7,28 +7,13 @@ import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandler;
 import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandlerFactory;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
 import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
-import com.dotmarketing.business.APILocator;
-import com.dotmarketing.business.DotStateException;
-import com.dotmarketing.business.NoSuchUserException;
-import com.dotmarketing.business.Role;
-import com.dotmarketing.business.RoleAPI;
-import com.dotmarketing.business.UserAPI;
+import com.dotmarketing.business.*;
 import com.dotmarketing.cms.factories.PublicEncryptionFactory;
 import com.dotmarketing.exception.DotDataException;
-import com.dotmarketing.exception.RoleNameException;
-import com.dotmarketing.util.ActivityLogger;
-import com.dotmarketing.util.AdminLogger;
-import com.dotmarketing.util.DateUtil;
-import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.RegEX;
-import com.dotmarketing.util.UUIDGenerator;
-import com.liferay.portal.language.LanguageUtil;
+import com.dotmarketing.util.*;
 import com.liferay.portal.model.User;
 import com.liferay.util.InstancePool;
-
-import com.sun.tools.corba.se.idl.StringGen;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.messaging.encoder.MessageEncodingException;
@@ -38,18 +23,18 @@ import org.opensaml.saml.saml2.binding.encoding.impl.HTTPRedirectDeflateEncoder;
 import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.opensaml.saml.saml2.core.LogoutRequest;
+import org.opensaml.saml.saml2.core.Subject;
 import org.opensaml.xmlsec.SignatureSigningParameters;
 import org.opensaml.xmlsec.context.SecurityParametersContext;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Date;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import static com.dotcms.plugin.saml.v3.DotSamlConstants.*;
 import static com.dotcms.plugin.saml.v3.SamlUtils.*;
@@ -62,10 +47,11 @@ import static com.dotmarketing.util.UtilMethods.isSet;
 public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationService {
 
 
-    private static final String NULL = "null";
-    private final UserAPI userAPI;
-    private final RoleAPI roleAPI;
-    private final AssertionResolverHandlerFactory assertionResolverHandlerFactory;
+
+    protected static final String NULL = "null";
+    protected final UserAPI userAPI;
+    protected final RoleAPI roleAPI;
+    protected final AssertionResolverHandlerFactory assertionResolverHandlerFactory;
 
     public OpenSamlAuthenticationServiceImpl() {
 
@@ -112,6 +98,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         this.doRedirect(context, response, authnRequest);
     } // authentication.
 
+
     public void logout(final HttpServletRequest request,
                        final HttpServletResponse response,
                        final String siteName) {
@@ -128,7 +115,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                 peerEntityContext.getSubcontext(SAMLEndpointContext.class, true);
 
         endpointContext.setEndpoint(
-                getIdentityProviderDestinationEndpoint(configuration)); // todo: set the Logout Destination Endpoint
+                getIdentityProviderSLODestinationEndpoint(configuration));
 
         this.setSignatureSigningParams(context, configuration);
         this.doRedirect(context, response, logoutRequest);
@@ -159,6 +146,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         final Assertion assertion;
         final SiteConfigurationResolver resolver      = (SiteConfigurationResolver)InstancePool.get(SiteConfigurationResolver.class.getName());
         final Configuration             configuration = resolver.resolveConfiguration(request);
+        Subject subject                               = null;
 
         if (this.isValidSamlRequest (request, response, siteName)) {
 
@@ -176,7 +164,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
     /**
      * When the authentication is performed and redirected to SO (DotCMS) you can call this method.
-     * If the request contains a parameter called AMLart, will try to get the {@link org.opensaml.saml.saml2.core.Assertion}
+     * If the request contains a parameter called SAMLart, will try to get the {@link org.opensaml.saml.saml2.core.Assertion}
      * with the user information via the Resolver Implementation.
      *
      * - If the user exists, will just return the instance of it.
@@ -186,6 +174,10 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
      * - If the existing user is active will also populate the roles.
      *
      * Note: if the parameter "SAMLart" does not exists, will return null.
+     *
+     * In addition this method is receiving the session, the reason of that is to store the SAML_SESSION_INDEX and the SAML_NAME_ID
+     * with them we can
+     *
      * @param request  {@link HttpServletRequest}
      * @param response {@link HttpServletResponse}
      * @param loginHttpSession {@link HttpSession} session to store the
@@ -265,7 +257,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
 
     // resolve the attributes from the assertion resolved from the OpenSaml artifact resolver via
-    private AttributesBean resolveAttributes (final Assertion assertion, final Configuration configuration) throws AttributesNotFoundException {
+    protected AttributesBean resolveAttributes (final Assertion assertion, final Configuration configuration) throws AttributesNotFoundException {
 
         final String emailField       = configuration.getStringProperty
                 (DOT_SAML_EMAIL_ATTRIBUTE, "mail");
@@ -305,7 +297,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         return attrBuilder.build();
     } // resolveAttributes.
 
-    private void validateAttributes(Assertion assertion) throws AttributesNotFoundException {
+    protected void validateAttributes(Assertion assertion) throws AttributesNotFoundException {
         if (assertion == null
             || assertion.getAttributeStatements() == null
             || assertion.getAttributeStatements().isEmpty()
@@ -321,7 +313,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     // Gets the attributes from the Assertion, based on the attributes
     // see if the user exists return it from the dotCMS records, if does not exist then, tries to create it.
     // the existing or created user, will be updated the roles if they present on the assertion.
-    private User resolveUser(final Assertion assertion, final Configuration configuration) {
+    protected User resolveUser(final Assertion assertion, final Configuration configuration) {
 
         User systemUser  = null;
         User user        = null;
@@ -488,7 +480,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         return role;
     }
 
-    private User createNewUser(final User systemUser,
+    protected User createNewUser(final User systemUser,
                                final AttributesBean attributesBean) {
 
         User user = null;

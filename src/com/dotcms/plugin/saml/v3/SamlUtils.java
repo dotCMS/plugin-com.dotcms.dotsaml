@@ -27,8 +27,11 @@ import org.opensaml.saml.common.SAMLVersion;
 import org.opensaml.saml.common.SignableSAMLObject;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.*;
+import org.opensaml.saml.saml2.core.impl.NameIDBuilder;
+import org.opensaml.saml.saml2.core.impl.SessionIndexBuilder;
 import org.opensaml.saml.saml2.encryption.Decrypter;
 import org.opensaml.saml.saml2.metadata.Endpoint;
+import org.opensaml.saml.saml2.metadata.SingleLogoutService;
 import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator;
 import org.opensaml.security.credential.Credential;
@@ -91,6 +94,8 @@ public class SamlUtils {
     private static final String DEFAULT_ELEMENT_NAME = "DEFAULT_ELEMENT_NAME";
     public static final String SAML_SESSION_INDEX = "SAMLSessionIndex";
     public static final String SAML_NAME_ID       = "SAMLNameID";
+    public static final String SINGLE_LOGOUT_REASON = "urn:oasis:names:tc:SAML:2.0:logout:user";
+
 
 
     private static Map<String, Credential> credentialMap = new ConcurrentHashMap<>();
@@ -133,7 +138,7 @@ public class SamlUtils {
         final NameID        nameID             = (NameID) ((null != httpSession)?httpSession.getAttribute(configuration.getSiteName()+SAML_NAME_ID):null);
         final String        sessionIndexValue  = (String) ((null != httpSession)?httpSession.getAttribute(configuration.getSiteName()+SAML_SESSION_INDEX):null);
         final LogoutRequest logoutRequest      = buildSAMLObject(LogoutRequest.class);
-        final String        idpSingleLogoutDestionation = getIDPSingleLogoutDestination(configuration);
+        final String        idpSingleLogoutDestionation = getIPDSLODestination(configuration);
         SessionIndex sessionIndex              = null;
 
         logoutRequest.setIssueInstant(new DateTime());
@@ -143,7 +148,7 @@ public class SamlUtils {
         if (!isSet(idpSingleLogoutDestionation)) {
 
             Logger.error(SamlUtils.class, "The idpSingleLogoutDestionation is not set in the idp metadata, neither the configuration files");
-            throw new DotSamlException("The property: " + DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_LOGOUT_DESTINATION_URL +
+            throw new DotSamlException("The property: " + DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SLO_URL +
                     " must be set on the host");
         }
 
@@ -156,6 +161,7 @@ public class SamlUtils {
         Logger.debug(SamlUtils.class, "NameID: " + nameID + ", SessionIndex: " + sessionIndexValue);
 
         // id for the sender
+        logoutRequest.setDestination(idpSingleLogoutDestionation);
         logoutRequest.setIssuer(buildIssuer(configuration));
         logoutRequest.setNameID(nameID);
 
@@ -163,24 +169,12 @@ public class SamlUtils {
         sessionIndex.setSessionIndex(sessionIndexValue);
         logoutRequest.getSessionIndexes().add(sessionIndex);
 
+        logoutRequest.setReason(SINGLE_LOGOUT_REASON);
+        logoutRequest.setVersion(SAMLVersion.VERSION_20);
+
         return logoutRequest;
     } // buildLogoutRequest
 
-    /**
-     * Gets from the dotmarketing-config.properties the destination logout url
-     * @return String
-     */
-    public static String getIDPSingleLogoutDestination(final Configuration configuration) {
-        // todo: implement the logout stuff here
-        final String redirectIdentityProviderDestinationSSOURL =
-                configuration.getIdentityProviderDestinationSSOURL(configuration);
-
-        // first check the meta data info., secondly the configuration
-        return (null != redirectIdentityProviderDestinationSSOURL)?
-                redirectIdentityProviderDestinationSSOURL:
-                configuration.getStringProperty(
-                        DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_LOGOUT_DESTINATION_URL, null);
-    } // getIPDSSODestination.
 
     /**
      * Return the value of the /AuthnStatement@SessionIndex element in an assertion
@@ -245,6 +239,8 @@ public class SamlUtils {
         return authnRequest;
     } // buildAuthnRequest.
 
+
+
     /**
      * Gets from the dotmarketing-config.properties the destination sso url
      * @return String
@@ -259,6 +255,23 @@ public class SamlUtils {
                 redirectIdentityProviderDestinationSSOURL:
                 configuration.getStringProperty(
                     DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL, null);
+    } // getIPDSSODestination.
+
+
+    /**
+     * Gets from the dotmarketing-config.properties the destination slo url
+     * @return String
+     */
+    public static String getIPDSLODestination(final Configuration configuration) {
+
+        final String redirectIdentityProviderDestinationSLOURL =
+                configuration.getIdentityProviderDestinationSLOURL(configuration);
+
+        // first check the meta data info., secondly the configuration
+        return (null != redirectIdentityProviderDestinationSLOURL)?
+                redirectIdentityProviderDestinationSLOURL:
+                configuration.getStringProperty(
+                        DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SLO_URL, null);
     } // getIPDSSODestination.
 
     public static  String getAssertionConsumerEndpoint(final HttpServletRequest request, final Configuration configuration) {
@@ -416,6 +429,20 @@ public class SamlUtils {
         return comparisonTypeEnumeration;
     } // getAuthnContextComparisonTypeEnumeration.
 
+
+    /**
+     * Get the Logout Identity Provider Destination
+     * @return Endpoint
+     */
+    public static Endpoint getIdentityProviderSLODestinationEndpoint(final Configuration configuration) {
+
+        final SingleLogoutService endpoint = buildSAMLObject(SingleLogoutService.class);
+
+        endpoint.setBinding(SAMLConstants.SAML2_REDIRECT_BINDING_URI);
+        endpoint.setLocation(getIPDSLODestination(configuration));
+
+        return endpoint;
+    } // getIdentityProviderSLODestinationEndpoint.
 
     /**
      * Get the Identity Provider Destination

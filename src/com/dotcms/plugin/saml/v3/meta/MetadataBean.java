@@ -19,14 +19,23 @@ public class MetadataBean implements Serializable {
     // list of single sign on location indexed by binding name
     private final Map<String, String> singleSignOnBindingLocationMap;
 
+    // list of single logout on location indexed by binding name
+    private final Map<String, String> singleLogoutBindingLocationMap;
+
     // credential signing list
     private final List<Credential> credentialSigningList;
 
-    public MetadataBean(String entityId, String errorURL, Map<String, String> singleSignOnBindingLocationMap, List<Credential> credentialSigningList) {
+    public MetadataBean(final String entityId,
+                        final String errorURL,
+                        final Map<String, String> singleSignOnBindingLocationMap,
+                        final Map<String, String> singleLogoutBindingLocationMap,
+                        final List<Credential> credentialSigningList) {
+
         this.entityId = entityId;
         this.errorURL = errorURL;
         this.singleSignOnBindingLocationMap = singleSignOnBindingLocationMap;
-        this.credentialSigningList = credentialSigningList;
+        this.credentialSigningList          = credentialSigningList;
+        this.singleLogoutBindingLocationMap = singleLogoutBindingLocationMap;
     }
 
     public String getEntityId() {
@@ -43,5 +52,9 @@ public class MetadataBean implements Serializable {
 
     public List<Credential> getCredentialSigningList() {
         return credentialSigningList;
+    }
+
+    public Map<String, String> getSingleLogoutBindingLocationMap() {
+        return singleLogoutBindingLocationMap;
     }
 } // E:O:F:MetadataBean.
