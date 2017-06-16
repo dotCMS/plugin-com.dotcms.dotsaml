@@ -43,6 +43,13 @@ public class ToleranceOpenSamlAuthenticationServiceImpl extends OpenSamlAuthenti
         final String nameDefault      = Config.getStringProperty(DotSamlConstants.DOTCMS_SAML_NAME_DEFAULT,     null);
         final String lastnameDefault  = Config.getStringProperty(DotSamlConstants.DOTCMS_SAML_LASTNAME_DEFAULT, null);
 
+        Logger.info(this,
+                "emailPrefix: " + emailPreFix + ", emailPostFix:" + emailPostFix + ", emailDefault: " + emailDefault);
+        Logger.info(this,
+                "namePreFix: " + namePreFix + ", namePostFix:" + namePostFix + ", nameDefault: " + nameDefault);
+        Logger.info(this,
+                "lastnamePreFix: " + lastnamePreFix + ", lastnamePostFix:" + lastnamePostFix + ", lastnameDefault: " + lastnameDefault);
+
         this.emailFieldStrategy       = new EmptyOrNullFieldStrategy(emailDefault, emailPreFix, emailPostFix);
         this.nameFieldStrategy        = new EmptyOrNullFieldStrategy(nameDefault, namePreFix, namePostFix);
         this.lastNameFieldStrategy    = new EmptyOrNullFieldStrategy(lastnameDefault, lastnamePreFix, lastnamePostFix);
@@ -68,7 +75,11 @@ public class ToleranceOpenSamlAuthenticationServiceImpl extends OpenSamlAuthenti
 
         try {
 
+            Logger.info(this, "Attributes before strategies: " + attributesBean);
+
             final AttributesBean newAttributesBean = this.applyStrategies(attributesBean);
+
+            Logger.info(this, "Attributes after strategies: " + newAttributesBean);
 
             try {
 
@@ -118,16 +129,22 @@ public class ToleranceOpenSamlAuthenticationServiceImpl extends OpenSamlAuthenti
         if (this.getEmailFieldStrategy().canApply(attributesBean.getEmail())) {
 
             builder.email((String)this.getEmailFieldStrategy().apply(attributesBean));
+        } else {
+            builder.email(attributesBean.getEmail());
         }
 
         if (this.getNameFieldStrategy().canApply(attributesBean.getFirstName())) {
 
             builder.firstName((String)this.getNameFieldStrategy().apply(attributesBean));
+        } else {
+            builder.firstName(attributesBean.getFirstName());
         }
 
         if (this.getLastNameFieldStrategy().canApply(attributesBean.getLastName())) {
 
             builder.lastName((String)this.getLastNameFieldStrategy().apply(attributesBean));
+        } else {
+            builder.lastName(attributesBean.getLastName());
         }
 
         return builder.build();

@@ -257,11 +257,13 @@ public class SamlAccessFilter implements Filter {
         final SiteConfigurationResolver resolver      = (SiteConfigurationResolver)InstancePool.get(SiteConfigurationResolver.class.getName());
         final Configuration             configuration = resolver.resolveConfiguration(request);
         String redirectAfterLogin                     = null;
-        boolean isLogoutNeed                          = configuration.getBooleanProperty(DotSamlConstants.DOTCMS_SAML_IS_LOGOUT_NEED, true);
+        boolean isLogoutNeed                          = false;
 
         // If configuration is not, means this site does not need SAML processing
         if (null != configuration) {
 
+            isLogoutNeed                                      = configuration.getBooleanProperty
+                    (DotSamlConstants.DOTCMS_SAML_IS_LOGOUT_NEED, true);
             ThreadLocalConfiguration.setCurrentSiteConfiguration(configuration);
 
             // First, check if the current request is the SP metadata xml.
@@ -319,40 +321,35 @@ public class SamlAccessFilter implements Filter {
             }
         } else {
 
-            Logger.warn(this, "Not configuration for the site: " + request.getServerName() +
+            Logger.debug(this, "Not configuration for the site: " + request.getServerName() +
                             ". No any saml filtering for this request: " + request.getRequestURI());
         }
 
         // Starting the logout
-        NameID nameID = null;
-        String samlSessionIndex = null;
-
+        // if it is logout
         if (isLogoutNeed && null != session && this.isLogoutRequest(request.getRequestURI(), configuration.getLogoutPathArray())) {
 
-            nameID           = (NameID)session.getAttribute(configuration.getSiteName() + SamlUtils.SAML_NAME_ID);
-            samlSessionIndex = (String)session.getAttribute(configuration.getSiteName() + SamlUtils.SAML_SESSION_INDEX);
-        } else {
-            isLogoutNeed = false;
+            final NameID nameID           = (NameID)session.getAttribute(configuration.getSiteName() + SamlUtils.SAML_NAME_ID);
+            final String samlSessionIndex = (String)session.getAttribute(configuration.getSiteName() + SamlUtils.SAML_SESSION_INDEX);
+            if ( null != nameID && null != samlSessionIndex) {
+
+                Logger.info(this, "The uri: " + request.getRequestURI() +
+                        ", is a logout request. Doing the logout call to saml");
+                Logger.info(this, "Doing dotCMS logout");
+                LoginFactory.doLogout(request, response);
+                Logger.info(this, "Doing SAML redirect logout");
+                this.samlAuthenticationService.logout(request,
+                        response, nameID, samlSessionIndex, configuration.getSiteName());
+                return;
+            } else {
+
+                Logger.warn(this,
+                        "Couldn't do the logout request. Because the saml name id or the saml session index are not in the http session");
+            }
         }
 
         chain.doFilter(request, response);
 
-        // if it is logout
-
-        if (isLogoutNeed) {
-            if ( null != nameID && null != samlSessionIndex) {
-
-                Logger.debug(this, "The uri: " + request.getRequestURI() +
-                        ", is a logout request. Doing the logout call to saml");
-
-                this.samlAuthenticationService.logout(request,
-                        response, configuration.getSiteName());
-            } else {
-
-                Logger.debug(this,
-                        "Couldn't do the logout request. Because the saml name id or the saml session index are not in the http session");
-            }
-        }
     } // doFilter.
 
     private boolean isLogoutRequest(final String requestURI, final String[] logoutPathArray) {

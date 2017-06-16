@@ -2,6 +2,7 @@ package com.dotcms.plugin.saml.v3;
 
 import com.liferay.portal.model.User;
 import org.opensaml.saml.saml2.core.Assertion;
+import org.opensaml.saml.saml2.core.NameID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -47,6 +48,8 @@ public interface SamlAuthenticationService extends Serializable {
      */
     void logout (final HttpServletRequest request,
                  final HttpServletResponse response,
+                 final NameID nameID,
+                 final String sessionIndexValue,
                  final String siteName);
 
     /**

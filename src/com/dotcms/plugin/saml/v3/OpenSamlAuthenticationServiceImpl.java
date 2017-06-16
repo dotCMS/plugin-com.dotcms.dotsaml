@@ -20,10 +20,7 @@ import org.opensaml.messaging.encoder.MessageEncodingException;
 import org.opensaml.saml.common.messaging.context.SAMLEndpointContext;
 import org.opensaml.saml.common.messaging.context.SAMLPeerEntityContext;
 import org.opensaml.saml.saml2.binding.encoding.impl.HTTPRedirectDeflateEncoder;
-import org.opensaml.saml.saml2.core.Assertion;
-import org.opensaml.saml.saml2.core.AuthnRequest;
-import org.opensaml.saml.saml2.core.LogoutRequest;
-import org.opensaml.saml.saml2.core.Subject;
+import org.opensaml.saml.saml2.core.*;
 import org.opensaml.xmlsec.SignatureSigningParameters;
 import org.opensaml.xmlsec.context.SecurityParametersContext;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
@@ -101,12 +98,14 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
     public void logout(final HttpServletRequest request,
                        final HttpServletResponse response,
+                       final NameID nameID,
+                       final String sessionIndexValue,
                        final String siteName) {
 
         final SiteConfigurationResolver resolver = (SiteConfigurationResolver)InstancePool.get(SiteConfigurationResolver.class.getName());
         final Configuration configuration = resolver.resolveConfiguration(request);
         final MessageContext context      = new MessageContext(); // main context
-        final LogoutRequest logoutRequest = buildLogoutRequest(request, configuration);
+        final LogoutRequest logoutRequest = buildLogoutRequest(configuration, nameID, sessionIndexValue);
 
         context.setMessage(logoutRequest);
         final SAMLPeerEntityContext peerEntityContext = // peer entity (Idp to SP and viceversa)
@@ -213,6 +212,12 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                     Logger.info (this, "SAMLSessionIndex: " + samlSessionIndex);
                     loginHttpSession.setAttribute(configuration.getSiteName()+SAML_SESSION_INDEX, samlSessionIndex);
                     loginHttpSession.setAttribute(configuration.getSiteName()+SAML_NAME_ID,       assertion.getSubject().getNameID());
+                    Logger.info (this, "Already set the session index with key:" +
+                            (configuration.getSiteName()+SAML_SESSION_INDEX) + " and value" +
+                            loginHttpSession.getAttribute(configuration.getSiteName()+SAML_SESSION_INDEX));
+                    Logger.info (this, "Already set the name id with key:" +
+                            (configuration.getSiteName()+SAML_NAME_ID) + " and value" +
+                            loginHttpSession.getAttribute(configuration.getSiteName()+SAML_NAME_ID));
                 }
             }
         }

@@ -18,8 +18,8 @@ public class EmptyOrNullFieldStrategy implements FieldStrategy {
     }
     public EmptyOrNullFieldStrategy(final String defaultValue, final String preFix, final String postFix) {
         this.defaultValue = defaultValue;
-        this.preFix  = (null == preFix) ? StringPool.BLANK:preFix;
-        this.postFix = (null == postFix)? StringPool.BLANK:postFix;
+        this.preFix  = preFix;
+        this.postFix = postFix;
     }
 
     @Override

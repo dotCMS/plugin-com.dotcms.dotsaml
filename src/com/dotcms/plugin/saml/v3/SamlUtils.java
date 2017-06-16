@@ -132,11 +132,9 @@ public class SamlUtils {
         return object;
     } // buildSAMLObject.
 
-    public static LogoutRequest buildLogoutRequest(final HttpServletRequest request, final Configuration configuration) {
+    public static LogoutRequest buildLogoutRequest(final Configuration configuration,
+                                                   final NameID nameID, final String sessionIndexValue) {
 
-        final HttpSession   httpSession        = request.getSession(false);
-        final NameID        nameID             = (NameID) ((null != httpSession)?httpSession.getAttribute(configuration.getSiteName()+SAML_NAME_ID):null);
-        final String        sessionIndexValue  = (String) ((null != httpSession)?httpSession.getAttribute(configuration.getSiteName()+SAML_SESSION_INDEX):null);
         final LogoutRequest logoutRequest      = buildSAMLObject(LogoutRequest.class);
         final String        idpSingleLogoutDestionation = getIPDSLODestination(configuration);
         SessionIndex sessionIndex              = null;
@@ -163,7 +161,11 @@ public class SamlUtils {
         // id for the sender
         logoutRequest.setDestination(idpSingleLogoutDestionation);
         logoutRequest.setIssuer(buildIssuer(configuration));
-        logoutRequest.setNameID(nameID);
+
+        final NameID newNameID = buildSAMLObject(NameID.class);
+        newNameID.setValue(nameID.getValue());
+        newNameID.setFormat(nameID.getFormat());
+        logoutRequest.setNameID(newNameID);
 
         sessionIndex = buildSAMLObject(SessionIndex.class);
         sessionIndex.setSessionIndex(sessionIndexValue);
