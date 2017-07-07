@@ -47,6 +47,13 @@ public final class DotSamlConstants {
      */
     public static final String DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL = "dotcms.saml.assertion.customer.endpoint.url";
 
+    /**
+     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
+     * This is the logout service endpoint url, which means the url where to be redirected when the user gets log out.
+     * You can set it for instance to http://[domain]/c in order to get back to the page.
+     */
+    public static final String DOT_SAML_LOGOUT_SERVICE_ENDPOINT_URL = "dotcms.saml.logout.service.endpoint.url";
+
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)

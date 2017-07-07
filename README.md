@@ -81,6 +81,12 @@ App Id for the dotCMS Service Provider. In case it is not provided, the default 
 URL used by the Idp (the Shibboleth server) to redirect to dotCMS when the login is made. We suggest to go to http://[domain]/dotsaml3sp.
 If this value is unset, a default endpoint will be created using the *dotcms.saml.service.provider.issuer* and the *dotcms.saml.keyentryid*.
 
+**dotcms.saml.logout.service.endpoint.url**
+
+URL used by the Idp (the Shibboleth server) to redirect to dotCMS when the logout is made. 
+If this value is unset, a default endpoint will be created using the *dotcms.saml.service.provider.issuer*/dotsaml3sp-logout
+
+
 **saml_user_role**
 Custom role, set to the logged user during authentication process. This property is optional, however, in case to be included, this role must exist in dotCMS with the proper permissions (at least to Grant Users), otherwise will be ignored.
 
