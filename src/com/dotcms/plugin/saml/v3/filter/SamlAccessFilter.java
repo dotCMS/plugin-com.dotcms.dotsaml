@@ -48,6 +48,7 @@ import java.io.Writer;
 import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Map;
 
 import static com.dotmarketing.business.PermissionAPI.PERMISSION_READ;
