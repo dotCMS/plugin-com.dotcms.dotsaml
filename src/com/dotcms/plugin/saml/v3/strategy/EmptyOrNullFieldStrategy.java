@@ -1,6 +1,7 @@
 package com.dotcms.plugin.saml.v3.strategy;
 
 import com.dotcms.plugin.saml.v3.AttributesBean;
+import com.dotmarketing.util.UtilMethods;
 import com.liferay.util.StringPool;
 
 /**
@@ -30,7 +31,7 @@ public class EmptyOrNullFieldStrategy implements FieldStrategy {
     @Override
     public Object apply(final AttributesBean attributesBean) {
 
-        return  (null != this.defaultValue)?
+        return  (UtilMethods.isSet(this.defaultValue))?
                 this.defaultValue:
                 this.preFix + attributesBean.getNameID().getValue() + this.postFix;
     }
