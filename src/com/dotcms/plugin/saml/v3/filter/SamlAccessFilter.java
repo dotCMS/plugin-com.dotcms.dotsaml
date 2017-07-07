@@ -29,6 +29,7 @@ import com.liferay.portal.PortalException;
 import com.liferay.portal.SystemException;
 import com.liferay.portal.auth.PrincipalThreadLocal;
 import com.liferay.portal.model.User;
+import com.liferay.portal.servlet.PortletSessionPool;
 import com.liferay.util.InstancePool;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.opensaml.core.xml.io.MarshallingException;
@@ -39,6 +40,7 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Cookie;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
@@ -359,7 +361,7 @@ public class SamlAccessFilter implements Filter {
 	 * @param request
 	 */
 	private void doLogout(final HttpServletResponse response, final HttpServletRequest request) {
-		final javax.servlet.http.Cookie[] cookies = request.getCookies();
+		final Cookie[] cookies = request.getCookies();
 		if (null != cookies) {
 			for (Cookie cookie : cookies) {
 				cookie.setMaxAge(0);
