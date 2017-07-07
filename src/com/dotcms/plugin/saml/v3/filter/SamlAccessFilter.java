@@ -337,7 +337,7 @@ public class SamlAccessFilter implements Filter {
                 Logger.info(this, "The uri: " + request.getRequestURI() +
                         ", is a logout request. Doing the logout call to saml");
                 Logger.info(this, "Doing dotCMS logout");
-                doLogout(request, response);
+                doLogout(response, request);
                 Logger.info(this, "Doing SAML redirect logout");
                 this.samlAuthenticationService.logout(request,
                         response, nameID, samlSessionIndex, configuration.getSiteName());
