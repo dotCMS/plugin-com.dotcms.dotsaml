@@ -26,20 +26,12 @@ import org.opensaml.messaging.handler.impl.BasicMessageHandlerChain;
 import org.opensaml.saml.common.SAMLVersion;
 import org.opensaml.saml.common.SignableSAMLObject;
 import org.opensaml.saml.common.xml.SAMLConstants;
-import org.opensaml.saml.saml2.core.ArtifactResponse;
-import org.opensaml.saml.saml2.core.Assertion;
-import org.opensaml.saml.saml2.core.AuthnContext;
-import org.opensaml.saml.saml2.core.AuthnContextClassRef;
-import org.opensaml.saml.saml2.core.AuthnContextComparisonTypeEnumeration;
-import org.opensaml.saml.saml2.core.AuthnRequest;
-import org.opensaml.saml.saml2.core.EncryptedAssertion;
-import org.opensaml.saml.saml2.core.Issuer;
-import org.opensaml.saml.saml2.core.NameIDPolicy;
-import org.opensaml.saml.saml2.core.NameIDType;
-import org.opensaml.saml.saml2.core.RequestedAuthnContext;
-import org.opensaml.saml.saml2.core.Response;
+import org.opensaml.saml.saml2.core.*;
+import org.opensaml.saml.saml2.core.impl.NameIDBuilder;
+import org.opensaml.saml.saml2.core.impl.SessionIndexBuilder;
 import org.opensaml.saml.saml2.encryption.Decrypter;
 import org.opensaml.saml.saml2.metadata.Endpoint;
+import org.opensaml.saml.saml2.metadata.SingleLogoutService;
 import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator;
 import org.opensaml.security.credential.Credential;
@@ -71,6 +63,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.xml.namespace.QName;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -99,6 +92,10 @@ public class SamlUtils {
 
 
     private static final String DEFAULT_ELEMENT_NAME = "DEFAULT_ELEMENT_NAME";
+    public static final String SAML_SESSION_INDEX = "SAMLSessionIndex";
+    public static final String SAML_NAME_ID       = "SAMLNameID";
+    public static final String SINGLE_LOGOUT_REASON = "urn:oasis:names:tc:SAML:2.0:logout:user";
+
 
 
     private static Map<String, Credential> credentialMap = new ConcurrentHashMap<>();
@@ -134,6 +131,70 @@ public class SamlUtils {
 
         return object;
     } // buildSAMLObject.
+
+    public static LogoutRequest buildLogoutRequest(final Configuration configuration,
+                                                   final NameID nameID, final String sessionIndexValue) {
+
+        final LogoutRequest logoutRequest      = buildSAMLObject(LogoutRequest.class);
+        final String        idpSingleLogoutDestionation = getIPDSLODestination(configuration);
+        SessionIndex sessionIndex              = null;
+
+        logoutRequest.setIssueInstant(new DateTime());
+        logoutRequest.setID(generateSecureRandomId());
+
+        // IDP logout url
+        if (!isSet(idpSingleLogoutDestionation)) {
+
+            Logger.error(SamlUtils.class, "The idpSingleLogoutDestionation is not set in the idp metadata, neither the configuration files");
+            throw new DotSamlException("The property: " + DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SLO_URL +
+                    " must be set on the host");
+        }
+
+        if (!isSet(nameID) || !isSet(sessionIndexValue)) {
+
+            Logger.error(SamlUtils.class, "The nameID or sessionIndex are null");
+            throw new DotSamlException("The nameID or sessionIndex are null");
+        }
+
+        Logger.debug(SamlUtils.class, "NameID: " + nameID + ", SessionIndex: " + sessionIndexValue);
+
+        // id for the sender
+        logoutRequest.setDestination(idpSingleLogoutDestionation);
+        logoutRequest.setIssuer(buildIssuer(configuration));
+
+        final NameID newNameID = buildSAMLObject(NameID.class);
+        newNameID.setValue(nameID.getValue());
+        newNameID.setFormat(nameID.getFormat());
+        logoutRequest.setNameID(newNameID);
+
+        sessionIndex = buildSAMLObject(SessionIndex.class);
+        sessionIndex.setSessionIndex(sessionIndexValue);
+        logoutRequest.getSessionIndexes().add(sessionIndex);
+
+        logoutRequest.setReason(SINGLE_LOGOUT_REASON);
+        logoutRequest.setVersion(SAMLVersion.VERSION_20);
+
+        return logoutRequest;
+    } // buildLogoutRequest
+
+
+    /**
+     * Return the value of the /AuthnStatement@SessionIndex element in an assertion
+     *
+     * @return The value. <code>null</code>, if the assertion does not
+     *         contain the element.
+     */
+    public static String getSessionIndex(final Assertion assertion) {
+        String sessionIndex = null;
+        if (assertion != null && assertion.getAuthnStatements() != null) {
+            if (assertion.getAuthnStatements().size() > 0) {
+                // We only look into the first AuthnStatement
+                AuthnStatement authnStatement = assertion.getAuthnStatements().get(0);
+                sessionIndex = authnStatement.getSessionIndex();
+            }
+        }
+        return sessionIndex;
+    } // getSessionIndex.
 
     /**
      * Build an authentication request.
@@ -180,6 +241,8 @@ public class SamlUtils {
         return authnRequest;
     } // buildAuthnRequest.
 
+
+
     /**
      * Gets from the dotmarketing-config.properties the destination sso url
      * @return String
@@ -194,6 +257,23 @@ public class SamlUtils {
                 redirectIdentityProviderDestinationSSOURL:
                 configuration.getStringProperty(
                     DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL, null);
+    } // getIPDSSODestination.
+
+
+    /**
+     * Gets from the dotmarketing-config.properties the destination slo url
+     * @return String
+     */
+    public static String getIPDSLODestination(final Configuration configuration) {
+
+        final String redirectIdentityProviderDestinationSLOURL =
+                configuration.getIdentityProviderDestinationSLOURL(configuration);
+
+        // first check the meta data info., secondly the configuration
+        return (null != redirectIdentityProviderDestinationSLOURL)?
+                redirectIdentityProviderDestinationSLOURL:
+                configuration.getStringProperty(
+                        DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SLO_URL, null);
     } // getIPDSSODestination.
 
     public static  String getAssertionConsumerEndpoint(final HttpServletRequest request, final Configuration configuration) {
@@ -351,6 +431,20 @@ public class SamlUtils {
         return comparisonTypeEnumeration;
     } // getAuthnContextComparisonTypeEnumeration.
 
+
+    /**
+     * Get the Logout Identity Provider Destination
+     * @return Endpoint
+     */
+    public static Endpoint getIdentityProviderSLODestinationEndpoint(final Configuration configuration) {
+
+        final SingleLogoutService endpoint = buildSAMLObject(SingleLogoutService.class);
+
+        endpoint.setBinding(SAMLConstants.SAML2_REDIRECT_BINDING_URI);
+        endpoint.setLocation(getIPDSLODestination(configuration));
+
+        return endpoint;
+    } // getIdentityProviderSLODestinationEndpoint.
 
     /**
      * Get the Identity Provider Destination

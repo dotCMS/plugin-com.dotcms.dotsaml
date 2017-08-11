@@ -32,6 +32,7 @@ import com.liferay.portal.model.User;
 import com.liferay.util.InstancePool;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.opensaml.core.xml.io.MarshallingException;
+import org.opensaml.saml.saml2.core.NameID;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 
 import javax.servlet.*;
@@ -45,7 +46,6 @@ import java.io.Writer;
 import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Map;
 
 import static com.dotmarketing.business.PermissionAPI.PERMISSION_READ;
 
@@ -73,8 +73,10 @@ public class SamlAccessFilter implements Filter {
 
     public SamlAccessFilter() {
 
-        this(new OpenSamlAuthenticationServiceImpl(),
-                InstanceUtil.newInstance(Config.getStringProperty(
+        this(InstanceUtil.newInstance(Config.getStringProperty(
+                        DotSamlConstants.DOT_SAML_AUTHENTICATION_SERVICE_CLASS_NAME, null
+                ), OpenSamlAuthenticationServiceImpl.class)
+                , InstanceUtil.newInstance(Config.getStringProperty(
                         DotSamlConstants.DOT_SAML_INITIALIZER_CLASS_NAME, null
                 ), DefaultInitializer.class));
     }
@@ -255,10 +257,13 @@ public class SamlAccessFilter implements Filter {
         final SiteConfigurationResolver resolver      = (SiteConfigurationResolver)InstancePool.get(SiteConfigurationResolver.class.getName());
         final Configuration             configuration = resolver.resolveConfiguration(request);
         String redirectAfterLogin                     = null;
+        boolean isLogoutNeed                          = false;
 
         // If configuration is not, means this site does not need SAML processing
         if (null != configuration) {
 
+            isLogoutNeed                                      = configuration.getBooleanProperty
+                    (DotSamlConstants.DOTCMS_SAML_IS_LOGOUT_NEED, true);
             ThreadLocalConfiguration.setCurrentSiteConfiguration(configuration);
 
             // First, check if the current request is the SP metadata xml.
@@ -269,11 +274,11 @@ public class SamlAccessFilter implements Filter {
                 return;
             }
 
-            // check if there is any exception filter path, to avoid to apply all the logic.
+            // check if there is any exception filter path, to avoid to canApply all the logic.
             if (!this.checkAccessFilters(request.getRequestURI(), configuration.getAccessFilterArray())
                     && this.checkIncludePath(request.getRequestURI(), configuration.getIncludePathArray(), request)) {
 
-                // if it is an url to apply the Saml access logic, determine if the autoLogin is possible
+                // if it is an url to canApply the Saml access logic, determine if the autoLogin is possible
                 // the autologin will works if the SAMLArt (Saml artifact id) is in the request query string
                 // for artifact resolution or SAMLResponse for post resolution.
                 if (!this.autoLogin(request, response, session, configuration)) {
@@ -316,12 +321,51 @@ public class SamlAccessFilter implements Filter {
             }
         } else {
 
-            Logger.warn(this, "Not configuration for the site: " + request.getServerName() +
+            Logger.debug(this, "Not configuration for the site: " + request.getServerName() +
                             ". No any saml filtering for this request: " + request.getRequestURI());
         }
 
+        // Starting the logout
+        // if it is logout
+        if (isLogoutNeed && null != session && this.isLogoutRequest(request.getRequestURI(), configuration.getLogoutPathArray())) {
+
+            final NameID nameID           = (NameID)session.getAttribute(configuration.getSiteName() + SamlUtils.SAML_NAME_ID);
+            final String samlSessionIndex = (String)session.getAttribute(configuration.getSiteName() + SamlUtils.SAML_SESSION_INDEX);
+            if ( null != nameID && null != samlSessionIndex) {
+
+                Logger.info(this, "The uri: " + request.getRequestURI() +
+                        ", is a logout request. Doing the logout call to saml");
+                Logger.info(this, "Doing dotCMS logout");
+                LoginFactory.doLogout(request, response);
+                Logger.info(this, "Doing SAML redirect logout");
+                this.samlAuthenticationService.logout(request,
+                        response, nameID, samlSessionIndex, configuration.getSiteName());
+                return;
+            } else {
+
+                Logger.warn(this,
+                        "Couldn't do the logout request. Because the saml name id or the saml session index are not in the http session");
+            }
+        }
+
         chain.doFilter(request, response);
+
     } // doFilter.
+
+    private boolean isLogoutRequest(final String requestURI, final String[] logoutPathArray) {
+
+        boolean isLogoutRequest = false;
+
+        if (null != logoutPathArray) {
+
+            for (String logoutPath : logoutPathArray) {
+
+                isLogoutRequest |= requestURI.startsWith(logoutPath);
+            }
+        }
+
+        return isLogoutRequest;
+    } // isLogoutRequest.
 
     private void doRequestLoginSecurityLog(final HttpServletRequest request, final Configuration configuration) {
 
@@ -430,7 +474,7 @@ public class SamlAccessFilter implements Filter {
 
         final User user =
                 this.samlAuthenticationService.getUser
-                        (request, response, configuration.getSiteName());
+                        (request, response, session, configuration.getSiteName());
         boolean continueFilter = true; // by default continue with the filter
 
         if (null != user) {

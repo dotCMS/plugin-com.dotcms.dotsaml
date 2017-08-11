@@ -255,6 +255,13 @@ Use this property in case you need to filter additional paths. For instance:
 "dotcms.saml.include.path.values":"^/html/portal/login.*$,^/dotCMS/login.*$,^/c/,^/admin"
 ~~~
 
+**dotcms.saml.identity.provider.destinationslo.url**
+
+This is url for the logout page on the SAML Server, by default it gets url from the idp-metadata (the file provided from the SAML server), but if it is not any idp-metadata you can
+edit this property and include the SLO url. (Note, if you set this property and set the idp-metadata, the idp-metada will be get by default)
+
+
 **dotcms.saml.verify.assertion.signature, dotcms.saml.verify.signature.profile and dotcms.saml.verify.signature.credentials**
+
 
 For signature verification purpose. Default value: true.

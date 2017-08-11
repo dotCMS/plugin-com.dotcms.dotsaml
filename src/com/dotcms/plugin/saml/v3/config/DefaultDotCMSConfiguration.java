@@ -38,6 +38,9 @@ public class DefaultDotCMSConfiguration implements Configuration {
         final String metaDescriptorResourcePath =
                 this.getStringProperty(DotSamlConstants.DOTCMS_SAML_IDP_METADATA_PATH, null);
 
+        Logger.info(this, "For the sitename: " + siteName
+                + ", the metaDescriptorResourcePath is " + metaDescriptorResourcePath);
+
         this.metadataBean = (UtilMethods.isSet(metaDescriptorResourcePath))?
                 this.getMetaData(metaDescriptorResourcePath):null;
 
@@ -104,11 +107,22 @@ public class DefaultDotCMSConfiguration implements Configuration {
                             + "^/c/public/login.*$,"
                             + "^/c/portal_public/login.*$,"
                             + "^/c/portal/logout.*$,"
+                            + "^/dotCMS/logout.*$,"
                             + "^/application/login/login.*$");
 
         return (UtilMethods.isSet(accessFilterValues))?
                 accessFilterValues.split(","):null;
     }
+
+    public  String[] getLogoutPathArray() {
+
+        final String logoutPathValues =
+                this.getStringProperty(DotSamlConstants.DOT_SAML_LOGOUT_PATH_VALUES,
+                                 "/c/portal/logout,/dotCMS/logout");
+
+        return (UtilMethods.isSet(logoutPathValues))?
+                logoutPathValues.split(","):null;
+    } // getLogoutPathArray,
 
     @Override
     public Collection<Credential> getSigningCredentials() {
@@ -135,6 +149,26 @@ public class DefaultDotCMSConfiguration implements Configuration {
 
         return url;
     } // getIdentityProviderDestinationSSOURL.
+
+
+    @Override
+    public String getIdentityProviderDestinationSLOURL(final Configuration configuration) {
+
+        String url               = null;
+        final String bindingType = configuration.getStringProperty(DotSamlConstants.DOTCMS_SAML_BINDING_TYPE,
+                BindingType.REDIRECT.getBinding());
+
+        if (null != this.metadataBean &&
+                null != this.metadataBean.getSingleLogoutBindingLocationMap() &&
+                this.metadataBean.getSingleLogoutBindingLocationMap().
+                        containsKey(bindingType)) {
+
+            url = this.metadataBean.
+                    getSingleLogoutBindingLocationMap().get(bindingType);
+        }
+
+        return url;
+    } // getIdentityProviderDestinationSLOURL.
 
 
 } // E:O:F:DefaultDotCMSConfiguration.
