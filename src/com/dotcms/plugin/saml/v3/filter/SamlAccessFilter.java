@@ -29,6 +29,7 @@ import com.liferay.portal.PortalException;
 import com.liferay.portal.SystemException;
 import com.liferay.portal.auth.PrincipalThreadLocal;
 import com.liferay.portal.model.User;
+import com.liferay.portal.servlet.PortletSessionPool;
 import com.liferay.util.InstancePool;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.opensaml.core.xml.io.MarshallingException;
@@ -39,6 +40,7 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Cookie;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
@@ -46,6 +48,8 @@ import java.io.Writer;
 import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 
 import static com.dotmarketing.business.PermissionAPI.PERMISSION_READ;
 
@@ -336,7 +340,7 @@ public class SamlAccessFilter implements Filter {
                 Logger.info(this, "The uri: " + request.getRequestURI() +
                         ", is a logout request. Doing the logout call to saml");
                 Logger.info(this, "Doing dotCMS logout");
-                LoginFactory.doLogout(request, response);
+                doLogout(response, request);
                 Logger.info(this, "Doing SAML redirect logout");
                 this.samlAuthenticationService.logout(request,
                         response, nameID, samlSessionIndex, configuration.getSiteName());
@@ -351,6 +355,37 @@ public class SamlAccessFilter implements Filter {
         chain.doFilter(request, response);
 
     } // doFilter.
+
+	/**
+	 * 
+	 * @param response
+	 * @param request
+	 */
+	private void doLogout(final HttpServletResponse response, final HttpServletRequest request) {
+		final Cookie[] cookies = request.getCookies();
+		if (null != cookies) {
+			for (Cookie cookie : cookies) {
+				cookie.setMaxAge(0);
+				cookie.setPath("/");
+				response.addCookie(cookie);
+			}
+		}
+		HttpSession session = request.getSession(false);
+		if (null != session) {
+			final Map sessions = PortletSessionPool.remove(session.getId());
+			if (null != sessions) {
+				final Iterator itr = sessions.values().iterator();
+				while (itr.hasNext()) {
+					final HttpSession portletSession = (HttpSession) itr.next();
+					if (null != portletSession) {
+
+						portletSession.invalidate();
+					}
+				}
+			}
+		}
+		LoginFactory.doLogout(request, response);
+	}
 
     private boolean isLogoutRequest(final String requestURI, final String[] logoutPathArray) {
 

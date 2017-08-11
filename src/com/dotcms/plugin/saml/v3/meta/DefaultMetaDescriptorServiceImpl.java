@@ -127,6 +127,9 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         final SAMLObjectBuilder<AssertionConsumerService> assertionConsumerServiceBuilder =
                 (SAMLObjectBuilder<AssertionConsumerService>) this.xmlObjectBuilderFactory.getBuilder
                         (AssertionConsumerService.DEFAULT_ELEMENT_NAME);
+        final SAMLObjectBuilder<SingleLogoutService> singleLogoutServiceBuilder =
+                (SAMLObjectBuilder<SingleLogoutService>) this.xmlObjectBuilderFactory.getBuilder
+                        (SingleLogoutService.DEFAULT_ELEMENT_NAME);
 
         final EntityDescriptor descriptor      = entityDescriptorBuilder.buildObject();
         final SPSSODescriptor  spssoDescriptor = spssoDescriptorBuilder.buildObject();
@@ -161,6 +164,10 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                 (this.createAssertionConsumerService(0, SAMLConstants.SAML2_POST_BINDING_URI,
                         configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));
 
+        spssoDescriptor.getSingleLogoutServices().add
+                (this.createSingleLogoutService(SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI,
+                        configuration.getSingleLogoutEndpoint(), singleLogoutServiceBuilder));
+
         /*spssoDescriptor.getAssertionConsumerServices().add
                 (this.createAssertionConsumerService(2, SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI,
                         configuration.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder));*/
@@ -172,7 +179,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
     } // getServiceProviderEntityDescriptor.
 
     /**
-     * Template method to create a assertion consumer service
+     * Template method to create an assertion consumer service
      * @param index {@link Integer}
      * @param binding {@link String}
      * @param location {@link String}
@@ -194,6 +201,28 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 
         return assertionConsumerServiceArtifact;
     } // createAssertionConsumerService.
+
+    /**
+     * Template method to create single logout service
+     * @param binding {@link String}
+     * @param location {@link String}
+     * @param singleLogoutServiceBuilder {@link SAMLObjectBuilder}
+     * @return SingleLogoutService
+     */
+    protected SingleLogoutService createSingleLogoutService(final String binding,
+                                                                      final String location,
+                                                                      final SAMLObjectBuilder<SingleLogoutService> singleLogoutServiceBuilder) {
+
+        Logger.info(this, "Assertion consumer service, location: " + location);
+
+        final SingleLogoutService assertionConsumerService =
+                singleLogoutServiceBuilder.buildObject();
+
+        assertionConsumerService.setBinding(binding);
+        assertionConsumerService.setLocation(location);
+
+        return assertionConsumerService;
+    } // createSingleLogoutService.
 
     /**
      * Sets the format's supported for the messages.

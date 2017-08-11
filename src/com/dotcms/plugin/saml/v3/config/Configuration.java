@@ -24,6 +24,7 @@ public interface Configuration extends Serializable {
     public static final String HTTPS_SCHEMA = "https://";
     String HTTPS_SCHEMA_PREFIX = "https";
     String ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP = "/dotsaml3sp";
+    String LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP = "/dotsaml3sp-logout";
 
     /**
      * Returns the site name associated to this configuration
@@ -178,6 +179,26 @@ public interface Configuration extends Serializable {
         return
                 this.getSiteConfiguration().getString(DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL, spIssuerValue);
     } // getAssertionConsumerEndpoint.
+
+    /**
+     * In case the user wants some specific logout url, otherwise null.
+     * This URL is used on the metadata to fill out the assertion customer service's
+     * @return String
+     */
+    public default String getSingleLogoutEndpoint() {
+
+        String spIssuerValue = SamlUtils.getSPIssuerValue(this);
+
+        if (null != spIssuerValue && !(spIssuerValue.trim().startsWith(HTTP_SCHEMA) || spIssuerValue.trim().startsWith(HTTPS_SCHEMA))) {
+
+            throw new InvalidIssuerValueException ("The issuer: " + spIssuerValue + " should starts with http:// or https:// to be valid");
+        }
+
+        spIssuerValue += LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP;
+
+        return
+                this.getSiteConfiguration().getString(DotSamlConstants.DOT_SAML_LOGOUT_SERVICE_ENDPOINT_URL, spIssuerValue);
+    }
 
     /**
      * In case you need custom credentials for the Service Provider (DotCMS) overwrites the
