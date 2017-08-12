@@ -369,9 +369,12 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         try {
 
-            // remove previous roles
-            Logger.debug(this, "Removing user previous roles");
-            this.roleAPI.removeAllRolesFromUser(user);
+        	if (attributesBean.isAddRoles() ||
+        			configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null) != null ) {
+        		// remove previous roles
+        		Logger.debug(this, "Removing user previous roles");
+        		this.roleAPI.removeAllRolesFromUser(user);
+        	}
 
             if (attributesBean.isAddRoles() &&
                 null != attributesBean.getRoles() &&
