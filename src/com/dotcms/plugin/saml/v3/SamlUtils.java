@@ -670,7 +670,7 @@ public class SamlUtils {
                 keyStoreEntryPassword = configuration.getStringProperty(
                         DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD, "");
 
-                Logger.info(SamlUtils.class, "Creating the credentials, using: " + password +
+                Logger.debug(SamlUtils.class, "Creating the credentials, using: " + password +
                         ", key store path: " + keyStorePath);
 
                 final String keyStoreType = configuration.getStringProperty(

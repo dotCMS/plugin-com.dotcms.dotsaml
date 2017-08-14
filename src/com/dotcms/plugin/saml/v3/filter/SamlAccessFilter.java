@@ -51,6 +51,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 
+
 import static com.dotmarketing.business.PermissionAPI.PERMISSION_READ;
 
 /**
@@ -130,14 +131,14 @@ public class SamlAccessFilter implements Filter {
     @Override
     public void init(final FilterConfig filterConfig) throws ServletException {
 
-        Logger.info(this, "Going to call the Initializer: " + this.initializer);
+        Logger.debug(this, "Going to call the Initializer: " + this.initializer);
 
         if (!this.initializer.isInitializationDone()) {
 
             this.initializer.init(Collections.EMPTY_MAP);
         } else {
 
-            Logger.info(this, "The initializer was already init: " + this.initializer);
+            Logger.debug(this, "The initializer was already init: " + this.initializer);
         }
     } // init.
 
@@ -337,13 +338,15 @@ public class SamlAccessFilter implements Filter {
             final String samlSessionIndex = (String)session.getAttribute(configuration.getSiteName() + SamlUtils.SAML_SESSION_INDEX);
             if ( null != nameID && null != samlSessionIndex) {
 
-                Logger.info(this, "The uri: " + request.getRequestURI() +
+                Logger.debug(this, "The uri: " + request.getRequestURI() +
                         ", is a logout request. Doing the logout call to saml");
-                Logger.info(this, "Doing dotCMS logout");
+                Logger.debug(this, "Doing dotCMS logout");
                 doLogout(response, request);
-                Logger.info(this, "Doing SAML redirect logout");
+                Logger.debug(this, "Doing SAML redirect logout");
                 this.samlAuthenticationService.logout(request,
                         response, nameID, samlSessionIndex, configuration.getSiteName());
+                Logger.info(this, "User " + nameID + " has logged out");
+                
                 return;
             } else {
 
@@ -415,7 +418,7 @@ public class SamlAccessFilter implements Filter {
                     request.getRemoteAddr();
 
             //“$TIMEDATE: SAML login request for $host (frontend|backend)from $REQUEST_ADDR”
-            SecurityLogger.logInfo(SamlAccessFilter.class, log);
+            SecurityLogger.logInfo(SecurityLogger.class, SamlAccessFilter.class + " - " + log);
             Logger.debug(this, log);
         } catch (Exception e) {
 
@@ -438,8 +441,8 @@ public class SamlAccessFilter implements Filter {
                     request.getRemoteAddr() + " for an user: " + user.getEmailAddress();
 
             //“$TIMEDATE: SAML login success for $host (frontend|backend)from $REQUEST_ADDR for user $username”
-            SecurityLogger.logInfo(SamlAccessFilter.class, log);
-            Logger.debug(this, log);
+            SecurityLogger.logInfo(SecurityLogger.class, SamlAccessFilter.class + " - " + log);
+            Logger.info(this, log);
         } catch (Exception e) {
 
             Logger.error(this, e.getMessage(), e);
@@ -517,7 +520,7 @@ public class SamlAccessFilter implements Filter {
             // we are going to do the autologin, so if the session is null, create it!
             try {
 
-                Logger.info(this, "User returned by SAML Service, id " + user.getUserId() +
+                Logger.debug(this, "User returned by SAML Service, id " + user.getUserId() +
                         ", user Map: " + user.toMap());
             } catch (Exception e) {
 
@@ -528,7 +531,7 @@ public class SamlAccessFilter implements Filter {
             final boolean doCookieLogin = LoginFactory.doCookieLogin(PublicEncryptionFactory.encryptString
                     (user.getUserId()), request, response);
 
-            Logger.info(this, "Login result by LoginFactory: " + doCookieLogin);
+            Logger.debug(this, "Login result by LoginFactory: " + doCookieLogin);
 
             if (doCookieLogin) {
 
@@ -611,16 +614,16 @@ public class SamlAccessFilter implements Filter {
 
                         if (this.isBackEndAdmin(session, redirectAfterLogin)) {
 
-                            Logger.info(this, "Redirecting to: /c");
+                            Logger.debug(this, "Redirecting to: /c");
                             response.sendRedirect("/c");
                         } else { // if it is front end
 
-                            Logger.info(this, "Redirecting to: /");
+                            Logger.debug(this, "Redirecting to: /");
                             response.sendRedirect("/");
                         }
                     } else {
 
-                        Logger.info(this, "Redirecting to: " + redirectAfterLogin);
+                        Logger.debug(this, "Redirecting to: " + redirectAfterLogin);
                         response.sendRedirect(redirectAfterLogin);
                     }
                     return false; // not continue. since it is a redirect.

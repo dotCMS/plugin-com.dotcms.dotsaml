@@ -59,7 +59,7 @@ public class DefaultDotCMSConfiguration implements Configuration {
         try (InputStream inputStream =
                      InputStreamUtils.getInputStream(metaDescriptorResourcePath)) {
 
-            Logger.info(this, "Parsing the meta data: " + metaDescriptorResourcePath);
+            Logger.debug(this, "Parsing the meta data: " + metaDescriptorResourcePath);
             metadataBean = this.descriptorParser.parse (inputStream, this.siteConfigurationBean);
         } catch (Exception e) {
 
