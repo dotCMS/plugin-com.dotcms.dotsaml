@@ -277,27 +277,42 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         validateAttributes(assertion);
 
+        Logger.debug(this, "Resolving attributes - Name ID : " + assertion.getSubject().getNameID().getValue());
         attrBuilder.nameID(assertion.getSubject().getNameID());
+        
+        Logger.debug(this, "Elements of type AttributeStatement in assertion : " + assertion.getAttributeStatements().size());
 
-        assertion.getAttributeStatements().get(0).getAttributes().forEach(attribute -> {
+        assertion.getAttributeStatements().forEach(attributeStatement -> {
+        	
+        	Logger.debug(this, "Attribute Statement - local name: " + attributeStatement.DEFAULT_ELEMENT_LOCAL_NAME +  ", type: " + attributeStatement.TYPE_LOCAL_NAME);
+        	
+        	attributeStatement.getAttributes().forEach(attribute -> {
+        		
+        		Logger.debug(this, "Attribute - friendly name: " + attribute.getFriendlyName() + ", name: " + attribute.getName() + ", type: " + attribute.TYPE_LOCAL_NAME + ", number of values: " + attribute.getAttributeValues().size());
 
-            if (attribute.getName().equals(emailField)) {
+        		if (attribute.getName().equals(emailField) || attribute.getFriendlyName().equals(emailField)) {
+            	
+        			Logger.debug(this, "Resolving attributes - Email : " + attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        			attrBuilder.email
+        				(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        		} else if (attribute.getName().equals(lastNameField) || attribute.getFriendlyName().equals(lastNameField)) {
 
-                attrBuilder.email
-                        (attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-            } else if (attribute.getName().equals(lastNameField)) {
+        			Logger.debug(this, "Resolving attributes - lastName : " + attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        			attrBuilder.lastName
+        				(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        		} else if(attribute.getName().equals(firstNameField) || attribute.getFriendlyName().equals(firstNameField)){
 
-                attrBuilder.lastName
-                        (attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-            } else if(attribute.getName().equals(firstNameField)){
+        			Logger.debug(this, "Resolving attributes - firstName : " + attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        			attrBuilder.firstName
+        			(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        		}else if (attribute.getName().equals(rolesField) || attribute.getFriendlyName().equals(rolesField)) {
 
-                attrBuilder.firstName
-                        (attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-            }else if (attribute.getName().equals(rolesField)) {
-
-                attrBuilder.addRoles(true).roles(attribute);
-            }
+        			Logger.debug(this, "Resolving attributes - roles : " + attribute);
+            		attrBuilder.addRoles(true).roles(attribute);
+        		}
+        	});
         });
+        
 
         return attrBuilder.build();
     } // resolveAttributes.
@@ -309,7 +324,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             || assertion.getSubject() == null
             || assertion.getSubject().getNameID() == null
             || assertion.getSubject().getNameID().getValue().isEmpty()) {
-
+        	
             throw new AttributesNotFoundException("No attributes found");
         }
 
@@ -374,6 +389,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         		// remove previous roles
         		Logger.info(this, "Removing user previous roles");
         		this.roleAPI.removeAllRolesFromUser(user);
+        	} else {
+        		Logger.debug(this, "No roles will be removed");
         	}
 
             if (attributesBean.isAddRoles() &&
@@ -409,10 +426,12 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             }
             //Add SAML User role
             addRole(user, configuration.getStringProperty(DOTCMS_SAML_USER_ROLE, "SAML User"), true, true);
+            Logger.debug(this, "Default SAML User role has been assigned");
 
             //Add DOTCMS_SAML_OPTIONAL_USER_ROLE
             if (configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null) != null) {
                 addRole(user, configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null), false, false);
+                Logger.debug(this, "Optional user role: " + configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null) + " has been assigned");
             }
 
         } catch (DotDataException e) {
