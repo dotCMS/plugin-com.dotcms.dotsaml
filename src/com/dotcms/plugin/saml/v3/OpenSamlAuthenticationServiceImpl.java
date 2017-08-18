@@ -290,22 +290,22 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         		
         		Logger.debug(this, "Attribute - friendly name: " + attribute.getFriendlyName() + ", name: " + attribute.getName() + ", type: " + attribute.TYPE_LOCAL_NAME + ", number of values: " + attribute.getAttributeValues().size());
 
-        		if (attribute.getFriendlyName().equals(emailField)) {
+        		if (attribute.getName().equals(emailField) || attribute.getFriendlyName().equals(emailField)) {
             	
         			Logger.debug(this, "Resolving attributes - Email : " + attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
         			attrBuilder.email
         				(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-        		} else if (attribute.getFriendlyName().equals(lastNameField)) {
+        		} else if (attribute.getName().equals(lastNameField) || attribute.getFriendlyName().equals(lastNameField)) {
 
         			Logger.debug(this, "Resolving attributes - lastName : " + attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
         			attrBuilder.lastName
         				(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-        		} else if(attribute.getFriendlyName().equals(firstNameField)){
+        		} else if(attribute.getName().equals(firstNameField) || attribute.getFriendlyName().equals(firstNameField)){
 
         			Logger.debug(this, "Resolving attributes - firstName : " + attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
         			attrBuilder.firstName
         			(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-        		}else if (attribute.getFriendlyName().equals(rolesField)) {
+        		}else if (attribute.getName().equals(rolesField) || attribute.getFriendlyName().equals(rolesField)) {
 
         			Logger.debug(this, "Resolving attributes - roles : " + attribute);
             		attrBuilder.addRoles(true).roles(attribute);
