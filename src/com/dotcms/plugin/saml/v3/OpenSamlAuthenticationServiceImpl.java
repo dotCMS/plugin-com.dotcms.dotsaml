@@ -151,11 +151,11 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
             assertion = this.resolveAssertion(request, response, siteName);
 
-            Logger.info (this, "Resolved assertion: " + assertion);
+            Logger.debug (this, "Resolved assertion: " + assertion);
 
             user      = this.resolveUser(assertion, configuration);
 
-            Logger.info (this, "Resolved user: " + user);
+            Logger.debug (this, "Resolved user: " + user);
         }
 
         return user;
@@ -197,11 +197,11 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
             assertion = this.resolveAssertion(request, response, siteName);
 
-            Logger.info (this, "Resolved assertion: " + assertion);
+            Logger.debug (this, "Resolved assertion: " + assertion);
 
             user      = this.resolveUser(assertion, configuration);
 
-            Logger.info (this, "Resolved user: " + user);
+            Logger.debug (this, "Resolved user: " + user);
 
             if (null != loginHttpSession && null != user && null != assertion) {
 
@@ -209,13 +209,13 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
                 if (null != samlSessionIndex) {
 
-                    Logger.info (this, "SAMLSessionIndex: " + samlSessionIndex);
+                    Logger.debug (this, "SAMLSessionIndex: " + samlSessionIndex);
                     loginHttpSession.setAttribute(configuration.getSiteName()+SAML_SESSION_INDEX, samlSessionIndex);
                     loginHttpSession.setAttribute(configuration.getSiteName()+SAML_NAME_ID,       assertion.getSubject().getNameID());
-                    Logger.info (this, "Already set the session index with key:" +
+                    Logger.debug (this, "Already set the session index with key:" +
                             (configuration.getSiteName()+SAML_SESSION_INDEX) + " and value" +
                             loginHttpSession.getAttribute(configuration.getSiteName()+SAML_SESSION_INDEX));
-                    Logger.info (this, "Already set the name id with key:" +
+                    Logger.debug (this, "Already set the name id with key:" +
                             (configuration.getSiteName()+SAML_NAME_ID) + " and value" +
                             loginHttpSession.getAttribute(configuration.getSiteName()+SAML_NAME_ID));
                 }
@@ -277,27 +277,42 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         validateAttributes(assertion);
 
+        Logger.debug(this, "Resolving attributes - Name ID : " + assertion.getSubject().getNameID().getValue());
         attrBuilder.nameID(assertion.getSubject().getNameID());
+        
+        Logger.debug(this, "Elements of type AttributeStatement in assertion : " + assertion.getAttributeStatements().size());
 
-        assertion.getAttributeStatements().get(0).getAttributes().forEach(attribute -> {
+        assertion.getAttributeStatements().forEach(attributeStatement -> {
+        	
+        	Logger.debug(this, "Attribute Statement - local name: " + attributeStatement.DEFAULT_ELEMENT_LOCAL_NAME +  ", type: " + attributeStatement.TYPE_LOCAL_NAME);
+        	
+        	attributeStatement.getAttributes().forEach(attribute -> {
+        		
+        		Logger.debug(this, "Attribute - friendly name: " + attribute.getFriendlyName() + ", name: " + attribute.getName() + ", type: " + attribute.TYPE_LOCAL_NAME + ", number of values: " + attribute.getAttributeValues().size());
 
-            if (attribute.getName().equals(emailField)) {
+        		if (attribute.getFriendlyName().equals(emailField)) {
+            	
+        			Logger.debug(this, "Resolving attributes - Email : " + attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        			attrBuilder.email
+        				(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        		} else if (attribute.getFriendlyName().equals(lastNameField)) {
 
-                attrBuilder.email
-                        (attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-            } else if (attribute.getName().equals(lastNameField)) {
+        			Logger.debug(this, "Resolving attributes - lastName : " + attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        			attrBuilder.lastName
+        				(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        		} else if(attribute.getFriendlyName().equals(firstNameField)){
 
-                attrBuilder.lastName
-                        (attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-            } else if(attribute.getName().equals(firstNameField)){
+        			Logger.debug(this, "Resolving attributes - firstName : " + attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        			attrBuilder.firstName
+        			(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        		}else if (attribute.getFriendlyName().equals(rolesField)) {
 
-                attrBuilder.firstName
-                        (attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-            }else if (attribute.getName().equals(rolesField)) {
-
-                attrBuilder.addRoles(true).roles(attribute);
-            }
+        			Logger.debug(this, "Resolving attributes - roles : " + attribute);
+            		attrBuilder.addRoles(true).roles(attribute);
+        		}
+        	});
         });
+        
 
         return attrBuilder.build();
     } // resolveAttributes.
@@ -309,7 +324,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             || assertion.getSubject() == null
             || assertion.getSubject().getNameID() == null
             || assertion.getSubject().getNameID().getValue().isEmpty()) {
-
+        	
             throw new AttributesNotFoundException("No attributes found");
         }
 
@@ -338,7 +353,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             Logger.error(this, e.getMessage());
             return null;
         } catch (NoSuchUserException e) {
-            Logger.info(this, "No matching user, creating");
+            Logger.error(this, "No matching user, creating");
             user = null;
         } catch (Exception e) {
             Logger.error(this, "Unknown exception", e);
@@ -374,6 +389,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         		// remove previous roles
         		Logger.debug(this, "Removing user previous roles");
         		this.roleAPI.removeAllRolesFromUser(user);
+        	} else {
+        		Logger.debug(this, "No roles will be removed");
         	}
 
             if (attributesBean.isAddRoles() &&
@@ -409,10 +426,12 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             }
             //Add SAML User role
             addRole(user, configuration.getStringProperty(DOTCMS_SAML_USER_ROLE, "SAML User"), true, true);
+            Logger.debug(this, "Default SAML User role has been assigned");
 
             //Add DOTCMS_SAML_OPTIONAL_USER_ROLE
             if (configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null) != null) {
                 addRole(user, configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null), false, false);
+                Logger.debug(this, "Optional user role: " + configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null) + " has been assigned");
             }
 
         } catch (DotDataException e) {
@@ -440,7 +459,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         if(null != role && !this.roleAPI.doesUserHaveRole(user, role)) {
 
             this.roleAPI.addRoleToUser(role, user);
-            Logger.debug(this, "Added role: " + role.getName() +
+            Logger.info(this, "Added role: " + role.getName() +
                 " to user:" + user.getEmailAddress());
         }
     } // addRole.
@@ -474,14 +493,14 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         String date = DateUtil.getCurrentDate();
 
-        ActivityLogger.logInfo(getClass(), "Adding Role", "Date: " + date + "; " + "Role:" + roleKey);
-        AdminLogger.log(getClass(), "Adding Role", "Date: " + date + "; " + "Role:" + roleKey);
+        ActivityLogger.logInfo(ActivityLogger.class, getClass() + " - Adding Role", "Date: " + date + "; " + "Role:" + roleKey);
+        AdminLogger.log(AdminLogger.class, getClass() + " - Adding Role", "Date: " + date + "; " + "Role:" + roleKey);
 
         try {
             role = roleAPI.save(role, role.getId());
         } catch (DotDataException | DotStateException e) {
-            ActivityLogger.logInfo(getClass(), "Error Adding Role", "Date: " + date + ";  " + "Role:" + roleKey);
-            AdminLogger.log(getClass(), "Error Adding Role", "Date: " + date + ";  " + "Role:" + roleKey);
+            ActivityLogger.logInfo(ActivityLogger.class, getClass() + " - Error Adding Role", "Date: " + date + ";  " + "Role:" + roleKey);
+            AdminLogger.log(AdminLogger.class, getClass() + " - Error Adding Role", "Date: " + date + ";  " + "Role:" + roleKey);
             throw e;
         }
 
@@ -508,7 +527,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             user.setPasswordEncrypted(true);
 
             this.userAPI.save(user, systemUser, false);
-            Logger.debug(this, "new user created. email: " + attributesBean.getEmail());
+            Logger.info(this, "new user created. email: " + attributesBean.getEmail());
         } catch (Exception e) {
 
             Logger.error(this, "Error creating user:" + e.getMessage(), e);
@@ -559,7 +578,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
             encoder.initialize();
 
-            Logger.info(this, "XMLObject: " + toXMLObjectString(xmlObject));
+            Logger.debug(this, "XMLObject: " + toXMLObjectString(xmlObject));
             Logger.info(this, "Redirecting to IDP");
 
             encoder.encode();
