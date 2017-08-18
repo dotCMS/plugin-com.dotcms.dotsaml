@@ -133,8 +133,6 @@ public class SiteConfigurationParser implements Serializable {
                 fieldsToValidate.add(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD);
                 fieldsToValidate.add(DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID);
                 fieldsToValidate.add(DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD);
-                fieldsToValidate.add(DotSamlConstants.DOT_SAML_REMOVE_ROLES_PREFIX);
-                fieldsToValidate.add(DotSamlConstants.DOTCMS_SAML_INCLUDE_ROLES_PATTERN);
 
                 Set<String> missingFields = SamlUtils.getMissingProperties(samlProperties, fieldsToValidate);
 
