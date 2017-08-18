@@ -58,11 +58,11 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
         MessageContext<SAMLObject>      messageContext = null;
         Response                        samlResponse   = null;
 
-        Logger.info(this, "Resolving the Artifact with the implementation: " + this.getClass());
+        Logger.debug(this, "Resolving the Artifact with the implementation: " + this.getClass());
 
         try {
 
-            Logger.info(this, "Decoding the Post message: " + request.getParameter(SAML_RESPONSE_KEY));
+            Logger.debug(this, "Decoding the Post message: " + request.getParameter(SAML_RESPONSE_KEY));
 
             decoder.setHttpServletRequest(request);
             decoder.setParserPool(XMLObjectProviderRegistrySupport.getParserPool());
@@ -73,7 +73,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
             messageContext = decoder.getMessageContext();
             samlResponse   = (Response)messageContext.getMessage();
 
-            Logger.info(this, "Post message context decoded: " +
+            Logger.debug(this, "Post message context decoded: " +
                     toXMLObjectString(samlResponse));
 
         } catch (ComponentInitializationException | MessageDecodingException e) {
@@ -89,7 +89,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 
         assertion = getAssertion(samlResponse, configuration);
 
-        Logger.info(this, "Decrypted Assertion: " + toXMLObjectString(assertion));
+        Logger.debug(this, "Decrypted Assertion: " + toXMLObjectString(assertion));
 
         if (configuration.isVerifyAssertionSignatureNeeded()) {
 
@@ -103,7 +103,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
             Logger.info(this, "The verification assertion signature and status code was skipped.");
         }
 
-        Logger.info(this, "Decrypted Assertion: " + toXMLObjectString(assertion));
+        Logger.debug(this, "Decrypted Assertion: " + toXMLObjectString(assertion));
 
         return assertion;
     } // resolveAssertion.

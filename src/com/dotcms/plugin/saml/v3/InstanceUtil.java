@@ -102,7 +102,7 @@ public class InstanceUtil {
 
             try {
 
-                Logger.info(InstanceUtil.class, "Creating an instance of: " + className);
+                Logger.debug(InstanceUtil.class, "Creating an instance of: " + className);
                 t = (T)Class.forName(className).newInstance();
             } catch (Exception e) {
 
@@ -133,7 +133,7 @@ public class InstanceUtil {
 
         try {
 
-            Logger.info(InstanceUtil.class, "Creating an instance of: " + tClass.getName());
+            Logger.debug(InstanceUtil.class, "Creating an instance of: " + tClass.getName());
             t = tClass.newInstance();
         } catch (Exception e1) {
 

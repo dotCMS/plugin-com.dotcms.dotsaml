@@ -75,11 +75,11 @@ public class ToleranceOpenSamlAuthenticationServiceImpl extends OpenSamlAuthenti
 
         try {
 
-            Logger.info(this, "Attributes before strategies: " + attributesBean);
+            Logger.debug(this, "Attributes before strategies: " + attributesBean);
 
             final AttributesBean newAttributesBean = this.applyStrategies(attributesBean);
 
-            Logger.info(this, "Attributes after strategies: " + newAttributesBean);
+            Logger.debug(this, "Attributes after strategies: " + newAttributesBean);
 
             try {
 

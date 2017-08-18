@@ -94,7 +94,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 
         idpDescriptor.getSingleLogoutServices().stream().forEach( sso -> {
 
-            Logger.info(this,"Add SLO binding " + sso.getBinding()
+            Logger.debug(this,"Add SLO binding " + sso.getBinding()
                     + "(" + sso.getLocation() + ")");
             singleLogoutBindingLocationMap.put(sso.getBinding(),
                     sso.getLocation());
@@ -137,7 +137,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         descriptor.setEntityID(SamlUtils.getSPIssuerValue(configuration)); // this get from the dotmarketing-config.properties.
 
         Logger.info(this, "Creating the MetaData for the site: " + configuration.getSiteName());
-        Logger.info(this, "Generating the Entity Provider Descriptor for: " +
+        Logger.debug(this, "Generating the Entity Provider Descriptor for: " +
                 descriptor.getEntityID());
 
         spssoDescriptor.setWantAssertionsSigned(configuration.getBooleanProperty
@@ -146,7 +146,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                 (DotSamlConstants.DOTCMS_SAML_AUTHN_REQUESTS_SIGNED, true));
         spssoDescriptor.addSupportedProtocol(SAMLConstants.SAML20_NS);
 
-        Logger.info(this, "Setting the key descriptors for: " +
+        Logger.debug(this, "Setting the key descriptors for: " +
                 descriptor.getEntityID());
 
         // set's the SIGNING and ENCRYPTION keyinfo.
@@ -191,7 +191,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                                                                       final String location,
                                                                       final SAMLObjectBuilder<AssertionConsumerService> assertionConsumerServiceBuilder) {
 
-        Logger.info(this, "Assertion consumer service, location: " + location);
+        Logger.debug(this, "Assertion consumer service, location: " + location);
 
         final AssertionConsumerService assertionConsumerServiceArtifact =
                 assertionConsumerServiceBuilder.buildObject();
@@ -213,7 +213,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                                                                       final String location,
                                                                       final SAMLObjectBuilder<SingleLogoutService> singleLogoutServiceBuilder) {
 
-        Logger.info(this, "Assertion consumer service, location: " + location);
+        Logger.debug(this, "Assertion consumer service, location: " + location);
 
         final SingleLogoutService assertionConsumerService =
                 singleLogoutServiceBuilder.buildObject();
@@ -332,7 +332,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         keyInfoGeneratorFactory.setEmitEntityCertificate(true);
         final KeyInfoGenerator keyInfoGenerator = keyInfoGeneratorFactory.newInstance();
 
-        Logger.info(this, "Meta Data Credential: " + credential);
+        Logger.debug(this, "Meta Data Credential: " + credential);
 
         return keyInfoGenerator.generate(credential);
     } // getKeyInfo.
@@ -407,7 +407,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 
         idpDescriptor.getSingleSignOnServices().stream().forEach( sso -> {
 
-            Logger.info(this,"Add SSO binding " + sso.getBinding()
+            Logger.debug(this,"Add SSO binding " + sso.getBinding()
                     + "(" + sso.getLocation() + ")");
             singleSignOnBindingLocationMap.put(sso.getBinding(),
                     sso.getLocation());
