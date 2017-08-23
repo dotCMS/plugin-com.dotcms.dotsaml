@@ -284,31 +284,46 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         assertion.getAttributeStatements().forEach(attributeStatement -> {
         	
-        	Logger.debug(this, "Attribute Statement - local name: " + attributeStatement.DEFAULT_ELEMENT_LOCAL_NAME +  ", type: " + attributeStatement.TYPE_LOCAL_NAME);
+        	Logger.debug(this, "Attribute Statement - local name: " + attributeStatement.DEFAULT_ELEMENT_LOCAL_NAME +  ", type: " 
+        			+ attributeStatement.TYPE_LOCAL_NAME + ", number of attributes: " + attributeStatement.getAttributes().size());
         	
         	attributeStatement.getAttributes().forEach(attribute -> {
         		
-        		Logger.debug(this, "Attribute - friendly name: " + attribute.getFriendlyName() + ", name: " + attribute.getName() + ", type: " + attribute.TYPE_LOCAL_NAME + ", number of values: " + attribute.getAttributeValues().size());
+        		Logger.debug(this, "Attribute - friendly name: " + attribute.getFriendlyName() + ", name: " 
+        				+ attribute.getName() + ", type: " + attribute.TYPE_LOCAL_NAME + ", number of values: " + attribute.getAttributeValues().size());
 
-        		if (attribute.getName().equals(emailField) || attribute.getFriendlyName().equals(emailField)) {
+        		if ( (attribute.getName() != null && attribute.getName().equals(emailField)) 
+        				|| (attribute.getFriendlyName() != null && attribute.getFriendlyName().equals(emailField)) ) {
             	
-        			Logger.debug(this, "Resolving attributes - Email : " + attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        			Logger.debug(this, "Resolving attribute - Email : " + emailField);
         			attrBuilder.email
         				(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-        		} else if (attribute.getName().equals(lastNameField) || attribute.getFriendlyName().equals(lastNameField)) {
+        			Logger.debug(this, "Resolved attribute - Email : " + attrBuilder.email);
+        			
+        		} else if ( (attribute.getName() != null && attribute.getName().equals(lastNameField))
+        				|| (attribute.getFriendlyName() != null && attribute.getFriendlyName().equals(lastNameField)) ) {
 
-        			Logger.debug(this, "Resolving attributes - lastName : " + attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        			Logger.debug(this, "Resolving attribute - LastName : " + lastNameField);
         			attrBuilder.lastName
         				(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-        		} else if(attribute.getName().equals(firstNameField) || attribute.getFriendlyName().equals(firstNameField)){
+        			Logger.debug(this, "Resolved attribute - lastName : " + attrBuilder.lastName);
+        			
+        		} else if ( (attribute.getName() != null && attribute.getName().equals(firstNameField))
+        				|| (attribute.getFriendlyName() != null && attribute.getFriendlyName().equals(firstNameField)) ) {
 
-        			Logger.debug(this, "Resolving attributes - firstName : " + attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+        			Logger.debug(this, "Resolving attribute - firstName : " + firstNameField);
         			attrBuilder.firstName
         			(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-        		}else if (attribute.getName().equals(rolesField) || attribute.getFriendlyName().equals(rolesField)) {
+        			Logger.debug(this, "Resolved attribute - firstName : " + attrBuilder.firstName);
+        			
+        		}else if ( (attribute.getName() != null && attribute.getName().equals(rolesField)) 
+        				|| (attribute.getFriendlyName() != null && attribute.getFriendlyName().equals(rolesField)) ) {
 
-        			Logger.debug(this, "Resolving attributes - roles : " + attribute);
+        			Logger.debug(this, "Resolving attribute - roles : " + rolesField);
             		attrBuilder.addRoles(true).roles(attribute);
+            		Logger.debug(this, "Resolving attributes - roles : " + attribute);
+        		} else {
+        			Logger.debug(this, "Attribute did not match any user property");
         		}
         	});
         });
