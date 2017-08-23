@@ -3,6 +3,8 @@ package com.dotcms.plugin.saml.v3;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.NameID;
 
+import com.dotmarketing.util.Logger;
+
 import java.io.Serializable;
 
 /**
@@ -84,16 +86,19 @@ public class AttributesBean implements Serializable {
         NameID nameID    = null;
 
         public Builder email(String email) {
+        	Logger.debug(this, "Setting email: " + email);
             this.email = email;
             return this;
         }
 
         public Builder lastName(String lastName) {
+        	Logger.debug(this, "Setting lastName: " + lastName);
             this.lastName = lastName;
             return this;
         }
 
         public Builder firstName(String firstName) {
+        	Logger.debug(this, "Setting firstName: " + firstName);
             this.firstName = firstName;
             return this;
         }
