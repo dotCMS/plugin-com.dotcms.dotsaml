@@ -92,13 +92,13 @@ public class SiteConfigurationParser implements Serializable {
      * Validate properties from the SAML Field.
      *
      * We need to validate these properties:
-     * dotcms.saml.idp.metadata.path (File)
-     * dotcms.saml.keystore.path (File)
-     * dotcms.saml.keystore.password
-     * dotcms.saml.keyentryid
-     * dotcms.saml.keystore.entry.password
-     * dotcms.saml.remove.roles.prefix
-     * dotcms.saml.include.roles.pattern
+     * idp.metadata.path (File)
+     * keystore.path (File)
+     * keystore.password
+     * keyentryid
+     * keystore.entry.password
+     * remove.roles.prefix
+     * include.roles.pattern
      *
      * 1. Validate that the properties exist.
      * 2. Validate that the File properties exist, can access and read.

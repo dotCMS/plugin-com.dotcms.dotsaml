@@ -83,7 +83,7 @@ Password to access the keystore.
 
 ###  <a name="advance-configuration">ADVANCE CONFIGURATION</a>
 
-In this section we describe all advance the properties that can be set in your SAML configuration:
+In this section we describe all the advance properties that can be set in your SAML configuration:
 
 **Important Considerations:** 
 1. We ship with default values for some of the properties below. You can find, add or remove those default values in the file ROOT/dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/classes/dotcms-saml-default.properties.
