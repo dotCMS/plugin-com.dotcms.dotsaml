@@ -76,6 +76,11 @@ If you want to get the XML from the file system use the prefix *file://*.
 
 Classpath or file system path for the keystore.
 
+**keystore.password**
+
+Password to access the keystore.
+
+
 ###  <a name="advance-configuration">ADVANCE CONFIGURATION</a>
 
 In this section we describe all advance the properties that can be set in your SAML configuration:
@@ -153,10 +158,6 @@ Authentication context, which could be Kerberos, Internet protocol, password, et
 By default we use: *org.opensaml.saml.saml2.core.AuthnContext.PASSWORD_AUTHN_CTX*
 
 
-
-**keystore.password**
-
-Password to access the keystore.
 
 **keyentryid**
 
