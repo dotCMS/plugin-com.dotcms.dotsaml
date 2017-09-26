@@ -54,7 +54,31 @@ For more details about properties configuration, please refer to the [Configurat
 
 ##  <a name="configuration">CONFIGURATION</a>
 
-In this section we describe all the properties that can be set in your SAML configuration:
+###  <a name="basic-configuration">BASIC CONFIGURATION</a>
+
+The basic and most common configuration for SAML will be such as
+
+~~~
+idp.metadata.path=
+keystore.path=
+keystore.password=
+~~~
+
+In most of the cases you will need to configure just these three properties:
+
+**idp.metadata.path**
+
+In case you have a *idp-metadata.xml* you can get it from the classpath or file system.
+For the classpath, overwrite the property with the right path in your classpath.
+If you want to get the XML from the file system use the prefix *file://*.
+
+**keystore.path**
+
+Classpath or file system path for the keystore.
+
+###  <a name="advance-configuration">ADVANCE CONFIGURATION</a>
+
+In this section we describe all advance the properties that can be set in your SAML configuration:
 
 **Important Considerations:** 
 1. We ship with default values for some of the properties below. You can find, add or remove those default values in the file ROOT/dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/classes/dotcms-saml-default.properties.
@@ -127,9 +151,7 @@ Authentication context, which could be Kerberos, Internet protocol, password, et
 
 By default we use: *org.opensaml.saml.saml2.core.AuthnContext.PASSWORD_AUTHN_CTX*
 
-**dotcms.saml.keystore.path**
 
-Classpath or file system path for the keystore.
 
 **dotcms.saml.keystore.password**
 
@@ -184,11 +206,7 @@ By default, dotCMS uses: *DefaultInitializer*. It inits the Java Crypto, Saml Se
 Used to manipulate the SAML plugin configuration
 Default implementation: *com.dotcms.plugin.saml.v3.config.DefaultDotCMSConfiguration*.
 
-**dotcms.saml.idp.metadata.path**
 
-In case you have a *idp-metadata.xml* you can get it from the classpath or file system.
-For the classpath, overwrite the property with the right path in your classpath.
-If you want to get the XML from the file system use the prefix *file://*.
 
 **dotcms.saml.idp.metadata.protocol**
 
@@ -260,6 +278,23 @@ Use this property in case you need to filter additional paths. For instance:
 ~~~
 "dotcms.saml.include.path.values":"^/html/portal/login.*$,^/dotCMS/login.*$,^/c/,^/admin"
 ~~~
+
+**dotcms.saml.logout.path.values**
+
+Comma separated values with the regex paths to be considered by the SAML plugin.
+
+By default we include:
+
+~~~
+ ^/dotsaml3sp*$, ^/dotCMS/login.*$, ^/html/portal/login.*$, ^/c/public/login.*$,^/c/portal_public/login.*$,^/c/portal/logout.*$", 
+~~~
+
+Use this property in case you need to add additional logout paths. For instance:
+
+~~~
+"dotcms.saml.include.path.values":"^/html/portal/logout.*$,^/dotCMS/logout.*$,^/c/"
+~~~
+
 
 **dotcms.saml.identity.provider.destinationslo.url**
 
