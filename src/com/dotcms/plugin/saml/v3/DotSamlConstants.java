@@ -3,7 +3,6 @@ package com.dotcms.plugin.saml.v3;
 import com.dotcms.plugin.saml.v3.init.DefaultInitializer;
 import com.dotcms.plugin.saml.v3.meta.DefaultMetaDescriptorServiceImpl;
 import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
-import com.dotmarketing.util.Config;
 
 /**
  * Encapsulates constants for the dot SAML SP
@@ -73,7 +72,7 @@ public final class DotSamlConstants {
      * By default dotcms use: {@link org.opensaml.saml.saml2.core.NameIDType}.TRANSIENT.
      * See More on {@link org.opensaml.saml.saml2.core.NameIDType}
      */
-    public static final String DOTCMS_SAML_POLICY_FORMAT = "policy.format";
+    public static final String DOTCMS_SAML_NAME_ID_POLICY_FORMAT = "nameidpolicy.format";
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
@@ -296,12 +295,6 @@ public final class DotSamlConstants {
      * By default true, overrides if you want the authorization requests signed.
      */
     public static final String DOTCMS_SAML_AUTHN_REQUESTS_SIGNED = "authn.requests.signed";
-
-    /**
-     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
-     * By default we use: "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent", you can overrides if need others by comma separated.
-     */
-    public static final String DOTCMS_SAML_NAME_ID_FORMATS = "name.id.formats";
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
