@@ -96,10 +96,11 @@ Allows to create users that do not exist on the IdP.
 
 We advise to not create new users on the Idp, however you can change this behavior, turning on this property.
 
-**dotcms.saml.policy.format**
+**dotcms.saml.nameidpolicy.format**
 
 SAML Name ID policy. By default we support TRANSIENT and PERSISTANCE formats, however if you want to overwrite it just add the values (comma separated).
 See *org.opensaml.saml.saml2.core.NameIDType* for more details about the valid values.
+
 
 **dotcms.saml.authn.comparisontype**
 

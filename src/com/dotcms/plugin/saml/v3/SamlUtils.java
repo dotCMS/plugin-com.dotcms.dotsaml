@@ -27,8 +27,6 @@ import org.opensaml.saml.common.SAMLVersion;
 import org.opensaml.saml.common.SignableSAMLObject;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.*;
-import org.opensaml.saml.saml2.core.impl.NameIDBuilder;
-import org.opensaml.saml.saml2.core.impl.SessionIndexBuilder;
 import org.opensaml.saml.saml2.encryption.Decrypter;
 import org.opensaml.saml.saml2.metadata.Endpoint;
 import org.opensaml.saml.saml2.metadata.SingleLogoutService;
@@ -63,7 +61,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.xml.namespace.QName;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -358,7 +355,7 @@ public class SamlUtils {
         // todo: should set the SPNameQualifier
         // it supports several formats, such as Kerberos, email, Windows Domain Qualified Name, etc.
         nameIDPolicy.setFormat(configuration.getStringProperty(
-                DotSamlConstants.DOTCMS_SAML_POLICY_FORMAT,
+                DotSamlConstants.DOTCMS_SAML_NAME_ID_POLICY_FORMAT,
                 // “The transient identifier is a random identifier that does not have any connection to the user. A transient identifier will be different for every time the user signs in.”
                 NameIDType.PERSISTENT));
 
