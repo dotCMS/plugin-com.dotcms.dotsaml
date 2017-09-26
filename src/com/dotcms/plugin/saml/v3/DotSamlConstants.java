@@ -73,7 +73,7 @@ public final class DotSamlConstants {
      * By default dotcms use: {@link org.opensaml.saml.saml2.core.NameIDType}.TRANSIENT.
      * See More on {@link org.opensaml.saml.saml2.core.NameIDType}
      */
-    public static final String DOTCMS_SAML_POLICY_FORMAT = "dotcms.saml.policy.format";
+    public static final String DOTCMS_SAML_NAME_ID_POLICY_FORMAT = "dotcms.saml.nameidpolicy.format";
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
@@ -301,7 +301,7 @@ public final class DotSamlConstants {
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * By default we use: "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent", you can overrides if need others by comma separated.
      */
-    public static final String DOTCMS_SAML_NAME_ID_FORMATS = "dotcms.saml.name.id.formats";
+    //public static final String DOTCMS_SAML_NAME_ID_FORMATS = "dotcms.saml.nameidpolicy.formats";
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)

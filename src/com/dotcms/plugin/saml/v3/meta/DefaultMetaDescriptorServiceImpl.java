@@ -237,7 +237,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                 (SAMLObjectBuilder<NameIDFormat>) this.xmlObjectBuilderFactory.getBuilder
                         (NameIDFormat.DEFAULT_ELEMENT_NAME);
 
-        final String [] formats = configuration.getStringArray (DotSamlConstants.DOTCMS_SAML_NAME_ID_FORMATS,
+        final String [] formats = configuration.getStringArray (DotSamlConstants.DOTCMS_SAML_NAME_ID_POLICY_FORMAT,
                 new String[] {  NameIDType.PERSISTENT });
 
         for (String format : formats) {
