@@ -3,6 +3,7 @@ package com.dotcms.plugin.saml.v3;
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.exception.AttributesNotFoundException;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
+import com.dotcms.plugin.saml.v3.exception.SamlUnauthorizedException;
 import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandler;
 import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandlerFactory;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
@@ -311,7 +312,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         			final String lastName = (UtilMethods.isSet(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue()))?
                             attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue():
-                            lastNameForNullValue;
+                            checkDefaultValue(lastNameForNullValue, lastNameField + " is null and the default is null too");
 
         			attrBuilder.lastName(lastName);
 
@@ -324,7 +325,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
                     final String firstName = (UtilMethods.isSet(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue()))?
                             attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue():
-                            firstNameForNullValue;
+                            checkDefaultValue(firstNameForNullValue, firstNameField + " is null and the default is null too");
 
         			attrBuilder.firstName(firstName);
 
@@ -345,6 +346,17 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         return attrBuilder.build();
     } // resolveAttributes.
+
+    private String checkDefaultValue(final String lastNameForNullValue,
+                                     final String message) {
+
+        if (!UtilMethods.isSet(lastNameForNullValue)) {
+
+            throw new SamlUnauthorizedException(message);
+        }
+
+        return lastNameForNullValue;
+    }
 
     private void resolveEmail(final String                  emailField,
                               final AttributesBean.Builder  attributesBuilder,
