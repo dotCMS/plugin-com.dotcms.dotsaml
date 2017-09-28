@@ -181,7 +181,7 @@ public class SiteConfigurationParser implements Serializable {
      * @return String with the configuration to be used (multiple lines following a key=value pattern)
      */
     private String getConfigurationToUse(Host hostToConfigure, Host fallbackHost) {
-        Object hostConf = hostToConfigure.getMap().get(DotSamlConstants.DOTCMS_SAML_FIELD_NAME);
+        Object hostConf = hostToConfigure.getMap().get(DotSamlConstants.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_NAME);
 
         if (isValidConfiguration(hostConf) || (fallbackHost != null)) {
 
@@ -190,7 +190,7 @@ public class SiteConfigurationParser implements Serializable {
                 return hostConf.toString();
             } else {
                 //otherwise, a default configuration is taken from the fallback site, if exists
-                hostConf = fallbackHost.getMap().get(DotSamlConstants.DOTCMS_SAML_FIELD_NAME);
+                hostConf = fallbackHost.getMap().get(DotSamlConstants.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_NAME);
                 if (isValidConfiguration(hostConf)) {
                     return hostConf.toString();
                 }

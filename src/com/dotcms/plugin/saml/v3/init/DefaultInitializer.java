@@ -6,6 +6,7 @@ import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.config.DefaultDotCMSConfiguration;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationParser;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationService;
+import com.dotcms.plugin.saml.v3.content.SamlContentTypeUtil;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.hooks.SamlHostPostHook;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
@@ -53,28 +54,24 @@ public class DefaultInitializer implements Initializer {
 
     private final AtomicBoolean initDone = new AtomicBoolean(false);
     private final SiteConfigurationParser siteConfigurationParser = new SiteConfigurationParser();
-    private final String hostVariableName = "Host";
-
-    private final StructureAPI structureAPI;
-    private final UserAPI userAPI;
+    private final SamlContentTypeUtil samlContentTypeUtil;
 
     public DefaultInitializer(){
 
-        this(APILocator.getStructureAPI(), APILocator.getUserAPI());
+        this(new SamlContentTypeUtil());
     }
 
     @VisibleForTesting
-    public DefaultInitializer(StructureAPI structureAPI, UserAPI userAPI) {
+    public DefaultInitializer(final SamlContentTypeUtil samlContentTypeUtil) {
 
-        this.structureAPI = structureAPI;
-        this.userAPI = userAPI;
+        this.samlContentTypeUtil = samlContentTypeUtil;
     }
 
     @Override
     public void init(final Map<String, Object> context) {
 
         Logger.info(this, "About to create SAML field under Host Content Type");
-        this.createSAMLField();
+        this.createSAMLFields();
         SamlHostPostHook postHook = new SamlHostPostHook();
         Interceptor interceptor = (Interceptor)APILocator.getContentletAPIntercepter();
         interceptor.delPostHookByClassName(postHook.getClass().getName());
@@ -108,65 +105,11 @@ public class DefaultInitializer implements Initializer {
      * We need a SAML field(textare) under the Host structure in order
      * to have a place to configure SAML for each Site.
      */
-    private void createSAMLField() {
+    private void createSAMLFields() {
 
-        try {
-            final Structure hostStructure = structureAPI.findByVarName(hostVariableName, userAPI.getSystemUser());
+        this.samlContentTypeUtil.checkORCreateSAMLField();
+    }// createSAMLFields.
 
-            if ( !hasSAMLField(hostStructure) ) {
-
-                Logger.info(this, "Creating SAML field under Host with inode: " + hostStructure.getInode());
-                Field samlField = new Field(DotSamlConstants.DOTCMS_SAML_FIELD_NAME,
-                    Field.FieldType.TEXT_AREA,
-                    Field.DataType.LONG_TEXT,
-                    hostStructure,
-                    false,
-                    false,
-                    true,
-                    1,
-                    "",
-                    DOTCMS_SAML_DEFAULT_CONF_FIELD_CONTENT,
-                    "",
-                    false,
-                    false,
-                    true);
-
-                // Logic from EditFieldAction.java, method: _saveField().
-                FieldFactory.saveField(samlField);
-                FieldsCache.removeFields(hostStructure);
-                CacheLocator.getContentTypeCache().remove(hostStructure);
-                StructureServices.removeStructureFile(hostStructure);
-                StructureFactory.saveStructure(hostStructure);
-                FieldsCache.addFields(hostStructure, hostStructure.getFields());
-            } else {
-
-                Logger.info(this, "SAML field already exists under Host with inode: " + hostStructure.getInode());
-            }
-        } catch (DotDataException | DotSecurityException e){
-
-            Logger.error(this, e.getMessage(), e);
-            throw new DotSamlException(e.getMessage(), e);
-        }
-    }// createSAMLField.
-
-    /**
-     * Check is the Structure has a SAML Field. {@link DotSamlConstants}
-     *
-     * @param hostStructure
-     * @return true is the strcture has a SAML fields, false else.
-     */
-    private boolean hasSAMLField(Structure hostStructure) {
-
-        final List<Field> fieldsByHost = FieldsCache.getFieldsByStructureInode(hostStructure.getInode());
-
-        boolean exists = false;
-        for (Field field : fieldsByHost) {
-            if (DotSamlConstants.DOTCMS_SAML_FIELD_NAME.equals(field.getVelocityVarName())){
-                exists = true;
-            }
-        }
-        return exists;
-    }// hasSAMLField.
 
     /**
      * Inits the app configuration.
