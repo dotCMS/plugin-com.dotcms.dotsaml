@@ -41,6 +41,7 @@ public class SamlHostPostHook extends ContentletAPIPostHookAbstractImp {
         Configuration siteConfiguration;
         SiteConfigurationService siteConfigurationService;
         SiteConfigurationParser siteConfigurationParser = new SiteConfigurationParser();
+
         try {
 
             Logger.info(this, "Reconfiguring Saml settings for the host with inode: " + currentContentlet.getInode());

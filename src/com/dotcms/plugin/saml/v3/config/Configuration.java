@@ -23,8 +23,8 @@ public interface Configuration extends Serializable {
     public static final String HTTP_SCHEMA  = "http://";
     public static final String HTTPS_SCHEMA = "https://";
     String HTTPS_SCHEMA_PREFIX = "https";
-    String ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP = "/dotsaml3sp";
-    String LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP = "/dotsaml3sp-logout";
+    String ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP = "/dotsaml/login";
+    String LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP = "/dotsaml/logout";
 
     /**
      * Returns the site name associated to this configuration
