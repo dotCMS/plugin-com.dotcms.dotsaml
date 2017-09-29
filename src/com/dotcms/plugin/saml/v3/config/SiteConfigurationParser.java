@@ -2,16 +2,13 @@ package com.dotcms.plugin.saml.v3.config;
 
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.InstanceUtil;
-import com.dotcms.plugin.saml.v3.SamlUtils;
 import com.dotcms.plugin.saml.v3.content.HostService;
 import com.dotcms.plugin.saml.v3.content.SamlContentTypeUtil;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
-import com.dotmarketing.portlets.contentlet.business.DotContentletValidationException;
 import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.UtilMethods;
 import com.liferay.util.InstancePool;
 
 import java.io.IOException;
@@ -29,22 +26,10 @@ import static com.dotcms.plugin.saml.v3.DotSamlConstants.DOTCMS_SAML_DEFAULT_CON
  */
 public class SiteConfigurationParser implements Serializable {
 
+    private final SamlSiteValidator samlSiteValidator =
+            new SamlSiteValidator();
     private final HostService hostService =
            (HostService) InstancePool.get(HostService.class.getName());
-
-    private final Set<String> fieldsToValidate = new HashSet<>(); // todo: on 4.x immutable
-    {
-        this.fieldsToValidate.add(DotSamlConstants.DOTCMS_SAML_IDP_METADATA_PATH);
-        this.fieldsToValidate.add(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
-        this.fieldsToValidate.add(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD);
-    }
-
-    private final Set<String> fileFields = new HashSet<>(); // todo: on 4.x immutable
-    {
-        this.fileFields.add(DotSamlConstants.DOTCMS_SAML_IDP_METADATA_PATH);
-        this.fileFields.add(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
-    }
-
 
     /**
      * Read the SAML configuration field from each host and
@@ -95,8 +80,9 @@ public class SiteConfigurationParser implements Serializable {
         try {
 
             hostName = host.getHostname();
-            this.validateConfigurationByHost(host);
-            Logger.debug(this, "Populating the host" + host.getHostname()  + ", with the SAML Configuration");
+            Logger.debug(this, "Doing SAML Validation for the host: " + host.getHostname() );
+            this.validateConfigurationByHost(host, defaultHost);
+            Logger.debug(this, "Populating the host: " + host.getHostname()  + ", with the SAML Configuration");
             this.populateSite(host, configurationMap, this.getConfigurationToUse(host, defaultHost));
         } catch (Exception e) {
 
@@ -163,6 +149,7 @@ public class SiteConfigurationParser implements Serializable {
 
         this.validateConfigurationByHost(host, defaultHost);
     }
+
     /**
      * Validate properties from the SAML Field.
      *
@@ -189,55 +176,13 @@ public class SiteConfigurationParser implements Serializable {
     public void validateConfigurationByHost(final Host host,
                                             final Host defaultHost) throws DotDataException, DotSecurityException{
 
-        final String configurationToUse =
+        final String hostSAMLConfiguration =
                 getConfigurationToUse(host, defaultHost);
+        final String hostSAMLAuthentication  = (String)host.getMap()
+                .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_VELOCITY_VAR_NAME);
 
-        if ( configurationToUse != null ) {
-
-            try {
-
-                final Properties samlProperties = new Properties();
-                samlProperties.load( new StringReader(configurationToUse));
-
-                //Validate that these properties exist.
-                final Set<String> missingFields = SamlUtils.getMissingProperties
-                        (samlProperties, this.fieldsToValidate);
-
-                //Specific Validations for Files.
-                final Set<String> missingFiles = SamlUtils.validateFiles
-                        (samlProperties, this.fileFields);
-
-                final Set<String> keyStoreErrors = SamlUtils.validateKeyStore
-                        (samlProperties);
-
-                final StringBuilder error = new StringBuilder();
-
-                if ( !missingFields.isEmpty() ) {
-                    error.append("Missing Fields: ");
-                    error.append(org.apache.commons.lang.StringUtils.join(missingFields, ','));
-                    error.append("\n");
-                }
-
-                if ( !missingFiles.isEmpty() ) {
-                    error.append("Can NOT open Files: ");
-                    error.append(org.apache.commons.lang.StringUtils.join(missingFiles, ','));
-                    error.append("\n");
-                }
-
-                if ( !keyStoreErrors.isEmpty() ) {
-                    error.append(org.apache.commons.lang.StringUtils.join(keyStoreErrors, ','));
-                }
-
-                //If error has any message, throw the Exception with it.
-                if ( UtilMethods.isSet(error.toString()) ) {
-                    Logger.error(this, "Errors validating SAML Field config: " + error.toString());
-                    throw new DotContentletValidationException(error.toString());
-                }
-
-            } catch (IOException e){
-                throw new DotContentletValidationException("Error trying to parse SAML Field Properties", e);
-            }
-        }
+        this.samlSiteValidator.validateSiteConfiguration(host.getHostname(),
+                hostSAMLConfiguration, hostSAMLAuthentication);
     } // validateConfigurationByHost.
 
     /**
@@ -252,7 +197,7 @@ public class SiteConfigurationParser implements Serializable {
         final Object hostSAMLConfiguration   = hostProperties
                 .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_VELOCITY_VAR_NAME);
         final String hostSAMLAuthentication  = (String)hostProperties
-                .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_VELOCITY_VAR_NAME);
+                .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_VELOCITY_VAR_NAME);
         final boolean isEnabled              =
                 SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_ENABLED
                         .equalsIgnoreCase(hostSAMLAuthentication);
@@ -261,7 +206,10 @@ public class SiteConfigurationParser implements Serializable {
                         .equalsIgnoreCase(hostSAMLAuthentication);
 
         Logger.debug(this, "For the Host: " + hostToConfigure.getHostname()  +
-                    "the SAML Authentication is: " + hostSAMLAuthentication +
+             " the hostProperties are " + hostProperties);
+
+        Logger.debug(this, "For the Host: " + hostToConfigure.getHostname()  +
+                    " the SAML Authentication is: " + hostSAMLAuthentication +
                     ", going to validate their configuration...");
 
                 //if a configuration is set for the host, that one will be used
@@ -275,7 +223,7 @@ public class SiteConfigurationParser implements Serializable {
                                          final String hostName) {
 
         Logger.debug(this, "For the Host: " + hostName  +
-                "the SAML Configuration is valid going to use this configuration: " + hostSAMLConfiguration);
+                " the SAML Configuration is valid going to use this configuration: " + hostSAMLConfiguration);
 
         return hostSAMLConfiguration.toString();
     }
@@ -288,7 +236,7 @@ public class SiteConfigurationParser implements Serializable {
         final boolean isNotNullFallbackHost  = (null != fallbackHost);
 
         Logger.debug(this, "For the Host: " + hostName  +
-                "Trying the fallback host configuration, useDefaultConfiguration = " + useDefaultConfiguration +
+                " Trying the fallback host configuration, useDefaultConfiguration = " + useDefaultConfiguration +
                 ", and the fallbackHost is " + (isNotNullFallbackHost? "not null": "null") );
 
         if (useDefaultConfiguration && isNotNullFallbackHost) {
@@ -296,7 +244,7 @@ public class SiteConfigurationParser implements Serializable {
             final Object hostSAMLConfiguration = fallbackHost.getMap()
                     .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_VELOCITY_VAR_NAME);
             final String hostSAMLAuthentication  = (String)fallbackHost.getMap()
-                    .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_VELOCITY_VAR_NAME);
+                    .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_VELOCITY_VAR_NAME);
             final boolean isEnabled              =
                     SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_ENABLED
                             .equalsIgnoreCase(hostSAMLAuthentication);
@@ -318,7 +266,6 @@ public class SiteConfigurationParser implements Serializable {
     } // getFallbackHostConfiguration.
 
     private boolean isValidConfiguration(Object hostConf) {
-        // todo: see if this validation is enough
         return (hostConf != null && !hostConf.toString().isEmpty() && !hostConf.toString()
             .equals(DOTCMS_SAML_DEFAULT_CONF_FIELD_CONTENT));
     } // isValidConfiguration
@@ -332,18 +279,18 @@ public class SiteConfigurationParser implements Serializable {
 
         if (configurationToUse != null && !configurationToUse.isEmpty()) {
 
-            Logger.info(this, "Populating the site with the configuration: " + configurationMap +
-                        ", for the host: " + site);
+            Logger.info(this, "Populating tthe configuration for the host: " + site);
             // save the configuration map for the host
             siteBean = this.getSiteBean(configurationToUse);
             final Configuration configuration =
                     this.createConfiguration(site.getHostname(), siteBean);
             configurationMap.put(site.getHostname(), configuration);
 
+            Logger.info(this, "Populated the site with the configuration: " + configuration +
+                    ", for the host: " + site);
             //save the same map for each host alias
             this.hostService.getHostAlias(site).forEach(alias -> configurationMap.put(alias, configuration));
         }
-
     } // populateSite.
 
     /**

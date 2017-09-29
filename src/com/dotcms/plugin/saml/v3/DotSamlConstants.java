@@ -310,7 +310,7 @@ public final class DotSamlConstants {
      */
     public static final String
         DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH_DEFAULT_VALUE =
-        "/dotsaml3sp/metadata.xml";
+        "/dotsaml/metadata.xml";
 
     /**
      * Key for dotmarketing-config.properties

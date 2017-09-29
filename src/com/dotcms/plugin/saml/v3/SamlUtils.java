@@ -701,6 +701,7 @@ public class SamlUtils {
 
         if (!credentialMap.containsKey(configuration.getSiteName())) {
 
+            Credential credential =
             credentialMap.put(configuration.getSiteName(),
                     createCredential(configuration));
         }
@@ -717,10 +718,13 @@ public class SamlUtils {
 
         try {
 
+            Logger.debug(SamlUtils.class, "Creating Idp credential");
             if (null != customCredentialProvider) {
 
+                Logger.debug(SamlUtils.class, "Using custom credential provider");
                 idpCredential = customCredentialProvider.createCredential();
             } else {
+                Logger.debug(SamlUtils.class, "Using standard credential algorithm");
                 // this fallback generates just a random keypair not very useful to validate the signature.
                 keyPair = KeySupport.generateKeyPair("RSA", 1024, null);
                 idpCredential =

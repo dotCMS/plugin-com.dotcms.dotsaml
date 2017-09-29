@@ -108,7 +108,7 @@ public class SamlContentTypeUtil {
                 true,
                 4,
                 DEFAULT_VALUES,
-                "2",
+                DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_DISABLED,
                 "",
                 false,
                 false,

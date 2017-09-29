@@ -30,7 +30,7 @@ keystore.path=file:///Users/dotcms/dotcms_3.5/plugins/plugin-dotcms-openSAML3/co
 keystore.password=password
 keyentryid=SPKey
 keystore.entry.password=password
-assertion.customer.endpoint.url=https://saml.test.dotcms.com/dotsaml3sp
+assertion.customer.endpoint.url=https://saml.test.dotcms.com/dotsaml/login
 idp.metadata.path=file:///Users/dotcms/dotcms_3.5/plugins/plugin-dotcms-openSAML3/conf/idp1-metadata.xml
 want.assertions.signed=false
 authn.requests.signed=true
@@ -107,13 +107,13 @@ App Id for the dotCMS Service Provider. In case it is not provided, the default 
 
 **assertion.customer.endpoint.url**
 
-URL used by the Idp (the Shibboleth server) to redirect to dotCMS when the login is made. We suggest to go to http://[domain]/dotsaml3sp.
+URL used by the Idp (the Shibboleth server) to redirect to dotCMS when the login is made. We suggest to go to http://[domain]/dotsaml/login.
 If this value is unset, a default endpoint will be created using the *service.provider.issuer* and the *keyentryid*.
 
 **logout.service.endpoint.url**
 
 URL used by the Idp (the Shibboleth server) to redirect to dotCMS when the logout is made. 
-If this value is unset, a default endpoint will be created using the *service.provider.issuer*/dotsaml3sp-logout
+If this value is unset, a default endpoint will be created using the *service.provider.issuer*/dotsaml/logout
 
 
 **saml_user_role**
@@ -243,7 +243,7 @@ Default: true. Overwrite this value if you do not want authorization requests si
 
 **sevice.provider.custom.metadata.path**
 
-By default this is the URL to get the dotCMS Service Provider metadata: */dotsaml3sp/metadata.xml
+By default this is the URL to get the dotCMS Service Provider metadata: */dotsaml/metadata.xml
 *. However, if you want to use a different path, feel free to overwrite it.
 
 **assertion.resolver.handler.classname**

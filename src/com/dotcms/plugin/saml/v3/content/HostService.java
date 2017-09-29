@@ -6,6 +6,8 @@ import com.dotmarketing.business.UserAPI;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.contentlet.business.HostAPI;
+import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.UtilMethods;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -81,11 +83,35 @@ public class HostService {
     public Host findDefaultHost(final String fallbackSite) throws DotDataException, DotSecurityException {
 
         //Verify if a fallback site is configured and get its SAML configuration
-        return (fallbackSite != null && !fallbackSite.isEmpty())?
-                this.hostAPI.findByName(fallbackSite, this.userAPI.getSystemUser(), false)
+        Logger.debug(this, "Finding the default Host, the fallbackSite: " + fallbackSite);
+        return (UtilMethods.isSet(fallbackSite))?
+                this.findFallbackSite(fallbackSite)
                 // if not fallback use the default host
-                :this.hostAPI.findDefaultHost(this.userAPI.getSystemUser(), false);
+                :this.findDefaultHost();
     } // findDefaultHost.
+
+    private Host findFallbackSite (final String fallbackSite) throws DotDataException, DotSecurityException {
+
+        Logger.debug(this, "Finding the fallbackSite: " + fallbackSite);
+        final Host host =
+                this.hostAPI.findByName(fallbackSite, this.userAPI.getSystemUser(), false);
+
+        Logger.debug(this, "The fallbackSite host retrieve is: " + host);
+
+        return host;
+    } // findingHostByName.
+
+    private Host findDefaultHost  () throws DotDataException, DotSecurityException {
+
+        Logger.debug(this, "Finding the default host");
+        final Host host =
+                this.hostAPI.findDefaultHost(this.userAPI.getSystemUser(), false);
+
+        Logger.debug(this, "The default host retrieve is: " + host);
+
+        return host;
+    } // findDefaultHost.
+
 
     /**
      * Get Host Alias

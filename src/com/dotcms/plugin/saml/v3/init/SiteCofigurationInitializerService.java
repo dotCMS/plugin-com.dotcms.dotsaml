@@ -48,6 +48,7 @@ public class SiteCofigurationInitializerService implements Initializer {
             throw new DotSamlException(e.getMessage(), e);
         }
 
+        Logger.debug(this, "SAML configuration, map = " + configurationMap);
         siteConfigurationService = new SiteConfigurationService(configurationMap);
 
         InstancePool.put(SiteConfigurationService.class.getName(), siteConfigurationService);

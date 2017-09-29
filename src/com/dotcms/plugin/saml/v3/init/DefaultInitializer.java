@@ -78,6 +78,8 @@ public class DefaultInitializer implements Initializer {
         Logger.info(this, "Init Plugin Configuration");
         this.initConfiguration ();
 
+        Logger.info(this, "Saml Init DONE");
+
         this.initDone.set(true);
     } // init.
 
