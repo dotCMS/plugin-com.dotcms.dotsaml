@@ -183,19 +183,27 @@ For message lifetime validation purpose. By default the clock skew is 1000 and l
 
 Depending on your Identity Providers on the IdP, the roles may be returned on the assertion with a prefix, you can change this behavior by turning on *remove.roles.prefix*.
 
-**email.attribute**
+**attribute.email.name**
 
 By default, "mail" is the field used to fetch the user email from the Idp response.
 
-**firstname.attribute**
+**attribute.firstname.name**
 
 By default "givenName" is the field used to fetch the user name from the Idp response, however if you are using another one you can overwrite it.
 
-**lastname.attribute**
+**attribute.firstname.nullvalue**
+
+If the first name attribute is null, this value will be set instead
+
+**attribute.lastname.name**
 
 By default, "sn" is the field used to fetch the last name from the Idp response.
 
-**roles.attribute**
+**attribute.lastname.nullvalue**
+
+If the first name attribute is null, this value will be set instead
+
+**attribute.roles.name**
 
 By default, "authorizations" is the field used to fetch the roles/groups from the Idp response, however if you are using another one you can overwrite it.
 

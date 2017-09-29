@@ -149,28 +149,40 @@ public final class DotSamlConstants {
      * By default dotcms use: "mail", but you can override it just adding the mail attribute name you want.
      * "mail" will be the expected field name from the Response coming from the OpenSaml post call.
      */
-    public static final String DOT_SAML_EMAIL_ATTRIBUTE = "email.attribute";
+    public static final String DOT_SAML_EMAIL_ATTRIBUTE = "attribute.email.name";
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * By default dotcms use: "givenName", but you can override it just adding the first name attribute name you want.
      * "givenName" will be the expected field name from the Response comming from the OpenSaml post call.
      */
-    public static final String DOT_SAML_FIRSTNAME_ATTRIBUTE = "firstname.attribute";
+    public static final String DOT_SAML_FIRSTNAME_ATTRIBUTE = "attribute.firstname.name";
+
+    /**
+     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOT_SAML_FIRSTNAME_ATTRIBUTE_NULL_VALUE)
+     * If the first name attribute is null, this value will be set instead
+     */
+    public static final String DOT_SAML_FIRSTNAME_ATTRIBUTE_NULL_VALUE = "attribute.firstname.nullvalue";
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * By default dotcms use: "sn", but you can override it just adding the last name attribute name you want.
      * "sn" will be the expected field name from the Response comming from the OpenSaml post call.
      */
-    public static final String DOT_SAML_LASTNAME_ATTRIBUTE = "lastname.attribute";
+    public static final String DOT_SAML_LASTNAME_ATTRIBUTE = "attribute.lastname.name";
+
+    /**
+     * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOT_SAML_FIRSTNAME_ATTRIBUTE_NULL_VALUE)
+     * If the last name attribute is null, this value will be set instead
+     */
+    public static final String DOT_SAML_LASTNAME_ATTRIBUTE_NULL_VALUE = "attribute.lastname.nullvalue";
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_FIELD_NAME)
      * By default dotcms use: "authorisations", but you can override it just adding the roles attribute name you want.
      * "authorisations" will be the expected field name from the Response comming from the OpenSaml post call.
      */
-    public static final String DOT_SAML_ROLES_ATTRIBUTE = "roles.attribute";
+    public static final String DOT_SAML_ROLES_ATTRIBUTE = "attribute.roles.name";
 
     /**
      * Key for dotmarketing-config.properties
@@ -397,55 +409,6 @@ public final class DotSamlConstants {
      * By default we do not include the encryptor in the metadata, if you want to include it set this to true.
      */
     public static final String DOTCMS_SAML_USE_ENCRYPTED_DESCRIPTOR = "use.encrypted.descriptor";
-
-    /**
-     * Prefix for the {@link ToleranceOpenSamlAuthenticationServiceImpl} email when the email is empty or null
-     */
-    public static final String DOTCMS_SAML_EMAIL_PREFIX = "tolerance.samlauthservice.email.prefix";
-
-    /**
-     * Prefix for the {@link ToleranceOpenSamlAuthenticationServiceImpl} first name when the first name is empty or null
-     */
-    public static final String DOTCMS_SAML_NAME_PREFIX = "tolerance.samlauthservice.name.prefix";
-
-    /**
-     * Prefix for the {@link ToleranceOpenSamlAuthenticationServiceImpl} last name when the last name is empty or null
-     */
-    public static final String DOTCMS_SAML_LASTNAME_PREFIX = "tolerance.samlauthservice.lastname.prefix";
-
-    /**
-     * Postfix for the {@link ToleranceOpenSamlAuthenticationServiceImpl} email when the email is empty or null
-     */
-    public static final String DOTCMS_SAML_EMAIL_POSTFIX = "tolerance.samlauthservice.email.postfix";
-
-    /**
-     * Postfix for the {@link ToleranceOpenSamlAuthenticationServiceImpl} first name when the first name is empty or null
-     */
-    public static final String DOTCMS_SAML_NAME_POSTFIX = "tolerance.samlauthservice.name.postfix";
-
-    /**
-     * Postfix for the {@link ToleranceOpenSamlAuthenticationServiceImpl} last name when the last name is empty or null
-     */
-    public static final String DOTCMS_SAML_LASTNAME_POSTFIX = "tolerance.samlauthservice.lastname.postfix";
-
-
-    /**
-     * Default for the {@link ToleranceOpenSamlAuthenticationServiceImpl} email when the email is empty or null
-     * If the default is set, the prefix and postfix will be ignore
-     */
-    public static final String DOTCMS_SAML_EMAIL_DEFAULT = "tolerance.samlauthservice.email.default";
-
-    /**
-     * Default for the {@link ToleranceOpenSamlAuthenticationServiceImpl} first name when the first name is empty or null
-     * If the default is set, the prefix and postfix will be ignore
-     */
-    public static final String DOTCMS_SAML_NAME_DEFAULT = "tolerance.samlauthservice.name.default";
-
-    /**
-     * Default for the {@link ToleranceOpenSamlAuthenticationServiceImpl} last name when the last name is empty or null
-     * If the default is set, the prefix and postfix will be ignore
-     */
-    public static final String DOTCMS_SAML_LASTNAME_DEFAULT = "tolerance.samlauthservice.lastname.default";
 
     /**
      * By default the app will try to logout on any site, however you can override this property per site in order to avoid the plugin to handle the logout.

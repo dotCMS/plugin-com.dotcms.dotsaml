@@ -2,6 +2,7 @@ package com.dotcms.plugin.saml.v3.filter;
 
 import com.dotcms.plugin.saml.v3.*;
 import com.dotcms.plugin.saml.v3.config.Configuration;
+import com.dotcms.plugin.saml.v3.exception.SamlUnauthorizedException;
 import com.dotcms.plugin.saml.v3.init.DefaultInitializer;
 import com.dotcms.plugin.saml.v3.init.Initializer;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
@@ -286,7 +287,7 @@ public class SamlAccessFilter implements Filter {
                 // if it is an url to canApply the Saml access logic, determine if the autoLogin is possible
                 // the autologin will works if the SAMLArt (Saml artifact id) is in the request query string
                 // for artifact resolution or SAMLResponse for post resolution.
-                if (!this.autoLogin(request, response, session, configuration)) {
+                if (!this.doAutoLogin(request, response, session, configuration)) {
 
                     return; // no continue. Usually no continue when there is a sendRedirect or sendError done.
                 }
@@ -504,6 +505,42 @@ public class SamlAccessFilter implements Filter {
             IOUtils.closeQuietly(writer);
         }
     } // printMetaData.
+
+    private boolean doAutoLogin (final HttpServletRequest   request,
+                                 final HttpServletResponse    response,
+                                 final HttpSession             session,
+                                 final Configuration     configuration) throws IOException {
+        boolean autoLogin = false;
+
+        try {
+
+            autoLogin = this.autoLogin(request, response, session, configuration);
+        } catch (SamlUnauthorizedException e) {
+
+            autoLogin = false;
+            Logger.debug(this, e.getMessage());
+            Logger.debug(this, "SamlUnauthorizedException, status = " + e.getStatus());
+            Logger.debug(this, "SamlUnauthorizedException, unauthorizedPage = " + e.getUnauthorizedPage());
+            Logger.debug(this, "SamlUnauthorizedException, stackTrace = ", e);
+
+            final int status = e.getStatus() > 0? e.getStatus():HttpServletResponse.SC_UNAUTHORIZED;
+
+            if (e.getUnauthorizedPage() != null) {
+
+                Logger.debug(this, "SamlUnauthorizedException, doing redirection with status: " + e.getStatus()
+                                + ", to the page: " + e.getUnauthorizedPage());
+
+                response.setStatus(e.getStatus());
+                response.sendRedirect(e.getUnauthorizedPage());
+            } else {
+
+                Logger.debug(this, "SamlUnauthorizedException, doing redirection error with status: " + e.getStatus());
+                response.sendError(status);
+            }
+        }
+
+        return autoLogin;
+    } // doAutoLogin.
 
     private boolean autoLogin (final HttpServletRequest   request,
                             final HttpServletResponse    response,

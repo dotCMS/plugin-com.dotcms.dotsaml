@@ -3,6 +3,7 @@ package com.dotcms.plugin.saml.v3;
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.exception.AttributesNotFoundException;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
+import com.dotcms.plugin.saml.v3.exception.SamlUnauthorizedException;
 import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandler;
 import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandlerFactory;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
@@ -44,8 +45,11 @@ import static com.dotmarketing.util.UtilMethods.isSet;
 public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationService {
 
 
-
     protected static final String NULL = "null";
+    public static final String NO_REPLY = "no-reply";
+    public static final String NO_REPLY_DOTCMS_COM = "@no-reply.dotcms.com";
+    public static final String AT_SYMBOL = "@";
+    public static final String AT_ = "_at_";
     protected final UserAPI userAPI;
     protected final RoleAPI roleAPI;
     protected final AssertionResolverHandlerFactory assertionResolverHandlerFactory;
@@ -272,11 +276,16 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                 (DOT_SAML_LASTNAME_ATTRIBUTE, "sn");
         final String rolesField       = configuration.getStringProperty
                 (DOT_SAML_ROLES_ATTRIBUTE, "authorizations");
+        final String firstNameForNullValue = configuration.getStringProperty
+                (DOT_SAML_FIRSTNAME_ATTRIBUTE_NULL_VALUE, null);
+        final String lastNameForNullValue = configuration.getStringProperty
+                (DOT_SAML_LASTNAME_ATTRIBUTE_NULL_VALUE, null);
 
         final AttributesBean.Builder attrBuilder = new AttributesBean.Builder();
 
         validateAttributes(assertion);
 
+        final String nameId = assertion.getSubject().getNameID().getValue();
         Logger.debug(this, "Resolving attributes - Name ID : " + assertion.getSubject().getNameID().getValue());
         attrBuilder.nameID(assertion.getSubject().getNameID());
         
@@ -294,26 +303,32 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         		if ( (attribute.getName() != null && attribute.getName().equals(emailField)) 
         				|| (attribute.getFriendlyName() != null && attribute.getFriendlyName().equals(emailField)) ) {
-            	
-        			Logger.debug(this, "Resolving attribute - Email : " + emailField);
-        			attrBuilder.email
-        				(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
-        			Logger.debug(this, "Resolved attribute - Email : " + attrBuilder.email);
-        			
+
+                    this.resolveEmail(emailField, attrBuilder, attribute, nameId);
         		} else if ( (attribute.getName() != null && attribute.getName().equals(lastNameField))
         				|| (attribute.getFriendlyName() != null && attribute.getFriendlyName().equals(lastNameField)) ) {
 
         			Logger.debug(this, "Resolving attribute - LastName : " + lastNameField);
-        			attrBuilder.lastName
-        				(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+
+        			final String lastName = (UtilMethods.isSet(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue()))?
+                            attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue():
+                            checkDefaultValue(lastNameForNullValue, lastNameField + " is null and the default is null too");
+
+        			attrBuilder.lastName(lastName);
+
         			Logger.debug(this, "Resolved attribute - lastName : " + attrBuilder.lastName);
         			
         		} else if ( (attribute.getName() != null && attribute.getName().equals(firstNameField))
         				|| (attribute.getFriendlyName() != null && attribute.getFriendlyName().equals(firstNameField)) ) {
 
         			Logger.debug(this, "Resolving attribute - firstName : " + firstNameField);
-        			attrBuilder.firstName
-        			(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue());
+
+                    final String firstName = (UtilMethods.isSet(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue()))?
+                            attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue():
+                            checkDefaultValue(firstNameForNullValue, firstNameField + " is null and the default is null too");
+
+        			attrBuilder.firstName(firstName);
+
         			Logger.debug(this, "Resolved attribute - firstName : " + attrBuilder.firstName);
         			
         		}else if ( (attribute.getName() != null && attribute.getName().equals(rolesField)) 
@@ -331,6 +346,55 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         return attrBuilder.build();
     } // resolveAttributes.
+
+    private String checkDefaultValue(final String lastNameForNullValue,
+                                     final String message) {
+
+        if (!UtilMethods.isSet(lastNameForNullValue)) {
+
+            throw new SamlUnauthorizedException(message);
+        }
+
+        return lastNameForNullValue;
+    }
+
+    private void resolveEmail(final String                  emailField,
+                              final AttributesBean.Builder  attributesBuilder,
+                              final Attribute               attribute,
+                              final String                  nameId) {
+
+        Logger.debug(this, "Resolving attribute - Email : " + emailField);
+
+        String emailValue = attribute.getAttributeValues().get(0)
+                .getDOM().getFirstChild().getNodeValue();
+
+        emailValue        = (!UtilMethods.isSet(emailValue))?
+                createNoReplyEmail(nameId):emailValue;
+
+        attributesBuilder.email(emailValue);
+
+        Logger.debug(this, "Resolved attribute - Email : " + attributesBuilder.email);
+    } // resolveEmail.
+
+    private String createNoReplyEmail (final String nameId) {
+
+        Logger.debug(this, "The userid : " + nameId
+                + " has the email null, creating a new one");
+
+        final String emailValue =
+                new StringBuilder(NO_REPLY).append(sanitizeNameId(nameId))
+                        .append(NO_REPLY_DOTCMS_COM).toString();
+
+        Logger.debug(this, "For the userid : " + nameId
+                + " the generated email is: " + emailValue);
+
+        return emailValue;
+    } // createNoReplyEmail.
+
+    private String sanitizeNameId(final String nameId) {
+
+        return StringUtils.replace(nameId, AT_SYMBOL, AT_);
+    } // sanitizeNameId.
 
     protected void validateAttributes(Assertion assertion) throws AttributesNotFoundException {
         if (assertion == null
@@ -378,6 +442,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         if (null == user) { // if user does not exists, create a new one.
 
             user = this.createNewUser(systemUser, attributesBean);
+        } else { // update it, since exists
+            user = this.updateUser (user, systemUser, attributesBean);
         }
 
         if (user.isActive()) {
@@ -391,6 +457,26 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         return user;
     } // resolveUser.
+
+    private User updateUser(final User user, final User systemUser,
+                            final AttributesBean attributesBean) {
+
+        try {
+
+            user.setEmailAddress(attributesBean.getEmail());
+            user.setFirstName(attributesBean.getFirstName());
+            user.setLastName (attributesBean.getLastName());
+
+            this.userAPI.save(user, systemUser, false);
+            Logger.info(this, "User updated. email: " + attributesBean.getEmail());
+        } catch (Exception e) {
+
+            Logger.error(this, "Error creating user:" + e.getMessage(), e);
+            throw new DotSamlException(e.getMessage());
+        }
+
+        return user;
+    }
 
     private void addRoles(final User user,
                           final AttributesBean attributesBean, final Configuration configuration) {
