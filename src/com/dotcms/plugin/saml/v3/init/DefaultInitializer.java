@@ -1,43 +1,27 @@
 package com.dotcms.plugin.saml.v3.init;
 
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
-import com.dotcms.plugin.saml.v3.SiteConfigurationResolver;
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.config.DefaultDotCMSConfiguration;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationParser;
-import com.dotcms.plugin.saml.v3.config.SiteConfigurationService;
+import com.dotcms.plugin.saml.v3.content.HostService;
 import com.dotcms.plugin.saml.v3.content.SamlContentTypeUtil;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.hooks.SamlHostPostHook;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
 import com.dotmarketing.business.APILocator;
-import com.dotmarketing.business.CacheLocator;
 import com.dotmarketing.business.Interceptor;
-import com.dotmarketing.business.UserAPI;
-import com.dotmarketing.cache.FieldsCache;
-import com.dotmarketing.exception.DotDataException;
-import com.dotmarketing.exception.DotSecurityException;
-import com.dotmarketing.portlets.structure.business.StructureAPI;
-import com.dotmarketing.portlets.structure.factories.FieldFactory;
-import com.dotmarketing.portlets.structure.factories.StructureFactory;
-import com.dotmarketing.portlets.structure.model.Field;
-import com.dotmarketing.portlets.structure.model.Structure;
-import com.dotmarketing.services.StructureServices;
 import com.dotmarketing.util.Logger;
 import com.liferay.util.InstancePool;
-
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.config.InitializationService;
 import org.opensaml.xmlsec.config.JavaCryptoValidationInitializer;
 
-import java.io.IOException;
 import java.security.Provider;
 import java.security.Security;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static com.dotcms.plugin.saml.v3.DotSamlConstants.DOTCMS_SAML_DEFAULT_CONF_FIELD_CONTENT;
 
 /**
  * Default initializer
@@ -53,7 +37,6 @@ import static com.dotcms.plugin.saml.v3.DotSamlConstants.DOTCMS_SAML_DEFAULT_CON
 public class DefaultInitializer implements Initializer {
 
     private final AtomicBoolean initDone = new AtomicBoolean(false);
-    private final SiteConfigurationParser siteConfigurationParser = new SiteConfigurationParser();
     private final SamlContentTypeUtil samlContentTypeUtil;
 
     public DefaultInitializer(){
@@ -120,27 +103,10 @@ public class DefaultInitializer implements Initializer {
      */
     protected void initConfiguration() {
 
-        final SiteConfigurationService siteConfigurationService;
-        final Map<String, Configuration> configurationMap;
+        final SiteCofigurationInitializerService siteCofigurationInitializerService =
+                (SiteCofigurationInitializerService) InstancePool.get(SiteConfigurationParser.class.getName());
 
-        final SiteConfigurationResolver siteConfigurationResolver =
-                new SiteConfigurationResolver();
-
-        try {
-
-            configurationMap =
-                    this.siteConfigurationParser.getConfiguration();
-
-        } catch (IOException | DotDataException | DotSecurityException e) {
-
-            Logger.error(this, e.getMessage(), e);
-            throw new DotSamlException(e.getMessage(), e);
-        }
-
-        siteConfigurationService = new SiteConfigurationService(configurationMap);
-
-        InstancePool.put(SiteConfigurationService.class.getName(), siteConfigurationService);
-        InstancePool.put(SiteConfigurationResolver.class.getName(), siteConfigurationResolver);
+        siteCofigurationInitializerService.init(Collections.emptyMap());
     } // initConfiguration.
 
 
@@ -149,6 +115,12 @@ public class DefaultInitializer implements Initializer {
      * Inits the OpenSaml service.
      */
     protected void initService() {
+
+        InstancePool.put(HostService.class.getName(),
+                new HostService());
+
+        InstancePool.put(SiteConfigurationParser.class.getName(),
+                new SiteCofigurationInitializerService());
 
         try {
 

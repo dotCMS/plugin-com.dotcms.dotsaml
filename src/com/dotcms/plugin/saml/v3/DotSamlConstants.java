@@ -325,8 +325,9 @@ public final class DotSamlConstants {
 
     /**
      * Host field that enables or disables the current saml configuration for the host
+     * or use the default configuration instead
      */
-    public static final String DOTCMS_SAML_CONTENT_TYPE_FIELD_ENABLED_NAME = "SAML Authentication";
+    public static final String DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_NAME = "SAML Authentication";
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_NAME)

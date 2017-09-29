@@ -33,11 +33,18 @@ public class SamlContentTypeUtil {
     private final StructureAPI structureAPI;
     private final UserAPI userAPI;
 
-    private final static String DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_VELOCITY_VAR_NAME =
+    public final static String DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_VELOCITY_VAR_NAME =
             UtilMethods.toCamelCase(DotSamlConstants.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_NAME);
 
-    private final static String DOTCMS_SAML_CONTENT_TYPE_FIELD_ENABLED_VELOCITY_VAR_NAME =
-            UtilMethods.toCamelCase(DotSamlConstants.DOTCMS_SAML_CONTENT_TYPE_FIELD_ENABLED_NAME);
+    public final static String DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_VELOCITY_VAR_NAME =
+            UtilMethods.toCamelCase(DotSamlConstants.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_NAME);
+
+    public final static String DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_ENABLED  = "Enabled";
+    public final static String DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_DISABLED = "Disabled";
+    public final static String DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_DEFAULT  = "Default";
+    private final static String DEFAULT_VALUES = "Enabled|"    + DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_ENABLED  + "\r\n"  +
+                                                "Disabled|"    + DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_DISABLED + "\r\n" +
+                                                "Use Default|" + DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_DEFAULT;
 
     public SamlContentTypeUtil(){
 
@@ -54,7 +61,7 @@ public class SamlContentTypeUtil {
 
     /**
      * Checks if the  {@link DotSamlConstants}DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_NAME and
-     * {@link DotSamlConstants}DOTCMS_SAML_CONTENT_TYPE_FIELD_ENABLED_NAME fields exists on the Host ContentType.
+     * {@link DotSamlConstants}DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_NAME fields exists on the Host ContentType.
      * If they do not exists will create them into the Host.
      *
      */
@@ -92,7 +99,7 @@ public class SamlContentTypeUtil {
 
     private Field createSamlEnabledField(final Structure hostStructure) {
 
-        return new Field(DotSamlConstants.DOTCMS_SAML_CONTENT_TYPE_FIELD_ENABLED_NAME,
+        return new Field(DotSamlConstants.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_NAME,
                 Field.FieldType.SELECT,
                 Field.DataType.TEXT,
                 hostStructure,
@@ -100,7 +107,7 @@ public class SamlContentTypeUtil {
                 false,
                 true,
                 4,
-                "Enabled|Enabled\r\nDisabled|Enabled\r\nUse Default|Default",
+                DEFAULT_VALUES,
                 "2",
                 "",
                 false,
@@ -128,7 +135,7 @@ public class SamlContentTypeUtil {
 
     /**
      * Check is the Structure has a SAML Field. {@link DotSamlConstants}DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_NAME and
-     * {@link DotSamlConstants}DOTCMS_SAML_CONTENT_TYPE_FIELD_ENABLED_NAME
+     * {@link DotSamlConstants}DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_NAME
      *
      * @param hostStructure
      * @return true is the strcture has a SAML fields, false else.
@@ -144,7 +151,7 @@ public class SamlContentTypeUtil {
         for (final Field field : fieldsByHost) {
 
             existsSamlConfigField   |= (DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_VELOCITY_VAR_NAME.equals(field.getVelocityVarName()));
-            existsSamlEnabledField  |= (DOTCMS_SAML_CONTENT_TYPE_FIELD_ENABLED_VELOCITY_VAR_NAME.equals(field.getVelocityVarName()));
+            existsSamlEnabledField  |= (DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_VELOCITY_VAR_NAME.equals(field.getVelocityVarName()));
         }
 
         return existsSamlEnabledField && existsSamlConfigField;
