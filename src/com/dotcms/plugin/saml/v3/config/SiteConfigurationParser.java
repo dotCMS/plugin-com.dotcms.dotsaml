@@ -279,7 +279,7 @@ public class SiteConfigurationParser implements Serializable {
 
         if (configurationToUse != null && !configurationToUse.isEmpty()) {
 
-            Logger.info(this, "Populating tthe configuration for the host: " + site);
+            Logger.info(this, "Populating the configuration for the host: " + site);
             // save the configuration map for the host
             siteBean = this.getSiteBean(configurationToUse);
             final Configuration configuration =
