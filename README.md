@@ -183,6 +183,16 @@ For message lifetime validation purpose. By default the clock skew is 1000 and l
 
 Depending on your Identity Providers on the IdP, the roles may be returned on the assertion with a prefix, you can change this behavior by turning on *remove.roles.prefix*.
 
+**build.roles**
+
+Optional key to configure the roles strategy to sync them from IDP to DOTCMS
+Valid values (default "all"):
+* "all": Removes all user roles from DOTCMS; adds the roles to DOTCMS from IdP and saml_user_role (if set)
+* "idp": Removes all user roles and adds the roles to DOTCMS from IdP
+* "staticonly": Removes all user roles, adds roles from saml_user_role (if set) to DOTCMS. Ignore roles from IdP.
+* "staticadd": Do not alter existing user roles, adds the roles from saml_user_role (if set) to DOTCMS. Ignore roles from IdP.
+* "none": Do not alter any user roles on DOTCMS     
+
 **attribute.email.name**
 
 By default, "mail" is the field used to fetch the user email from the Idp response.
