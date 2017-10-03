@@ -663,9 +663,9 @@ public class SamlUtils {
                 password = configuration.getStringProperty(
                         DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD, "");
                 keyEntryId = configuration.getStringProperty(
-                        DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID, "");
+                        DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID, DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID_DEFAULT_VALUE);
                 keyStoreEntryPassword = configuration.getStringProperty(
-                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD, "");
+                        DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD, password);
 
                 Logger.debug(SamlUtils.class, "Creating the credentials, using: " + password +
                         ", key store path: " + keyStorePath);
@@ -843,11 +843,14 @@ public class SamlUtils {
 
         Set<String> otherErrors = new HashSet<>();
 
-        final String pathToKeyStore = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
-        final String keyStorePassword = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD);
-        final String keyStoreType = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
-        final String keyEntryId = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID);
-        final String keyStoreEntryPassword = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD);
+        final String pathToKeyStore        = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
+        final String keyStorePassword      = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD);
+        final String keyStoreType          = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
+        final String keyEntryId   = UtilMethods.isSet(samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID))?
+                                        samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID):
+                                        DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID_DEFAULT_VALUE;
+        final String keyStoreEntryPassword = (UtilMethods.isSet(samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD)))?
+                samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD):keyStorePassword;
 
         if ( pathToKeyStore != null
             && keyStorePassword != null
