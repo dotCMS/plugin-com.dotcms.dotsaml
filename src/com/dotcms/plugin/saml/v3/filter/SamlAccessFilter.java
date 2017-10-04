@@ -63,6 +63,8 @@ import static com.dotmarketing.business.PermissionAPI.PERMISSION_READ;
  */
 public class SamlAccessFilter implements Filter {
 
+    private static final String BY_PASS_KEY   = "native";
+    private static final String BY_PASS_VALUE = "true";
     private static final String TEXT_XML = "text/xml";
     public static final String REFERRER_PARAMETER_KEY = "referrer";
     public static final String ORIGINAL_REQUEST = "original_request";
@@ -252,6 +254,32 @@ public class SamlAccessFilter implements Filter {
         return include;
     } // checkFilePagePermission.
 
+    private boolean isByPass (final HttpServletRequest        request,
+                              final HttpSession               session) {
+
+        String byPass = request.getParameter(BY_PASS_KEY);
+
+        if (null != session) {
+
+            if (null != byPass) {
+
+                session.setAttribute(BY_PASS_KEY, byPass);
+            } else {
+
+                if (this.isNotLogged(request, session)) {
+
+                    byPass = (String) session.getAttribute(BY_PASS_KEY);
+                } else if (null != session.getAttribute(BY_PASS_KEY)) {
+
+                    session.removeAttribute(BY_PASS_KEY);
+                }
+            }
+        }
+
+        return BY_PASS_VALUE.equalsIgnoreCase(byPass);
+    }
+
+
     @Override
     public void doFilter(final ServletRequest req,
                          final ServletResponse res,
@@ -264,6 +292,14 @@ public class SamlAccessFilter implements Filter {
         final Configuration             configuration = resolver.resolveConfiguration(request);
         String redirectAfterLogin                     = null;
         boolean isLogoutNeed                          = false;
+
+
+        if (this.isByPass(request, session)) {
+
+            Logger.info(this, "Using SAML by pass");
+            chain.doFilter(req, res);
+            return;
+        }
 
         // If configuration is not, means this site does not need SAML processing
         if (null != configuration) {
