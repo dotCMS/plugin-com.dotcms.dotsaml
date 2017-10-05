@@ -56,9 +56,12 @@ public class SiteCofigurationInitializerService implements Initializer {
         }
 
         Logger.debug(this, "SAML configuration, map = " + configurationMap);
+        Logger.debug(this,
+                "SAML configuration for disabled saml sites, map = " + disableConfigurationMap);
         if (null != hostList && null != InstancePool.get(SiteConfigurationService.class.getName())) {
 
-            this.update(hostList, configurationMap);
+            this.update(hostList, configurationMap,
+                    disableConfigurationMap);
         } else {
 
             final SiteConfigurationResolver siteConfigurationResolver =
@@ -75,7 +78,8 @@ public class SiteCofigurationInitializerService implements Initializer {
     } // init.
 
     private void update (final List<Host>  hostList,
-                         final Map<String, Configuration> configurationMap) {
+                         final Map<String, Configuration> configurationMap,
+                         final Map<String, Configuration> disableConfigurationMap) {
 
         Logger.debug(this, "This is a SAML configuration update...");
         final SiteConfigurationService siteConfigurationService =
@@ -84,6 +88,7 @@ public class SiteCofigurationInitializerService implements Initializer {
                 (HostService) InstancePool.get(HostService.class.getName());
 
         siteConfigurationService.updateConfigurations(configurationMap);
+        siteConfigurationService.updateDisableConfiguration(disableConfigurationMap);
 
         // if a host in the list, does not retrieve any configuration, means it is invalid or has been disabled.
         for (final Host host : hostList) {

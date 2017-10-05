@@ -380,6 +380,7 @@ public class SamlAccessFilter implements Filter {
                 if (null != disableConfiguration &&
                         this.printMetaData(request, response, disableConfiguration)) {
 
+                    Logger.debug(this, "Metadata printed");
                     return; // if the
                 }
             }
@@ -545,12 +546,14 @@ public class SamlAccessFilter implements Filter {
 
         try {
 
+            Logger.debug(this, "Going to print the descriptor: " + descriptor);
             // get ready to convert it to XML.
             response.setContentType(TEXT_XML);
             writer = response.getWriter();
             this.metaDataXMLPrinter.print(descriptor, writer);
             response.setStatus(HttpServletResponse.SC_OK);
             isOK = true;
+            Logger.debug(this, "Descriptor printed...");
         } catch (ParserConfigurationException | TransformerException | IOException | MarshallingException e) {
 
             Logger.error(this.getClass(),

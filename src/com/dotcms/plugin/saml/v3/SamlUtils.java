@@ -668,7 +668,8 @@ public class SamlUtils {
                         DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD, password);
 
                 Logger.debug(SamlUtils.class, "Creating the credentials, using: " + password +
-                        ", key store path: " + keyStorePath);
+                        ", key store path: " + keyStorePath + ", keyEntryId: " + keyEntryId +
+                        ", keyStoreEntryPassword: " + keyStoreEntryPassword);
 
                 final String keyStoreType = configuration.getStringProperty(
                     DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
@@ -683,6 +684,8 @@ public class SamlUtils {
                 criteriaSet = new CriteriaSet();
                 criteriaSet.add(criterion);
                 credential = resolver.resolveSingle(criteriaSet);
+
+                Logger.debug(SamlUtils.class, "Created the credentials: " + credential);
             }
         } catch (ResolverException e) {
 
