@@ -71,6 +71,87 @@ public class SiteConfigurationParser implements Serializable {
         return configurationMap;
     } // getConfiguration.
 
+
+    /**
+     * Read the SAML configuration for each disable host and
+     * put it into a map String -> {@link SiteConfigurationBean}
+     * Each configuration is read as a pattern of key=value
+     *
+     * @return Map
+     */
+    public Map<String, Configuration> getConfigurationForDisableHosts()
+            throws IOException, DotDataException, DotSecurityException {
+
+        final List<Host> hosts = this.hostService.getAllHosts();
+        return null != hosts?
+                this.getConfigurationForDisableHosts(hosts):
+                Collections.emptyMap();
+    } // getConfiguration.
+
+    /**
+     * Read the SAML configuration for each disable host and
+     * put it into a map String -> {@link SiteConfigurationBean}
+     * Each configuration is read as a pattern of key=value
+     *
+     * @param hosts List of Host
+     * @return Map
+     */
+    public Map<String, Configuration> getConfigurationForDisableHosts(final List<Host> hosts)
+            throws IOException, DotDataException, DotSecurityException {
+
+        final Map<String, Configuration> disabledConfigurationMap = new HashMap<>(); // todo: on 4.x make immutable.
+
+        //Save in a map the configuration for each disabled site
+        hosts.forEach(host -> this.populateDisabledSite(host, disabledConfigurationMap));
+
+        return disabledConfigurationMap;
+    } // getConfiguration.
+
+    /**
+     * This method will process the host configuration only if the saml config is on disabled and has the minimum configuration
+     * to at least generates the meta descriptor.
+     * @param site Host
+     * @param disabledConfigurationMap Map
+     */
+    private void populateDisabledSite (final Host site,
+                               final Map<String, Configuration> disabledConfigurationMap)  {
+
+
+        final Map    hostProperties          = site.getMap();
+        final Object hostSAMLConfiguration   = hostProperties
+                .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_VELOCITY_VAR_NAME);
+        final String hostSAMLAuthentication  = (String)hostProperties
+                .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_VELOCITY_VAR_NAME);
+        final boolean isDisabled             =
+                SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_DISABLED
+                        .equalsIgnoreCase(hostSAMLAuthentication);
+
+        try {
+
+            //if a configuration is set for the host, that one will be used
+            if  (null != hostSAMLConfiguration && isDisabled) {
+
+                Logger.debug(this, "Doing configuration for the disabled host: " +
+                                site.getHostname());
+                this.samlSiteValidator.validateSiteConfiguration(site.getHostname(),
+                        hostSAMLConfiguration.toString(), hostSAMLAuthentication);
+
+                this.populateSite(site, disabledConfigurationMap, hostSAMLConfiguration.toString());
+            }
+        } catch (Exception e) {
+
+            if (isDisabled) {
+                Logger.error(this,
+                        "Error Trying to get the disable configuration of the host: " +
+                                site.getHostname() +
+                                ", error message: " + e.getMessage(), e);
+            }
+            /*throw new DotSamlException(
+                    "Error doing configuration of the host: " + hostName, e);*/
+        }
+    } // populateSite.
+
+
     private void populateSite (final Host host,
                                final Map<String, Configuration> configurationMap,
                                final Host defaultHost)  {

@@ -36,6 +36,7 @@ public class SiteCofigurationInitializerService implements Initializer {
 
         final SiteConfigurationService siteConfigurationService;
         final Map<String, Configuration> configurationMap;
+        final Map<String, Configuration> disableConfigurationMap;
         final List<Host>  hostList    = (List<Host>) context.get(HOST_LIST_CONTEXT_KEY);
 
         try {
@@ -45,6 +46,9 @@ public class SiteCofigurationInitializerService implements Initializer {
                     this.siteConfigurationParser.getConfiguration(hostList):
                     this.siteConfigurationParser.getConfiguration();
 
+            disableConfigurationMap = (null != hostList)?
+                    this.siteConfigurationParser.getConfigurationForDisableHosts(hostList):
+                    this.siteConfigurationParser.getConfigurationForDisableHosts();
         } catch (IOException | DotDataException | DotSecurityException e) {
 
             Logger.error(this, e.getMessage(), e);
@@ -61,6 +65,7 @@ public class SiteCofigurationInitializerService implements Initializer {
                     new SiteConfigurationResolver();
 
             siteConfigurationService = new SiteConfigurationService(configurationMap);
+            siteConfigurationService.updateDisableConfiguration(disableConfigurationMap);
 
             InstancePool.put(SiteConfigurationService.class.getName(), siteConfigurationService);
             InstancePool.put(SiteConfigurationResolver.class.getName(), siteConfigurationResolver);

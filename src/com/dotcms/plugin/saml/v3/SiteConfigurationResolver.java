@@ -46,4 +46,24 @@ public class SiteConfigurationResolver implements Serializable {
         return configuration;
     }
 
+    /**
+     * Tries to find the configuration for the disable host.
+     * @param request HttpServletRequest
+     * @return Configuration
+     */
+    public Configuration findConfigurationForDisableHost(final HttpServletRequest request) {
+
+        final String serverName = request.getServerName();
+        final SiteConfigurationService siteConfigurationService
+                = (SiteConfigurationService) InstancePool.get(SiteConfigurationService.class.getName());
+        final Configuration configuration = siteConfigurationService.
+                getConfigurationByDisabledSite(serverName);
+
+        Logger.debug(this, "Resolving the configuration: " + configuration +
+                ", for the site: " + serverName + ", sites availables:" +
+                siteConfigurationService.getSiteNames());
+
+        return configuration;
+    } // findConfigurationEvenDisable.
+
 } // E:O:F:SiteConfigurationResolver

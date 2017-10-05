@@ -79,7 +79,7 @@ public class SamlSiteValidator {
 
                 samlProperties.load( new StringReader(samlConfiguration));
 
-                if (isDisabled && hasConfiguration(samlProperties, hostName)) {
+                if (isDisabled && hasConfiguration(samlProperties)) {
 
                     doValidationForDisabledSite(samlProperties, hostName);
                 } else {
@@ -91,8 +91,12 @@ public class SamlSiteValidator {
         }
     } // validateSiteConfiguration.
 
-    private boolean hasConfiguration(final Properties samlProperties,
-                                     final String hostName) {
+    /**
+     * Determine if the saml properties has set the minimum configuration, even for a disabled site.
+     * @param samlProperties Properties
+     * @return boolean
+     */
+    public boolean hasConfiguration(final Properties samlProperties) {
         /*
         If keystore.path and keystore.password are entered, then we validate that and any other params needed for sp metadata generation _except_ idp.metadata.path
          */
@@ -100,6 +104,25 @@ public class SamlSiteValidator {
                 (samlProperties, fieldsToValidateOnDisabled);
 
         return missingFields.isEmpty(); // not missing these too, so go ahead and validate it
+    } // hasConfiguration.
+
+    /**
+     * Determine if the saml properties has set the minimum configuration, even for a disabled site.
+     * @param samlConfiguration String
+     * @return boolean
+     */
+    public boolean hasConfiguration(final String samlConfiguration) {
+
+        final Properties samlProperties = new Properties();
+
+        try {
+
+            samlProperties.load( new StringReader(samlConfiguration));
+        } catch (IOException e){
+            return false;
+        }
+
+        return this.hasConfiguration(samlProperties);
     } // hasConfiguration.
 
     private void doValidationForDisabledSite(final Properties samlProperties,

@@ -138,7 +138,12 @@ public class SamlAccessFilter implements Filter {
 
         if (!this.initializer.isInitializationDone()) {
 
-            this.initializer.init(Collections.EMPTY_MAP);
+            try {
+                this.initializer.init(Collections.EMPTY_MAP);
+            } catch (Throwable e) {
+
+                Logger.error(this, "SAML ERROR: " + e.getMessage(), e);
+            }
         } else {
 
             Logger.debug(this, "The initializer was already init: " + this.initializer);
@@ -365,6 +370,19 @@ public class SamlAccessFilter implements Filter {
 
             Logger.debug(this, "Not configuration for the site: " + request.getServerName() +
                             ". No any saml filtering for this request: " + request.getRequestURI());
+            // if the configuration for this host does not exists
+            // we check if the url is a default metadata url.
+            if (request.getRequestURI().contains(DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH_DEFAULT_VALUE)) {
+
+                // if its, so print it out in the response and return.
+                final Configuration disableConfiguration =
+                        resolver.findConfigurationForDisableHost(request);
+                if (null != disableConfiguration &&
+                        this.printMetaData(request, response, disableConfiguration)) {
+
+                    return; // if the
+                }
+            }
         }
 
         // Starting the logout
@@ -514,7 +532,7 @@ public class SamlAccessFilter implements Filter {
         return isNotLogged;
     } // isNotLogged.
 
-    private void printMetaData(final HttpServletRequest request,
+    private boolean printMetaData(final HttpServletRequest request,
                                final HttpServletResponse response,
                                final Configuration configuration) throws ServletException {
 
@@ -523,6 +541,7 @@ public class SamlAccessFilter implements Filter {
                 configuration.getMetaDescriptorService()
                         .getServiceProviderEntityDescriptor(configuration);
         Writer writer = null;
+        boolean isOK  = false;
 
         try {
 
@@ -531,6 +550,7 @@ public class SamlAccessFilter implements Filter {
             writer = response.getWriter();
             this.metaDataXMLPrinter.print(descriptor, writer);
             response.setStatus(HttpServletResponse.SC_OK);
+            isOK = true;
         } catch (ParserConfigurationException | TransformerException | IOException | MarshallingException e) {
 
             Logger.error(this.getClass(),
@@ -540,6 +560,8 @@ public class SamlAccessFilter implements Filter {
 
             IOUtils.closeQuietly(writer);
         }
+
+        return isOK;
     } // printMetaData.
 
     private boolean doAutoLogin (final HttpServletRequest   request,
