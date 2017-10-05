@@ -1,6 +1,7 @@
 package com.dotcms.plugin.saml.v3.hooks;
 
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationParser;
+import com.dotcms.plugin.saml.v3.content.SamlContentTypeUtil;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.beans.Permission;
 import com.dotmarketing.exception.DotDataException;
@@ -42,9 +43,22 @@ public class SamlHostPostHook extends ContentletAPIPostHookAbstractImp {
             Logger.info(this, "Validating Saml settings for the host with inode: " + currentContentlet.getInode());
 
             //Validate the configuration.
-            this.siteConfigurationParser.validateConfigurationByHost(host);
+            final String hostSAMLAuthentication  = (String)host.getMap()
+                    .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_VELOCITY_VAR_NAME);
+            final boolean isDisabled =
+                    SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_DISABLED
+                            .equalsIgnoreCase(hostSAMLAuthentication);
+
+            if (isDisabled) {
+
+                this.siteConfigurationParser.validateConfigurationByDisableHost(host, hostSAMLAuthentication);
+            } else {
+                this.siteConfigurationParser.validateConfigurationByHost(host);
+            }
+
+            Logger.info(this, "DONE Validating Saml settings for the host with inode: " + currentContentlet.getInode());
         } catch (DotDataException | DotSecurityException e) {
-            Logger.error(this, "Error updating Saml configuration", e);
+            Logger.error(this, "Error Validating Saml configuration", e);
         }
     } // checkin.
 

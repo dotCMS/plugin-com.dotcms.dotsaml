@@ -81,6 +81,7 @@ public class SamlSiteValidator {
 
                 if (isDisabled && hasConfiguration(samlProperties)) {
 
+                    Logger.debug(this, "Doing validation for disable hostName: " + hostName);
                     doValidationForDisabledSite(samlProperties, hostName);
                 } else {
                     doValidationForEnabledSite(samlProperties, hostName);
@@ -183,6 +184,7 @@ public class SamlSiteValidator {
             error.append(org.apache.commons.lang.StringUtils.join(keyStoreErrors, ','));
         }
 
+        Logger.debug(this, "Validation errors: " + error);
         //If error has any message, throw the Exception with it.
         if ( UtilMethods.isSet(error.toString()) ) {
             Logger.error(this, "Errors validating SAML Field config: " + error.toString());

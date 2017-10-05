@@ -231,6 +231,21 @@ public class SiteConfigurationParser implements Serializable {
         this.validateConfigurationByHost(host, defaultHost);
     }
 
+    public void validateConfigurationByDisableHost(final Host site, final String hostSAMLAuthentication) throws DotDataException, DotSecurityException{
+
+        final Map    hostProperties          = site.getMap();
+        final Object hostSAMLConfiguration   = hostProperties
+                .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_VELOCITY_VAR_NAME);
+
+        if  (null != hostSAMLConfiguration) {
+
+            Logger.debug(this, "Doing validation for the disabled host: " +
+                    site.getHostname());
+            this.samlSiteValidator.validateSiteConfiguration(site.getHostname(),
+                    hostSAMLConfiguration.toString(), hostSAMLAuthentication);
+        }
+    }
+
     /**
      * Validate properties from the SAML Field.
      *
@@ -262,6 +277,8 @@ public class SiteConfigurationParser implements Serializable {
         final String hostSAMLAuthentication  = (String)host.getMap()
                 .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_VELOCITY_VAR_NAME);
 
+        Logger.debug(this, "Doing validateConfigurationByHost, hostSAMLConfiguration: " +
+                                hostSAMLConfiguration);
         this.samlSiteValidator.validateSiteConfiguration(host.getHostname(),
                 hostSAMLConfiguration, hostSAMLAuthentication);
     } // validateConfigurationByHost.
