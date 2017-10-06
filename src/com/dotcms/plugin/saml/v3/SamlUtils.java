@@ -927,13 +927,16 @@ public class SamlUtils {
      * @param keysRequired Property keys required to be in the samlProperties.
      * @return
      */
-    public static Set<String> getMissingProperties(Properties properties, Set<String> keysRequired) {
-        Set<String> missingProperties = new HashSet<>();
+    public static Set<String> getMissingProperties(final Properties properties,
+                                                   final Set<String> keysRequired) {
+
+        final Set<String> missingProperties = new HashSet<>(); // todo: make this immutable on 4.x
         for (String s : keysRequired) {
-            if ( properties.getProperty(s) == null || properties.getProperty(s).equals("") ) {
+            if ( properties.getProperty(s) == null || properties.getProperty(s).trim().equals("") ) {
                 missingProperties.add(s);
             }
         }
+
         return missingProperties;
     } // getMissingProperties.
 
