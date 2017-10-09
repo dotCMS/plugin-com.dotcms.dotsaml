@@ -79,10 +79,12 @@ public class SamlSiteValidator {
 
                 samlProperties.load( new StringReader(samlConfiguration));
 
-                if (isDisabled && hasConfiguration(samlProperties)) {
+                if (isDisabled) {
 
-                    Logger.debug(this, "Doing validation for disable hostName: " + hostName);
-                    doValidationForDisabledSite(samlProperties, hostName);
+                    if (hasConfiguration(samlProperties)) {
+                        Logger.debug(this, "Doing validation for disable hostName: " + hostName);
+                        doValidationForDisabledSite(samlProperties, hostName);
+                    }
                 } else {
                     doValidationForEnabledSite(samlProperties, hostName);
                 }
