@@ -28,7 +28,7 @@ SAML properties must be configured using key=value pairs, for example:
 service.provider.issuer=https://saml.test.dotcms.com
 keystore.path=file:///Users/dotcms/dotcms_3.5/plugins/plugin-dotcms-openSAML3/conf/SPKeystore.jks
 keystore.password=password
-keyentryid=SPKey
+keystore.entry.id=SPKey
 keystore.entry.password=password
 assertion.customer.endpoint.url=https://saml.test.dotcms.com/dotsaml/login
 idp.metadata.path=file:///Users/dotcms/dotcms_3.5/plugins/plugin-dotcms-openSAML3/conf/idp1-metadata.xml
@@ -108,7 +108,7 @@ App Id for the dotCMS Service Provider. In case it is not provided, the default 
 **assertion.customer.endpoint.url**
 
 URL used by the Idp (the Shibboleth server) to redirect to dotCMS when the login is made. We suggest to go to http://[domain]/dotsaml/login.
-If this value is unset, a default endpoint will be created using the *service.provider.issuer* and the *keyentryid*.
+If this value is unset, a default endpoint will be created using the *service.provider.issuer* and the *keystore.entry.id*.
 
 **logout.service.endpoint.url**
 
@@ -159,7 +159,7 @@ By default we use: *org.opensaml.saml.saml2.core.AuthnContext.PASSWORD_AUTHN_CTX
 
 
 
-**keyentryid**
+**keystore.entry.id**
 
 Key entry for the keystore. By default we use SPKey, you can overwrite it if needed.
 

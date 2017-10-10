@@ -110,7 +110,9 @@ public final class DotSamlConstants {
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_NAME)
      * By default dotcms use: "SPKey", but if you want to use a different key store password you can override it on the properties file.
      */
-    public static final String DOTCMS_SAML_KEY_ENTRY_ID = "keyentryid";
+    public static final String DOTCMS_SAML_KEY_ENTRY_ID = "keystore.entry.id";
+
+    public static final String DOTCMS_SAML_KEY_ENTRY_ID_DEFAULT_VALUE = "dotsamlsp";
 
     /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_NAME)
