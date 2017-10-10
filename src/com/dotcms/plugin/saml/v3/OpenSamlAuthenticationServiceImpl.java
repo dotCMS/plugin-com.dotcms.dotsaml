@@ -481,66 +481,118 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     private void addRoles(final User user,
                           final AttributesBean attributesBean, final Configuration configuration) {
 
-        String role;
+        final String buildRolesStrategy = configuration.getStringProperty
+                (DOTCMS_SAML_BUILD_ROLES, DOTCMS_SAML_BUILD_ROLES_ALL_VALUE);
 
-        try {
+        Logger.debug(this, "Using the build roles Strategy: " + buildRolesStrategy);
 
-        	if (attributesBean.isAddRoles() ||
-        			configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null) != null ) {
-        		// remove previous roles
-        		Logger.info(this, "Removing user previous roles");
-        		this.roleAPI.removeAllRolesFromUser(user);
-        	} else {
-        		Logger.debug(this, "No roles will be removed");
-        	}
+        if (!DOTCMS_SAML_BUILD_ROLES_NONE_VALUE.equalsIgnoreCase(buildRolesStrategy)) {
 
-            if (attributesBean.isAddRoles() &&
-                null != attributesBean.getRoles() &&
-                null != attributesBean.getRoles().getAttributeValues() &&
-                attributesBean.getRoles().getAttributeValues().size() > 0) {
+            try {
 
-                final String removeRolePrefix = configuration.getStringProperty
-                    (DOT_SAML_REMOVE_ROLES_PREFIX, StringUtils.EMPTY);
-                final String [] rolePatterns   = configuration.getStringArray
-                    (DOTCMS_SAML_INCLUDE_ROLES_PATTERN, null);
+                if (attributesBean.isAddRoles() ||
+                        configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null) != null) {
+                    // remove previous roles
+                    Logger.info(this, "Removing user previous roles");
 
-                Logger.debug(this, "Role Patterns: " + this.toString(rolePatterns) +
-                    ", remove role prefix: " + removeRolePrefix);
+                    if (!DOTCMS_SAML_BUILD_ROLES_STATIC_ADD_VALUE.equalsIgnoreCase(buildRolesStrategy)) {
 
-                //add roles
-                for (XMLObject roleObject : attributesBean.getRoles().getAttributeValues()) {
+                        this.roleAPI.removeAllRolesFromUser(user);
+                    } else {
 
-                    if (null != rolePatterns && rolePatterns.length > 0) {
-
-                        role = roleObject.getDOM().getFirstChild().getNodeValue();
-                        if (!this.isValidRole(role, rolePatterns)) {
-                            // when there are role filters and the current roles is not
-                            // a valid role, we have to filter it.
-
-                            Logger.info(this, "Skipping the role: " + role);
-                            continue;
-                        }
+                        Logger.info(this,
+                                "The buildRoles Strategy is: 'staticadd', so didn't remove any dotCMS existing role");
                     }
+                } else {
 
-                    this.addRole(user, removeRolePrefix, roleObject);
+                    Logger.debug(this, "No roles will be removed");
                 }
-            }
-            //Add SAML User role
-            addRole(user, configuration.getStringProperty(DOTCMS_SAML_USER_ROLE, "SAML User"), true, true);
-            Logger.debug(this, "Default SAML User role has been assigned");
 
+                this.handleRoles(user, attributesBean, configuration, buildRolesStrategy);
+            } catch (DotDataException e) {
+
+                Logger.error(this, "Error creating user:" + e.getMessage(), e);
+                throw new DotSamlException(e.getMessage());
+            }
+        } else {
+
+            Logger.info(this, "The build roles strategy is 'none', so not alter any user role");
+        }
+    } // addRoles.t
+
+    private void handleRoles(final User user,
+                             final AttributesBean attributesBean,
+                             final Configuration configuration,
+                             final String buildRolesStrategy) throws DotDataException {
+
+        this.addRolesFromIDP(user, attributesBean, configuration, buildRolesStrategy);
+
+        //Add SAML User role
+        addRole(user, configuration.getStringProperty(DOTCMS_SAML_USER_ROLE, "SAML User"), true, true);
+        Logger.debug(this, "Default SAML User role has been assigned");
+
+        // the only strategy that does not include the saml user role is the "idp"
+        if (!DOTCMS_SAML_BUILD_ROLES_IDP_VALUE.equalsIgnoreCase(buildRolesStrategy)) {
             //Add DOTCMS_SAML_OPTIONAL_USER_ROLE
             if (configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null) != null) {
                 addRole(user, configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null), false, false);
                 Logger.debug(this, "Optional user role: " + configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null) + " has been assigned");
             }
+        } else {
 
-        } catch (DotDataException e) {
-
-            Logger.error(this, "Error creating user:" + e.getMessage(), e);
-            throw new DotSamlException(e.getMessage());
+            Logger.info(this, "The build roles strategy is 'idp' so not any saml_user_role added");
         }
-    } // addRoles.
+    } // handleRoles.
+
+    private void addRolesFromIDP(final User user,
+                                 final AttributesBean attributesBean,
+                                 final Configuration configuration,
+                                 final String buildRolesStrategy) throws DotDataException {
+
+        String role = null;
+        final boolean includeIDPRoles = DOTCMS_SAML_BUILD_ROLES_ALL_VALUE.equalsIgnoreCase(buildRolesStrategy) ||
+                DOTCMS_SAML_BUILD_ROLES_IDP_VALUE.equalsIgnoreCase(buildRolesStrategy);
+
+        Logger.debug(this, "Including roles from IDP: " + includeIDPRoles
+                + ", for the build roles Strategy: " + buildRolesStrategy);
+
+        if (includeIDPRoles  &&
+            attributesBean.isAddRoles() &&
+            null != attributesBean.getRoles() &&
+            null != attributesBean.getRoles().getAttributeValues() &&
+            attributesBean.getRoles().getAttributeValues().size() > 0) {
+
+            final String removeRolePrefix  = configuration.getStringProperty
+                (DOT_SAML_REMOVE_ROLES_PREFIX, StringUtils.EMPTY);
+            final String [] rolePatterns    = configuration.getStringArray
+                (DOTCMS_SAML_INCLUDE_ROLES_PATTERN, null);
+
+            Logger.debug(this, "Role Patterns: " + this.toString(rolePatterns) +
+                ", remove role prefix: " + removeRolePrefix);
+
+            //add roles
+            for (XMLObject roleObject : attributesBean.getRoles().getAttributeValues()) {
+
+                if (null != rolePatterns && rolePatterns.length > 0) {
+
+                    role = roleObject.getDOM().getFirstChild().getNodeValue();
+                    if (!this.isValidRole(role, rolePatterns)) {
+                        // when there are role filters and the current roles is not
+                        // a valid role, we have to filter it.
+
+                        Logger.info(this, "Skipping the role: " + role);
+                        continue;
+                    }
+                }
+
+                this.addRole(user, removeRolePrefix, roleObject);
+            }
+        } else {
+
+            Logger.info(this, "Roles have been ignore by the build roles strategy: " + buildRolesStrategy +
+                        ", or roles have been not set from the idp!");
+        }
+    } // addRolesFromIDP.
 
     private String toString(String[] rolePatterns) {
 
@@ -562,6 +614,9 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             this.roleAPI.addRoleToUser(role, user);
             Logger.info(this, "Added role: " + role.getName() +
                 " to user:" + user.getEmailAddress());
+        } else {
+            Logger.info(this, "The user: " + user.getEmailAddress() +
+                " already has the role: " + role + ", so not added");
         }
     } // addRole.
 
