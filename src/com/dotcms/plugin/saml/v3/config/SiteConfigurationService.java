@@ -5,6 +5,7 @@ import com.dotmarketing.util.Logger;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Encapsulates the configuration per site.
@@ -16,9 +17,17 @@ public class SiteConfigurationService implements Serializable {
 
     public SiteConfigurationService(final Map<String, Configuration> configurationBySiteMap) {
 
-        this.configurationBySiteMap = configurationBySiteMap;
+        this.configurationBySiteMap = new ConcurrentHashMap<>(configurationBySiteMap);
 
     } // SiteConfigurationService.
+
+    /**
+     * Updates a set of configurations.
+     * @param configurationBySiteMap Map
+     */
+    public void updateConfigurations (final Map<String, Configuration> configurationBySiteMap) {
+        this.configurationBySiteMap.putAll(configurationBySiteMap);
+    }
 
     /**
      * Get the site names

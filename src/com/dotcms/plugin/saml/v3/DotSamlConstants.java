@@ -421,4 +421,14 @@ public final class DotSamlConstants {
      */
     public static final String DOTCMS_SAML_IS_LOGOUT_NEED = "islogoutneed";
 
+    /**
+     * Initial delay (10 seconds per default) to start the updater task: time is in seconds
+     */
+    public static final String SCHEDULE_UPDATER_TASK_INITIAL_DELAY = "schedule.updater.task.initial.delay";
+
+    /**
+     * Delay between calls to rerun the updater task, by default 10 seconds: time is in seconds
+     */
+    public static final String SCHEDULE_UPDATER_TASK_DELAY_SECONDS = "schedule.updater.task.delay";
+
 } // E:O:F:DotSamlConstants.

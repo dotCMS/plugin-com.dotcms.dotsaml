@@ -1,5 +1,6 @@
 package com.dotcms.plugin.saml.v3.content;
 
+import com.dotcms.repackage.org.apache.commons.lang.time.StopWatch;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.UserAPI;
@@ -9,11 +10,9 @@ import com.dotmarketing.portlets.contentlet.business.HostAPI;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * This is kinda stateful service to keep the tracking of the hosts updates.
@@ -27,6 +26,47 @@ public class HostService {
     private final Map<String, Date> hostByModDateMap =
             new ConcurrentHashMap<>();
 
+     private List<Host>  findAllFromDB () throws DotDataException, DotSecurityException {
+
+         final StopWatch stopWatch = new StopWatch();
+         List<Host> hosts          = null;
+         try {
+
+             stopWatch.start();
+
+             hosts =
+                     this.hostAPI.findAllFromDB(this.userAPI.getSystemUser(), false);
+         } finally {
+
+             stopWatch.stop();
+
+             Logger.debug(this, ((null != hosts)?hosts.size():0) +
+                     " Sites SAML config fetched in: " +
+                     stopWatch.getTime() + " ms");
+         }
+
+         hosts = hosts.stream().filter(
+                 this::isHostRunning).collect(Collectors.toList());
+
+         Logger.debug(this, ((null != hosts)?hosts.size():0) +
+                 " returned live hosts!");
+
+         return hosts;
+     }
+
+     private boolean isHostRunning (final Host host) {
+
+         boolean  isRunning = false;
+
+         try {
+             isRunning =  (null != host && host.isLive());
+         } catch (Exception e) {
+
+             isRunning = false;
+         }
+
+         return   isRunning;
+     }
     /**
      * Get All hosts, not matter if they are the updated or not.
      *
@@ -37,7 +77,7 @@ public class HostService {
     public List<Host> getAllHosts () throws DotDataException, DotSecurityException {
 
         final List<Host> hosts    =
-                this.hostAPI.findAllFromDB(this.userAPI.getSystemUser(), false);
+                this.findAllFromDB();
 
         if (null != hosts) {
 
@@ -55,12 +95,15 @@ public class HostService {
      * @throws DotDataException
      * @throws DotSecurityException
      */
-    public List<Host> getUpdatedHosts () throws DotDataException, DotSecurityException {
+    public UpdatedHostResult getUpdatedHosts () throws DotDataException, DotSecurityException {
 
         final List<Host> hosts    =
-                this.hostAPI.findAllFromDB(this.userAPI.getSystemUser(), false);
-        final List<Host> updatedHosts =
-                new ArrayList<>(); // todo: make me immutable on 4.x
+                this.findAllFromDB();
+        final List<Host> updatedHosts = new ArrayList<>(); // todo: make me immutable on 4.x
+        final List<String> removedHosts = new ArrayList<>();
+        final Map<String, Date> nonUpdatedHostByModDateMap =
+                new HashMap<>(this.hostByModDateMap);
+
 
         if (null != hosts) {
 
@@ -73,10 +116,24 @@ public class HostService {
                     this.hostByModDateMap.put
                             (host.getHostname(), host.getModDate());
                 }
+
+                nonUpdatedHostByModDateMap.remove(host.getHostname());
             }
         }
 
-        return updatedHosts;
+        Logger.debug(this, "Updated published hosts, number of hosts to update: "
+                + updatedHosts.size());
+        Logger.debug(this, "Non published hosts, number of hosts to remove: "
+                + nonUpdatedHostByModDateMap.size());
+
+        for (final String hostId : nonUpdatedHostByModDateMap.keySet()) {
+
+            Logger.debug(this, "Removing non published hostId: " + hostId);
+            this.hostByModDateMap.remove(hostId);
+            removedHosts.add(hostId);
+        }
+
+        return new UpdatedHostResult(updatedHosts, removedHosts);
     } // getUpdatedHosts.
 
 
@@ -122,6 +179,27 @@ public class HostService {
 
         return this.hostAPI.parseHostAliases(host);
     } // getHostAlias.
+
+
+    /**
+     * Get Host Alias
+     * @param hostname Host
+     * @return List of String alias
+     */
+    public List<String> getHostAlias (final String hostname) {
+
+        Host host = null;
+        try {
+            host = this.hostAPI.findByName
+                    (hostname, this.userAPI.getSystemUser(), false);
+        } catch (Exception e) {
+            host = null;
+        }
+
+        return (null != host)?
+                this.hostAPI.parseHostAliases(host):Collections.EMPTY_LIST;
+    } // getHostAlias.
+
 
 
 } // E:O:F:HostService.
