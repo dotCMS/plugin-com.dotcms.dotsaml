@@ -115,7 +115,7 @@ public class DefaultDotCMSConfiguration implements Configuration {
         return (UtilMethods.isSet(accessFilterValues))?
                 accessFilterValues.split(","):null;
     }
-    
+
 
     public  String[] getLogoutPathArray() {
 
