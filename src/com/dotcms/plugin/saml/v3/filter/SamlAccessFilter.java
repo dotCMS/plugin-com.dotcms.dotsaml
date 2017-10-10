@@ -47,10 +47,7 @@ import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URLDecoder;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 
 import static com.dotmarketing.business.PermissionAPI.PERMISSION_READ;
@@ -292,7 +289,7 @@ public class SamlAccessFilter implements Filter {
 
         final HttpServletResponse       response      = (HttpServletResponse) res;
         final HttpServletRequest        request       = (HttpServletRequest) req;
-        final HttpSession               session       = request.getSession();
+        HttpSession                     session       = request.getSession();
         final SiteConfigurationResolver resolver      = (SiteConfigurationResolver)InstancePool.get(SiteConfigurationResolver.class.getName());
         final Configuration             configuration = resolver.resolveConfiguration(request);
         String redirectAfterLogin                     = null;
@@ -328,10 +325,15 @@ public class SamlAccessFilter implements Filter {
                 // if it is an url to canApply the Saml access logic, determine if the autoLogin is possible
                 // the autologin will works if the SAMLArt (Saml artifact id) is in the request query string
                 // for artifact resolution or SAMLResponse for post resolution.
-                if (!this.doAutoLogin(request, response, session, configuration)) {
+                final AutoLoginResult autoLoginResult =
+                        this.doAutoLogin(request, response, session, configuration);
+                if (!autoLoginResult.isAutoLogin()) {
 
                     return; // no continue. Usually no continue when there is a sendRedirect or sendError done.
                 }
+
+                // we have to assign again the session, since the doAutoLogin might be renewed.
+                session = autoLoginResult.getSession();
 
                 // if the auto login couldn't logged the user, then send it to the IdP login page (if it is not already logged in).
                 if (null == session || this.isNotLogged(request, session)) {
@@ -567,18 +569,19 @@ public class SamlAccessFilter implements Filter {
         return isOK;
     } // printMetaData.
 
-    private boolean doAutoLogin (final HttpServletRequest   request,
+    private AutoLoginResult doAutoLogin (final HttpServletRequest   request,
                                  final HttpServletResponse    response,
                                  final HttpSession             session,
                                  final Configuration     configuration) throws IOException {
-        boolean autoLogin = false;
+
+        AutoLoginResult autoLogin = new AutoLoginResult(session, false);
 
         try {
 
             autoLogin = this.autoLogin(request, response, session, configuration);
         } catch (SamlUnauthorizedException e) {
 
-            autoLogin = false;
+            autoLogin = new AutoLoginResult(session, false);
             Logger.debug(this, e.getMessage());
             Logger.debug(this, "SamlUnauthorizedException, status = " + e.getStatus());
             Logger.debug(this, "SamlUnauthorizedException, unauthorizedPage = " + e.getUnauthorizedPage());
@@ -603,7 +606,7 @@ public class SamlAccessFilter implements Filter {
         return autoLogin;
     } // doAutoLogin.
 
-    private boolean autoLogin (final HttpServletRequest   request,
+    private AutoLoginResult autoLogin (final HttpServletRequest   request,
                             final HttpServletResponse    response,
                             final HttpSession             session,
                             final Configuration     configuration) throws IOException {
@@ -611,7 +614,8 @@ public class SamlAccessFilter implements Filter {
         final User user =
                 this.samlAuthenticationService.getUser
                         (request, response, session, configuration.getSiteName());
-        boolean continueFilter = true; // by default continue with the filter
+        boolean continueFilter       = true; // by default continue with the filter
+        HttpSession renewSession = session;
 
         if (null != user) {
 
@@ -637,7 +641,8 @@ public class SamlAccessFilter implements Filter {
                     // this is what the PortalRequestProcessor needs to check the login.
                     Logger.info(this, "Setting the user id on the session: " + user.getUserId());
 
-                    final String uri = session.getAttribute(ORIGINAL_REQUEST) != null ? (String)session.getAttribute(ORIGINAL_REQUEST) : request.getRequestURI();
+                    final String uri = session.getAttribute(ORIGINAL_REQUEST) != null ?
+                            (String)session.getAttribute(ORIGINAL_REQUEST) : request.getRequestURI();
                     session.removeAttribute(ORIGINAL_REQUEST);
 
                     if(this.isBackEndAdmin(session, uri)) {
@@ -645,8 +650,12 @@ public class SamlAccessFilter implements Filter {
                         session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
                         PrincipalThreadLocal.setName(user.getUserId());
                     }
+
+                    renewSession =
+                            this.renewSession (request, session);
+
                     // depending if it is a redirection or not, continue.
-                    continueFilter = this.checkRedirection(request, response, session);
+                    continueFilter = this.checkRedirection(request, response, renewSession);
 
                     this.doAuthenticationLoginSecurityLog(request, configuration, user);
                 }
@@ -663,9 +672,47 @@ public class SamlAccessFilter implements Filter {
             }
         }
 
-        return continueFilter;
+        return new AutoLoginResult(renewSession, continueFilter);
     } // autoLogin.
 
+    private HttpSession renewSession(final HttpServletRequest request,
+                                     HttpSession currentSession) {
+
+        String                    attributeName     = null;
+        Object                    attributeValue    = null;
+        Enumeration<String>       attributesNames   = null;
+        HttpSession               renewSession      = currentSession;
+        final Map<String, Object> sessionAttributes = new HashMap<>();
+
+        if (null != currentSession && !currentSession.isNew()) {
+
+            Logger.debug(this, "Starting the Renew of the current session");
+
+            attributesNames    = currentSession.getAttributeNames();
+
+            while (attributesNames.hasMoreElements()) {
+
+                attributeName  = attributesNames.nextElement();
+                attributeValue = currentSession.getAttribute(attributeName);
+                Logger.debug(this, "Copying the attribute: " + attributeName);
+                sessionAttributes.put(attributeName, attributeValue);
+            }
+
+            Logger.debug(this, "Killing the current session");
+            currentSession.invalidate(); // kill the previous session
+
+            Logger.debug(this, "Creating a new session");
+            renewSession = request.getSession(true);
+
+            for (Map.Entry<String, Object> sessionEntry : sessionAttributes.entrySet()) {
+
+                Logger.debug(this, "Setting the attribute to the new session: " + attributeName);
+                renewSession.setAttribute(sessionEntry.getKey(), sessionEntry.getValue());
+            }
+        }
+
+        return renewSession;
+    } // renewSession.
 
 
     private boolean isBackEndAdmin(final HttpSession session, final String uri) {
