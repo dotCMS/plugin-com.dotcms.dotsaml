@@ -175,6 +175,8 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
         spssoDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
         descriptor.getRoleDescriptors().add(spssoDescriptor);
 
+        Logger.debug(this, "Descriptor DONE");
+
         return descriptor;
     } // getServiceProviderEntityDescriptor.
 

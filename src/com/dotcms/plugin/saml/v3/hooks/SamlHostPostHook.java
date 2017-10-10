@@ -1,69 +1,65 @@
 package com.dotcms.plugin.saml.v3.hooks;
 
-import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationParser;
-import com.dotcms.plugin.saml.v3.config.SiteConfigurationService;
+import com.dotcms.plugin.saml.v3.content.SamlContentTypeUtil;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.beans.Permission;
-import com.dotmarketing.business.APILocator;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.categories.model.Category;
 import com.dotmarketing.portlets.contentlet.business.ContentletAPIPostHookAbstractImp;
-import com.dotmarketing.portlets.contentlet.business.HostAPI;
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.portlets.structure.model.ContentletRelationships;
 import com.dotmarketing.util.Logger;
 import com.liferay.portal.model.User;
-import com.liferay.util.InstancePool;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
- * Contains the logic that updates the saml configuration for a host after editing it
+ * This Hook is called when the Host is checking and it is only doing a configuration fields validation, not affecting the saml configuration.
  * Created by nollymar on 3/17/17.
  */
 public class SamlHostPostHook extends ContentletAPIPostHookAbstractImp {
 
-    private final HostAPI hostAPI = APILocator.getHostAPI();
+    private final SiteConfigurationParser siteConfigurationParser = new SiteConfigurationParser();
 
     public SamlHostPostHook() {
         super();
     }
 
     @Override
-    public void checkin(Contentlet currentContentlet, ContentletRelationships relationshipsData, List<Category> cats,
-                        List<Permission> selectedPermissions, User user, boolean respectFrontendRoles,
-                        Contentlet returnValue) {
+    public void checkin(final Contentlet currentContentlet,
+                        final ContentletRelationships relationshipsData,
+                        final List<Category> cats,
+                        final List<Permission> selectedPermissions,
+                        final User user,
+                        final boolean respectFrontendRoles,
+                        final Contentlet returnValue) {
 
-        Host host = new Host(currentContentlet);
-        Configuration siteConfiguration;
-        SiteConfigurationService siteConfigurationService;
-        SiteConfigurationParser siteConfigurationParser = new SiteConfigurationParser();
+        final Host host = new Host(currentContentlet);
 
         try {
 
-            Logger.info(this, "Reconfiguring Saml settings for the host with inode: " + currentContentlet.getInode());
+            Logger.info(this, "Validating Saml settings for the host with inode: " + currentContentlet.getInode());
 
             //Validate the configuration.
-            siteConfigurationParser.validateConfigurationByHost(host);
-            //Loading current configuration
-            siteConfiguration = siteConfigurationParser.getConfigurationByHost(host);
+            final String hostSAMLAuthentication  = (String)host.getMap()
+                    .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_VELOCITY_VAR_NAME);
+            final boolean isDisabled =
+                    SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_DISABLED
+                            .equalsIgnoreCase(hostSAMLAuthentication);
 
-            if (siteConfiguration != null) {
-                siteConfigurationService =
-                    (SiteConfigurationService) InstancePool.get(SiteConfigurationService.class.getName());
+            if (isDisabled) {
 
-                //Updating configuration
-                siteConfigurationService.setConfigurationBySite(host.getHostname(), siteConfiguration);
-
-                //save the same map for each host alias
-                hostAPI.parseHostAliases(host).forEach(alias -> siteConfigurationService.setConfigurationBySite(alias, siteConfiguration));
+                this.siteConfigurationParser.validateConfigurationByDisableHost(host, hostSAMLAuthentication);
+            } else {
+                this.siteConfigurationParser.validateConfigurationByHost(host);
             }
-        } catch (IOException | DotDataException | DotSecurityException e) {
-            Logger.error(this, "Error updating Saml configuration", e);
-        }
-    }
 
-}
+            Logger.info(this, "DONE Validating Saml settings for the host with inode: " + currentContentlet.getInode());
+        } catch (DotDataException | DotSecurityException e) {
+            Logger.error(this, "Error Validating Saml configuration", e);
+        }
+    } // checkin.
+
+} // E:O:F:SamlHostPostHook.

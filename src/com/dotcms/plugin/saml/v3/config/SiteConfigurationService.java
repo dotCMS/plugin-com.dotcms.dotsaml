@@ -14,10 +14,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SiteConfigurationService implements Serializable {
 
     private final Map<String, Configuration> configurationBySiteMap;
+    private final Map<String, Configuration> disableConfigurationBySiteMap;
 
     public SiteConfigurationService(final Map<String, Configuration> configurationBySiteMap) {
 
-        this.configurationBySiteMap = new ConcurrentHashMap<>(configurationBySiteMap);
+        this.configurationBySiteMap        = new ConcurrentHashMap<>(configurationBySiteMap);
+        this.disableConfigurationBySiteMap = new ConcurrentHashMap<>();
 
     } // SiteConfigurationService.
 
@@ -27,6 +29,15 @@ public class SiteConfigurationService implements Serializable {
      */
     public void updateConfigurations (final Map<String, Configuration> configurationBySiteMap) {
         this.configurationBySiteMap.putAll(configurationBySiteMap);
+    }
+
+    /**
+     * Updates a set of disable configurations.
+     * These configuration are only used as a fallback to figure out the metadata when the configuration is disable.
+     * @param configurationBySiteMap Map
+     */
+    public void updateDisableConfiguration(final Map<String, Configuration> configurationBySiteMap) {
+        this.disableConfigurationBySiteMap.putAll(configurationBySiteMap);
     }
 
     /**
@@ -51,6 +62,22 @@ public class SiteConfigurationService implements Serializable {
                     ));
 
         return this.configurationBySiteMap.get(site);
+    } // getConfigurationBySite.
+
+    /**
+     * Get Configuration by disable site
+     * This should be use just as a fallback for things such as the metadata, not for doing authentication or anything else
+     * @param site {@link String}
+     * @return Configuration
+     */
+    public Configuration getConfigurationByDisabledSite (final String site) {
+
+        Logger.debug(this, ((this.disableConfigurationBySiteMap.containsKey(site))?
+                "Found a configuration for the disable site: " + site:
+                "Could not find a configuration for the disable site: " + site
+        ));
+
+        return this.disableConfigurationBySiteMap.get(site);
 
     } // getConfigurationBySite.
 
@@ -60,5 +87,6 @@ public class SiteConfigurationService implements Serializable {
         if (conf != null) {
             this.configurationBySiteMap.put(site, conf);
         }
-    }
+    } // setConfigurationBySite.
+
 } // E:O:F:SiteConfigurationService.

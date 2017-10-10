@@ -668,7 +668,8 @@ public class SamlUtils {
                         DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD, password);
 
                 Logger.debug(SamlUtils.class, "Creating the credentials, using: " + password +
-                        ", key store path: " + keyStorePath);
+                        ", key store path: " + keyStorePath + ", keyEntryId: " + keyEntryId +
+                        ", keyStoreEntryPassword: " + keyStoreEntryPassword);
 
                 final String keyStoreType = configuration.getStringProperty(
                     DotSamlConstants.DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType());
@@ -683,6 +684,8 @@ public class SamlUtils {
                 criteriaSet = new CriteriaSet();
                 criteriaSet.add(criterion);
                 credential = resolver.resolveSingle(criteriaSet);
+
+                Logger.debug(SamlUtils.class, "Created the credentials: " + credential);
             }
         } catch (ResolverException e) {
 
@@ -924,13 +927,16 @@ public class SamlUtils {
      * @param keysRequired Property keys required to be in the samlProperties.
      * @return
      */
-    public static Set<String> getMissingProperties(Properties properties, Set<String> keysRequired) {
-        Set<String> missingProperties = new HashSet<>();
+    public static Set<String> getMissingProperties(final Properties properties,
+                                                   final Set<String> keysRequired) {
+
+        final Set<String> missingProperties = new HashSet<>(); // todo: make this immutable on 4.x
         for (String s : keysRequired) {
-            if ( properties.getProperty(s) == null || properties.getProperty(s).equals("") ) {
+            if ( properties.getProperty(s) == null || properties.getProperty(s).trim().equals("") ) {
                 missingProperties.add(s);
             }
         }
+
         return missingProperties;
     } // getMissingProperties.
 

@@ -36,6 +36,7 @@ public class SiteCofigurationInitializerService implements Initializer {
 
         final SiteConfigurationService siteConfigurationService;
         final Map<String, Configuration> configurationMap;
+        final Map<String, Configuration> disableConfigurationMap;
         final List<Host>  hostList    = (List<Host>) context.get(HOST_LIST_CONTEXT_KEY);
 
         try {
@@ -45,6 +46,9 @@ public class SiteCofigurationInitializerService implements Initializer {
                     this.siteConfigurationParser.getConfiguration(hostList):
                     this.siteConfigurationParser.getConfiguration();
 
+            disableConfigurationMap = (null != hostList)?
+                    this.siteConfigurationParser.getConfigurationForDisableHosts(hostList):
+                    this.siteConfigurationParser.getConfigurationForDisableHosts();
         } catch (IOException | DotDataException | DotSecurityException e) {
 
             Logger.error(this, e.getMessage(), e);
@@ -52,15 +56,19 @@ public class SiteCofigurationInitializerService implements Initializer {
         }
 
         Logger.debug(this, "SAML configuration, map = " + configurationMap);
+        Logger.debug(this,
+                "SAML configuration for disabled saml sites, map = " + disableConfigurationMap);
         if (null != hostList && null != InstancePool.get(SiteConfigurationService.class.getName())) {
 
-            this.update(hostList, configurationMap);
+            this.update(hostList, configurationMap,
+                    disableConfigurationMap);
         } else {
 
             final SiteConfigurationResolver siteConfigurationResolver =
                     new SiteConfigurationResolver();
 
             siteConfigurationService = new SiteConfigurationService(configurationMap);
+            siteConfigurationService.updateDisableConfiguration(disableConfigurationMap);
 
             InstancePool.put(SiteConfigurationService.class.getName(), siteConfigurationService);
             InstancePool.put(SiteConfigurationResolver.class.getName(), siteConfigurationResolver);
@@ -70,7 +78,8 @@ public class SiteCofigurationInitializerService implements Initializer {
     } // init.
 
     private void update (final List<Host>  hostList,
-                         final Map<String, Configuration> configurationMap) {
+                         final Map<String, Configuration> configurationMap,
+                         final Map<String, Configuration> disableConfigurationMap) {
 
         Logger.debug(this, "This is a SAML configuration update...");
         final SiteConfigurationService siteConfigurationService =
@@ -79,6 +88,7 @@ public class SiteCofigurationInitializerService implements Initializer {
                 (HostService) InstancePool.get(HostService.class.getName());
 
         siteConfigurationService.updateConfigurations(configurationMap);
+        siteConfigurationService.updateDisableConfiguration(disableConfigurationMap);
 
         // if a host in the list, does not retrieve any configuration, means it is invalid or has been disabled.
         for (final Host host : hostList) {

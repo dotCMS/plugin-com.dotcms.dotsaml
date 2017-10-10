@@ -58,14 +58,7 @@ public class DefaultInitializer implements Initializer {
 
         Logger.info(this, "About to create SAML field under Host Content Type");
         this.createSAMLFields();
-       /* SamlHostPostHook postHook = new SamlHostPostHook();
-        Interceptor interceptor = (Interceptor)APILocator.getContentletAPIntercepter();
-        interceptor.delPostHookByClassName(postHook.getClass().getName());
-        try {
-            interceptor.addPostHook(postHook);
-        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-            Logger.error(this, "Error adding SamlHostPostHook", e);
-        }*/
+        this.addPostHook();
 
         Logger.info(this, "Init java crypto");
         this.initJavaCrypto();
@@ -88,6 +81,21 @@ public class DefaultInitializer implements Initializer {
 
         this.initDone.set(true);
     } // init.
+
+    private void addPostHook () {
+
+        final SamlHostPostHook postHook = new SamlHostPostHook();
+        final Interceptor interceptor = (Interceptor)APILocator.getContentletAPIntercepter();
+
+        Logger.info(this, "Adding Saml Host Hook");
+        interceptor.delPostHookByClassName(postHook.getClass().getName());
+
+        try {
+            interceptor.addPostHook(postHook);
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            Logger.error(this, "Error adding SamlHostPostHook", e);
+        }
+    } // addPostHook.
 
     /**
      * Init the task that read the hosts and update the saml configuration if they changed.
