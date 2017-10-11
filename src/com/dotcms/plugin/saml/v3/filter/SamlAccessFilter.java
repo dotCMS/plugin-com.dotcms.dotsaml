@@ -2,6 +2,7 @@ package com.dotcms.plugin.saml.v3.filter;
 
 import com.dotcms.plugin.saml.v3.*;
 import com.dotcms.plugin.saml.v3.config.Configuration;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.exception.SamlUnauthorizedException;
 import com.dotcms.plugin.saml.v3.init.DefaultInitializer;
 import com.dotcms.plugin.saml.v3.init.Initializer;
@@ -362,9 +363,18 @@ public class SamlAccessFilter implements Filter {
                         session.setAttribute(ORIGINAL_REQUEST, originalRequest);
                     }
 
-                    // this will redirect the user to the IdP Login Page.
-                    this.samlAuthenticationService.authentication(request,
-                            response, configuration.getSiteName());
+                    try {
+                        // this will redirect the user to the IdP Login Page.
+                        this.samlAuthenticationService.authentication(request,
+                                response, configuration.getSiteName());
+                    } catch (DotSamlException e) {
+
+                        Logger.error(this, "Error on authentication: " +
+                                e.getMessage(), e);
+                        Logger.debug(this, "Error on authentication, settings 500 response status.");
+                        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    }
+
                     return;
                 }
             }

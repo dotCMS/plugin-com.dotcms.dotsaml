@@ -28,7 +28,7 @@ public class InputStreamUtils {
 
         InputStream inputStream = null;
 
-        if (StringUtils.startsWith(resourceName, PREFIX_FILE)) {
+        if (isResourceFile(resourceName)) {
 
             final String normalizedName = resourceName.
                     replaceFirst(PREFIX_FILE, StringUtils.EMPTY);
@@ -41,5 +41,28 @@ public class InputStreamUtils {
 
         return inputStream;
     } // getInputStream.
+
+    /**
+     * Normalize the resource name removing the prefix
+     * @param resourceName String
+     * @return String
+     */
+    public static String normalizeFile (final String resourceName) {
+
+        String normalizedName = resourceName;
+
+        if (isResourceFile(resourceName)) {
+
+            normalizedName = resourceName.
+                    replaceFirst(PREFIX_FILE, StringUtils.EMPTY);
+        }
+
+        return normalizedName;
+    } // normalizeFile.
+
+    public static boolean isResourceFile (final String resourceName) {
+
+        return  (StringUtils.startsWith(resourceName, PREFIX_FILE));
+    }
 
 } // E:O:F:InputStreamUtils.
