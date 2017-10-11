@@ -704,9 +704,19 @@ public class SamlUtils {
 
         if (!credentialMap.containsKey(configuration.getSiteName())) {
 
-            Credential credential =
-            credentialMap.put(configuration.getSiteName(),
-                    createCredential(configuration));
+            final Credential credential = createCredential(configuration);
+
+            if (null != credential) {
+
+                credentialMap.put(configuration.getSiteName(), credential);
+            } else {
+
+                Logger.error(SamlUtils.class, "The credential is null for the site: " +
+                            configuration.getSiteName());
+
+                throw new DotSamlException("The credential is null for the site: " +
+                            configuration.getSiteName());
+            }
         }
 
         return credentialMap.get(configuration.getSiteName());
@@ -854,6 +864,7 @@ public class SamlUtils {
                                         DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID_DEFAULT_VALUE;
         final String keyStoreEntryPassword = (UtilMethods.isSet(samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD)))?
                 samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD):keyStorePassword;
+        Credential credential     = null;
 
         if ( pathToKeyStore != null
             && keyStorePassword != null
@@ -861,25 +872,43 @@ public class SamlUtils {
             && keyEntryId != null
             && keyStoreEntryPassword != null) {
 
+            if (InputStreamUtils.isResourceFile(pathToKeyStore)) {
+
+                Logger.debug(SamlUtils.class,
+                        "The " + pathToKeyStore + ", is a file, checking if exists and can read");
+                final File pathToKeyStoreFile = new File(InputStreamUtils.normalizeFile(pathToKeyStore));
+
+                if (!pathToKeyStoreFile.exists() || !pathToKeyStoreFile.canRead()) {
+                    otherErrors.add("The Key Store path: " + pathToKeyStore + ", does not exists or can not read.");
+                    return otherErrors;
+                }
+            }
+
             try {
+
                 final KeyStore keystore = readKeyStoreFromFile(pathToKeyStore, keyStorePassword, keyStoreType);
 
                 final Map<String, String> passwordMap = new HashMap<>();
                 passwordMap.put(keyEntryId, keyStoreEntryPassword);
 
                 final KeyStoreCredentialResolver resolver =
-                    new KeyStoreCredentialResolver(keystore, passwordMap);
+                        new KeyStoreCredentialResolver(keystore, passwordMap);
 
                 final Criterion criterion = new EntityIdCriterion(keyEntryId);
                 final CriteriaSet criteriaSet = new CriteriaSet();
                 criteriaSet.add(criterion);
-                resolver.resolveSingle(criteriaSet);
+                credential = resolver.resolveSingle(criteriaSet);
 
-            } catch (DotSamlException e){
+                if (null == credential) {
+                    otherErrors.add("Error reading Key Store, please check the: " +
+                            DotSamlConstants.DOTCMS_SAML_KEY_ENTRY_ID);
+                }
+            } catch (DotSamlException e) {
                 otherErrors.add("Error reading Key Store");
             } catch (ResolverException e) {
                 otherErrors.add("Error reading credentials");
             }
+
         }
         return otherErrors;
     } // validateKeyStore.

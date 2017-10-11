@@ -582,6 +582,10 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
                         Logger.info(this, "Skipping the role: " + role);
                         continue;
+                    } else {
+
+                        Logger.debug(this, "Role Patterns: " + this.toString(rolePatterns) +
+                                ", remove role prefix: " + removeRolePrefix + ": true");
                     }
                 }
 
@@ -609,14 +613,20 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             role = createNewRole(roleKey, isSystem);
         }
 
-        if(null != role && !this.roleAPI.doesUserHaveRole(user, role)) {
+        if(null != role) {
+            if (!this.roleAPI.doesUserHaveRole(user, role)) {
 
-            this.roleAPI.addRoleToUser(role, user);
-            Logger.info(this, "Added role: " + role.getName() +
-                " to user:" + user.getEmailAddress());
+                this.roleAPI.addRoleToUser(role, user);
+                Logger.info(this, "Added role: " + role.getName() +
+                        " to user:" + user.getEmailAddress());
+            } else {
+                Logger.info(this, "The user: " + user.getEmailAddress() +
+                        " already has the role: " + role + ", so not added");
+            }
         } else {
-            Logger.info(this, "The user: " + user.getEmailAddress() +
-                " already has the role: " + role + ", so not added");
+
+            Logger.info(this, "The role: " + roleKey
+                    + ", does not exists on dotCMS, not added to the user.");
         }
     } // addRole.
 
