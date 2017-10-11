@@ -128,7 +128,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
         final long clockSkew = configuration.getIntProperty
                 (DotSamlConstants.DOT_SAML_CLOCK_SKEW, DOT_SAML_CLOCK_SKEW_DEFAULT_VALUE);
         final long lifeTime  = configuration.getIntProperty
-                (DotSamlConstants.DOT_SAML_MESSAGE_LIFE_TIME, DOT_SMAL_MESSAGE_LIFE_DEFAULT_VALUE);
+                (DotSamlConstants.DOT_SAML_MESSAGE_LIFE_TIME, DOT_SAML_MESSAGE_LIFE_DEFAULT_VALUE);
         final SAMLMessageInfoContext messageInfoContext =
                 context.getSubcontext(SAMLMessageInfoContext.class, true);
         final MessageLifetimeSecurityHandler lifetimeSecurityHandler =

@@ -109,7 +109,8 @@ public class DefaultDotCMSConfiguration implements Configuration {
                                 + "^/c/portal/logout.*$,"
                                 + "^/dotCMS/logout.*$,"
                                 + "^/application/login/login.*$,"
-                                + "^/dotAdmin.*$"
+                                + "^/dotAdmin.*$,"
+                                + "^" + LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP + "$"
                 );
 
         return (UtilMethods.isSet(accessFilterValues))?

@@ -402,24 +402,8 @@ public class SamlAccessFilter implements Filter {
         // if it is logout
         if (isLogoutNeed && null != session && this.isLogoutRequest(request.getRequestURI(), configuration.getLogoutPathArray())) {
 
-            final NameID nameID           = (NameID)session.getAttribute(configuration.getSiteName() + SamlUtils.SAML_NAME_ID);
-            final String samlSessionIndex = (String)session.getAttribute(configuration.getSiteName() + SamlUtils.SAML_SESSION_INDEX);
-            if ( null != nameID && null != samlSessionIndex) {
-
-                Logger.debug(this, "The uri: " + request.getRequestURI() +
-                        ", is a logout request. Doing the logout call to saml");
-                Logger.debug(this, "Doing dotCMS logout");
-                doLogout(response, request);
-                Logger.debug(this, "Doing SAML redirect logout");
-                this.samlAuthenticationService.logout(request,
-                        response, nameID, samlSessionIndex, configuration.getSiteName());
-                Logger.info(this, "User " + nameID + " has logged out");
-                
+            if (this.doLogout(response, request, session, configuration)) {
                 return;
-            } else {
-
-                Logger.warn(this,
-                        "Couldn't do the logout request. Because the saml name id or the saml session index are not in the http session");
             }
         }
 
@@ -427,7 +411,37 @@ public class SamlAccessFilter implements Filter {
 
     } // doFilter.
 
-	/**
+    private boolean doLogout(final HttpServletResponse response,
+                             final HttpServletRequest request,
+                             final HttpSession session,
+                             final Configuration configuration) {
+
+        final NameID nameID           = (NameID)session.getAttribute(configuration.getSiteName() + SamlUtils.SAML_NAME_ID);
+        final String samlSessionIndex = (String)session.getAttribute(configuration.getSiteName() + SamlUtils.SAML_SESSION_INDEX);
+        boolean doLogoutDone          = false;
+
+        if ( null != nameID && null != samlSessionIndex) {
+
+            Logger.debug(this, "The uri: " + request.getRequestURI() +
+                    ", is a logout request. Doing the logout call to saml");
+            Logger.debug(this, "Doing dotCMS logout");
+            doLogout(response, request);
+            Logger.debug(this, "Doing SAML redirect logout");
+            this.samlAuthenticationService.logout(request,
+                    response, nameID, samlSessionIndex, configuration.getSiteName());
+            Logger.info(this, "User " + nameID + " has logged out");
+
+            doLogoutDone = true;
+        } else {
+
+            Logger.warn(this,
+                    "Couldn't do the logout request. Because the saml name id or the saml session index are not in the http session");
+        }
+
+        return doLogoutDone;
+    }
+
+    /**
 	 * 
 	 * @param response
 	 * @param request
@@ -716,7 +730,7 @@ public class SamlAccessFilter implements Filter {
 
             for (Map.Entry<String, Object> sessionEntry : sessionAttributes.entrySet()) {
 
-                Logger.debug(this, "Setting the attribute to the new session: " + attributeName);
+                Logger.debug(this, "Setting the attribute to the new session: " + sessionEntry.getKey());
                 renewSession.setAttribute(sessionEntry.getKey(), sessionEntry.getValue());
             }
         }
