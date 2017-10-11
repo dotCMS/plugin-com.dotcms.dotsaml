@@ -13,7 +13,7 @@ import java.io.Serializable;
 public interface AssertionResolverHandler extends Serializable {
 
     public static final int DOT_SAML_CLOCK_SKEW_DEFAULT_VALUE = 1000;
-    public static final int DOT_SMAL_MESSAGE_LIFE_DEFAULT_VALUE = 2000;
+    public static final int DOT_SAML_MESSAGE_LIFE_DEFAULT_VALUE = 2000;
 
     /**
      * Returns true if it is a valid saml request.
