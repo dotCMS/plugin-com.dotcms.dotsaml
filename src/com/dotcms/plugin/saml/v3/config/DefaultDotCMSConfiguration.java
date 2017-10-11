@@ -101,14 +101,16 @@ public class DefaultDotCMSConfiguration implements Configuration {
 
         final String accessFilterValues =
                 this.getStringProperty(DotSamlConstants.DOT_SAML_INCLUDE_PATH_VALUES,
-                        "^/dotsaml3sp*$,"
+                        "^/" + ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP + "*$,"
                             + "^/dotCMS/login.*$,"
                             + "^/html/portal/login.*$,"
                             + "^/c/public/login.*$,"
                             + "^/c/portal_public/login.*$,"
                             + "^/c/portal/logout.*$,"
                             + "^/dotCMS/logout.*$,"
-                            + "^/application/login/login.*$");
+                            + "^/application/login/login.*$,"
+                            + "^/dotAdmin.*$"
+                );
 
         return (UtilMethods.isSet(accessFilterValues))?
                 accessFilterValues.split(","):null;
