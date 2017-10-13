@@ -1,5 +1,7 @@
 package com.dotcms.plugin.saml.v3.filter;
 
+import com.dotcms.cms.login.LoginService;
+import com.dotcms.cms.login.LoginServiceFactory;
 import com.dotcms.plugin.saml.v3.*;
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
@@ -20,7 +22,6 @@ import com.dotmarketing.business.web.LanguageWebAPI;
 import com.dotmarketing.business.web.UserWebAPI;
 import com.dotmarketing.business.web.WebAPILocator;
 import com.dotmarketing.cms.factories.PublicEncryptionFactory;
-import com.dotmarketing.cms.login.factories.LoginFactory;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.filters.CmsUrlUtil;
@@ -39,17 +40,16 @@ import org.opensaml.saml.saml2.core.NameID;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 
 import javax.servlet.*;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.servlet.http.Cookie;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URLDecoder;
 import java.util.*;
-
 
 import static com.dotmarketing.business.PermissionAPI.PERMISSION_READ;
 
@@ -76,6 +76,7 @@ public class SamlAccessFilter implements Filter {
     private final IdentifierAPI identifierAPI;
     private final ContentletAPI contentletAPI;
     private final UserWebAPI    userWebAPI;
+    private final LoginService  loginService;
 
     public SamlAccessFilter() {
 
@@ -101,7 +102,8 @@ public class SamlAccessFilter implements Filter {
                 APILocator.getPermissionAPI(),
                 APILocator.getIdentifierAPI(),
                 APILocator.getContentletAPI(),
-                WebAPILocator.getUserWebAPI());
+                WebAPILocator.getUserWebAPI(),
+                LoginServiceFactory.getInstance().getLoginService());
 
     }
 
@@ -115,7 +117,8 @@ public class SamlAccessFilter implements Filter {
                             final PermissionAPI permissionAPI,
                             final IdentifierAPI identifierAPI,
                             final ContentletAPI contentletAPI,
-                            final UserWebAPI    userWebAPI) {
+                            final UserWebAPI    userWebAPI,
+                            final LoginService  loginService) {
 
         this.samlAuthenticationService = samlAuthenticationService;
         this.initializer               = initializer;
@@ -127,6 +130,7 @@ public class SamlAccessFilter implements Filter {
         this.identifierAPI             = identifierAPI;
         this.contentletAPI             = contentletAPI;
         this.userWebAPI                = userWebAPI;
+        this.loginService              = loginService;
     }
 
     @Override
@@ -411,38 +415,46 @@ public class SamlAccessFilter implements Filter {
 
     } // doFilter.
 
+
     private boolean doLogout(final HttpServletResponse response,
-                             final HttpServletRequest request,
-                             final HttpSession session,
-                             final Configuration configuration) {
+                            final HttpServletRequest request,
+                            final HttpSession session,
+                            final Configuration configuration) throws IOException, ServletException {
 
         final NameID nameID           = (NameID)session.getAttribute(configuration.getSiteName() + SamlUtils.SAML_NAME_ID);
         final String samlSessionIndex = (String)session.getAttribute(configuration.getSiteName() + SamlUtils.SAML_SESSION_INDEX);
         boolean doLogoutDone          = false;
 
-        if ( null != nameID && null != samlSessionIndex) {
+        try {
+            if (null != nameID && null != samlSessionIndex) {
 
-            Logger.debug(this, "The uri: " + request.getRequestURI() +
-                    ", is a logout request. Doing the logout call to saml");
-            Logger.debug(this, "Doing dotCMS logout");
-            doLogout(response, request);
-            Logger.debug(this, "Doing SAML redirect logout");
-            this.samlAuthenticationService.logout(request,
-                    response, nameID, samlSessionIndex, configuration.getSiteName());
-            Logger.info(this, "User " + nameID + " has logged out");
+                Logger.debug(this, "The uri: " + request.getRequestURI() +
+                        ", is a logout request. Doing the logout call to saml");
+                Logger.debug(this, "Doing dotCMS logout");
 
-            doLogoutDone = true;
-        } else {
+                doLogout(response, request);
+                Logger.debug(this, "Doing SAML redirect logout");
+                this.samlAuthenticationService.logout(request,
+                        response, nameID, samlSessionIndex, configuration.getSiteName());
+                Logger.info(this, "User " + nameID + " has logged out");
 
-            Logger.warn(this,
-                    "Couldn't do the logout request. Because the saml name id or the saml session index are not in the http session");
+                doLogoutDone = true;
+            } else {
+
+                Logger.warn(this,
+                        "Couldn't do the logout request. Because the saml name id or the saml session index are not in the http session");
+            }
+        } catch (Throwable e) {
+
+            Logger.error(this, "Error on Logout: " + e.getMessage(), e);
         }
 
         return doLogoutDone;
     }
 
+
     /**
-	 * 
+	 * Do the dotCMS logout
 	 * @param response
 	 * @param request
 	 */
@@ -468,8 +480,12 @@ public class SamlAccessFilter implements Filter {
 					}
 				}
 			}
+
+			if (!session.isNew()) {
+
+			    this.loginService.doLogout(request, response);
+            }
 		}
-		LoginFactory.doLogout(request, response);
 	}
 
     private boolean isLogoutRequest(final String requestURI, final String[] logoutPathArray) {
@@ -653,11 +669,11 @@ public class SamlAccessFilter implements Filter {
                 Logger.error(this, e.getMessage(), e);
             }
 
-            // todo: 3.7 this should be changed to LoginService
-            final boolean doCookieLogin = LoginFactory.doCookieLogin(PublicEncryptionFactory.encryptString
+            // todo: on master this should be changed to LoginServiceAPI
+            final boolean doCookieLogin = this.loginService.doCookieLogin(PublicEncryptionFactory.encryptString
                     (user.getUserId()), request, response);
 
-            Logger.debug(this, "Login result by LoginFactory: " + doCookieLogin);
+            Logger.debug(this, "Login result by LoginService: " + doCookieLogin);
 
             if (doCookieLogin) {
 
@@ -671,6 +687,7 @@ public class SamlAccessFilter implements Filter {
 
                     if(this.isBackEndAdmin(session, uri)) {
 
+                        Logger.debug(this, "The uri: " + uri + ", is a backend setting the session backend stuff");
                         session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
                         PrincipalThreadLocal.setName(user.getUserId());
                     }
@@ -748,7 +765,8 @@ public class SamlAccessFilter implements Filter {
 
     private boolean isBackEndLoginPage(final String uri) {
 
-        return  uri.startsWith("/html/portal/login")        ||
+        return  uri.startsWith("/dotAdmin")                 ||
+                uri.startsWith("/html/portal/login")        ||
                 uri.startsWith("/c/public/login")           ||
                 uri.startsWith("/c/portal_public/login")    ||
                 uri.startsWith("/c/portal/logout");
@@ -783,8 +801,8 @@ public class SamlAccessFilter implements Filter {
 
                         if (this.isBackEndAdmin(session, redirectAfterLogin)) {
 
-                            Logger.debug(this, "Redirecting to: /c");
-                            response.sendRedirect("/c");
+                            Logger.debug(this, "Redirecting to: /dotAdmin");
+                            response.sendRedirect("/dotAdmin");
                         } else { // if it is front end
 
                             Logger.debug(this, "Redirecting to: /");

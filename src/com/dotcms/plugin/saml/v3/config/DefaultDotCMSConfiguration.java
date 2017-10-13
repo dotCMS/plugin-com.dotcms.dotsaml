@@ -122,7 +122,7 @@ public class DefaultDotCMSConfiguration implements Configuration {
 
         final String logoutPathValues =
                 this.getStringProperty(DotSamlConstants.DOT_SAML_LOGOUT_PATH_VALUES,
-                                 "/c/portal/logout,/dotCMS/logout");
+                                 "/c/portal/logout,/dotCMS/logout,/dotsaml/request/logout");
 
         return (UtilMethods.isSet(logoutPathValues))?
                 logoutPathValues.split(","):null;
