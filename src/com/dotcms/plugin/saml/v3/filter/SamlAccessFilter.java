@@ -1,7 +1,6 @@
 package com.dotcms.plugin.saml.v3.filter;
 
-import com.dotcms.cms.login.LoginService;
-import com.dotcms.cms.login.LoginServiceFactory;
+import com.dotcms.cms.login.LoginServiceAPI;
 import com.dotcms.plugin.saml.v3.*;
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
@@ -76,7 +75,7 @@ public class SamlAccessFilter implements Filter {
     private final IdentifierAPI identifierAPI;
     private final ContentletAPI contentletAPI;
     private final UserWebAPI    userWebAPI;
-    private final LoginService  loginService;
+    private final LoginServiceAPI loginService;
 
     public SamlAccessFilter() {
 
@@ -103,7 +102,7 @@ public class SamlAccessFilter implements Filter {
                 APILocator.getIdentifierAPI(),
                 APILocator.getContentletAPI(),
                 WebAPILocator.getUserWebAPI(),
-                LoginServiceFactory.getInstance().getLoginService());
+                APILocator.getLoginServiceAPI());
 
     }
 
@@ -118,7 +117,7 @@ public class SamlAccessFilter implements Filter {
                             final IdentifierAPI identifierAPI,
                             final ContentletAPI contentletAPI,
                             final UserWebAPI    userWebAPI,
-                            final LoginService  loginService) {
+                            final LoginServiceAPI  loginService) {
 
         this.samlAuthenticationService = samlAuthenticationService;
         this.initializer               = initializer;
@@ -669,7 +668,6 @@ public class SamlAccessFilter implements Filter {
                 Logger.error(this, e.getMessage(), e);
             }
 
-            // todo: on master this should be changed to LoginServiceAPI
             final boolean doCookieLogin = this.loginService.doCookieLogin(PublicEncryptionFactory.encryptString
                     (user.getUserId()), request, response);
 
