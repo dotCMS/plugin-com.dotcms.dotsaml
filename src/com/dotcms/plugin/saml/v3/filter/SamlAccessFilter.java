@@ -11,29 +11,22 @@ import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
 import com.dotmarketing.beans.Host;
-import com.dotmarketing.beans.Identifier;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.IdentifierAPI;
 import com.dotmarketing.business.PermissionAPI;
-import com.dotmarketing.business.Permissionable;
 import com.dotmarketing.business.web.HostWebAPI;
 import com.dotmarketing.business.web.LanguageWebAPI;
 import com.dotmarketing.business.web.UserWebAPI;
 import com.dotmarketing.business.web.WebAPILocator;
 import com.dotmarketing.cms.factories.PublicEncryptionFactory;
-import com.dotmarketing.exception.DotDataException;
-import com.dotmarketing.exception.DotSecurityException;
-import com.dotmarketing.filters.CmsUrlUtil;
 import com.dotmarketing.portlets.contentlet.business.ContentletAPI;
 import com.dotmarketing.util.*;
-import com.dotmarketing.velocity.VelocityServlet;
 import com.liferay.portal.PortalException;
 import com.liferay.portal.SystemException;
 import com.liferay.portal.auth.PrincipalThreadLocal;
 import com.liferay.portal.model.User;
 import com.liferay.portal.servlet.PortletSessionPool;
 import com.liferay.util.InstancePool;
-import org.apache.velocity.exception.ResourceNotFoundException;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.saml2.core.NameID;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
@@ -47,10 +40,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.Writer;
-import java.net.URLDecoder;
 import java.util.*;
-
-import static com.dotmarketing.business.PermissionAPI.PERMISSION_READ;
 
 /**
  * Access filter for SAML plugin, it does the autologin and also redirect to the
@@ -69,7 +59,6 @@ public class SamlAccessFilter implements Filter {
     private final Initializer initializer;
     private final MetaDataXMLPrinter metaDataXMLPrinter;
     private final HostWebAPI hostWebAPI;
-    private final CmsUrlUtil urlUtil;
     private final LanguageWebAPI languageWebAPI;
     private final PermissionAPI permissionAPI;
     private final IdentifierAPI identifierAPI;
@@ -96,7 +85,6 @@ public class SamlAccessFilter implements Filter {
                     new DefaultInitializer():initializer,
                 new MetaDataXMLPrinter(),
                 WebAPILocator.getHostWebAPI(),
-                CmsUrlUtil.getInstance(),
                 WebAPILocator.getLanguageWebAPI(),
                 APILocator.getPermissionAPI(),
                 APILocator.getIdentifierAPI(),
@@ -111,7 +99,6 @@ public class SamlAccessFilter implements Filter {
                             final Initializer initializer,
                             final MetaDataXMLPrinter metaDataXMLPrinter,
                             final HostWebAPI hostWebAPI,
-                            final CmsUrlUtil urlUtil,
                             final LanguageWebAPI languageWebAPI,
                             final PermissionAPI permissionAPI,
                             final IdentifierAPI identifierAPI,
@@ -123,7 +110,6 @@ public class SamlAccessFilter implements Filter {
         this.initializer               = initializer;
         this.metaDataXMLPrinter        = metaDataXMLPrinter;
         this.hostWebAPI                = hostWebAPI;
-        this.urlUtil                   = urlUtil;
         this.languageWebAPI            = languageWebAPI;
         this.permissionAPI             = permissionAPI;
         this.identifierAPI             = identifierAPI;
@@ -214,51 +200,6 @@ public class SamlAccessFilter implements Filter {
 
         return include;
     }
-
-    /**
-     * If the url represents a file or page, will check if the user needs a permission to access it.
-     * It is for the Front end logic.
-     * @param uriParam String
-     * @return boolean
-     */
-    private boolean checkFilePagePermission(final String uriParam,
-                                            final HttpServletRequest request) throws Exception {
-
-        boolean include             = false;
-        String uri                  = URLDecoder.decode(uriParam, UtilMethods.getCharsetConfiguration());
-        Host host                   = this.hostWebAPI.getCurrentHost(request);
-        Identifier identifier       = null;
-        Permissionable contentlet   = null;
-        final long languageId       = this.languageWebAPI.getLanguage(request).getId();
-
-        if (this.urlUtil.isFileAsset(uri, host, languageId)
-                || this.urlUtil.isPageAsset(uri, host, languageId)) {
-
-            Logger.debug(this, "The uri: " + uri + ", for the site: " + host + ", language: " + languageId +
-                    ". Is a contentlet or file asset");
-            try {
-
-                identifier = this.identifierAPI.find(host, uri);
-                contentlet = this.contentletAPI.findContentletForLanguage(languageId, identifier);
-            } catch(DotDataException | DotSecurityException e) {
-
-                Logger.info(VelocityServlet.class,
-                        "Unable to find live version of contentlet. Identifier: " + identifier.getId());
-                throw new ResourceNotFoundException
-                        (String.format("Resource %s not found in Live mode!", uri));
-            }
-
-            // Check if the contentlet is visible by a CMS Anonymous role
-            include = !this.permissionAPI.doesUserHavePermission(contentlet,
-                                PERMISSION_READ, null, true);
-
-            Logger.debug(this, "The uri: " + uri + ", for the site: " + host + ", language: " + languageId +
-                    ", with the identifier: " + identifier + " is included: " + include
-            );
-        }
-
-        return include;
-    } // checkFilePagePermission.
 
     private boolean isByPass (final HttpServletRequest        request,
                               final HttpSession               session) {
