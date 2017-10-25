@@ -5,13 +5,11 @@ import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
-
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.resolver.Criterion;
 import net.shibboleth.utilities.java.support.resolver.ResolverException;
 import net.shibboleth.utilities.java.support.security.RandomIdentifierGenerationStrategy;
-
 import org.joda.time.DateTime;
 import org.opensaml.core.criterion.EntityIdCriterion;
 import org.opensaml.core.xml.XMLObject;
@@ -43,6 +41,14 @@ import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.SignatureValidator;
 import org.w3c.dom.Element;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.namespace.QName;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -52,22 +58,8 @@ import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.xml.namespace.QName;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import static com.dotcms.plugin.saml.v3.DotSamlConstants.DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL;
 import static com.dotmarketing.util.UtilMethods.isSet;
@@ -925,6 +917,7 @@ public class SamlUtils {
 
         for (String fileField : filePathPropertyKeys) {
             //If field is missing we don't need to validate.
+            Logger.debug(SamlUtils.class, "Validating the field: " + fileField);
             if ( properties.getProperty(fileField) == null ) {
                 continue;
             }
@@ -942,7 +935,10 @@ public class SamlUtils {
                     }
                 } catch (URISyntaxException e){
                     Logger.debug(SamlUtils.class, "Problem reading file from URI: " + filePath, e);
-                    missingFiles.add(filePath);
+                    missingFiles.add(fileField +": " + filePath);
+                } catch (Exception e) {
+                    Logger.debug(SamlUtils.class, "Problem reading file from URI: " + filePath, e);
+                    missingFiles.add(fileField +": " + filePath + " (" +  e.getMessage() + ")");
                 }
             }
         }
@@ -960,9 +956,11 @@ public class SamlUtils {
                                                    final Set<String> keysRequired) {
 
         final Set<String> missingProperties = new HashSet<>(); // todo: make this immutable on 4.x
-        for (String s : keysRequired) {
-            if ( properties.getProperty(s) == null || properties.getProperty(s).trim().equals("") ) {
-                missingProperties.add(s);
+        for (String keyRequired : keysRequired) {
+
+            Logger.debug(SamlUtils.class, "Validating missing prop: " + keyRequired);
+            if ( properties.getProperty(keyRequired) == null || properties.getProperty(keyRequired).trim().equals("") ) {
+                missingProperties.add(keyRequired);
             }
         }
 

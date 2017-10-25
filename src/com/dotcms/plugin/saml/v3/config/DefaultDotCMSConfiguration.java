@@ -38,7 +38,7 @@ public class DefaultDotCMSConfiguration implements Configuration {
         final String metaDescriptorResourcePath =
                 this.getStringProperty(DotSamlConstants.DOTCMS_SAML_IDP_METADATA_PATH, null);
 
-        Logger.info(this, "For the sitename: " + siteName
+        Logger.debug(this, "For the sitename: " + siteName
                 + ", the metaDescriptorResourcePath is " + metaDescriptorResourcePath);
 
         this.metadataBean = (UtilMethods.isSet(metaDescriptorResourcePath))?
