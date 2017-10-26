@@ -377,14 +377,14 @@ public class SiteConfigurationParser implements Serializable {
 
         if (configurationToUse != null && !configurationToUse.isEmpty()) {
 
-            Logger.info(this, "Populating the configuration for the host: " + site);
+            Logger.debug(this, "Populating the configuration for the host: " + site);
             // save the configuration map for the host
             siteBean = this.getSiteBean(configurationToUse);
             final Configuration configuration =
                     this.createConfiguration(site.getHostname(), siteBean);
             configurationMap.put(site.getHostname(), configuration);
 
-            Logger.info(this, "Populated the site with the configuration: " + configuration +
+            Logger.debug(this, "Populated the site with the configuration: " + configuration +
                     ", for the host: " + site);
             //save the same map for each host alias
             this.hostService.getHostAlias(site).forEach(alias -> configurationMap.put(alias, configuration));

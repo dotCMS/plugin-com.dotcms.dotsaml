@@ -34,6 +34,11 @@ public class SamlSiteValidator {
         this.fieldsToValidateOnDisabled.add(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PASSWORD);
     }
 
+    private final Set<String> fileFieldsOnDisabled = new HashSet<>(); // todo: on 4.x immutable
+    {
+        this.fileFieldsOnDisabled.add(DotSamlConstants.DOTCMS_SAML_KEY_STORE_PATH);
+    }
+
     private final Set<String> fileFields = new HashSet<>(); // todo: on 4.x immutable
     {
         this.fileFields.add(DotSamlConstants.DOTCMS_SAML_IDP_METADATA_PATH);
