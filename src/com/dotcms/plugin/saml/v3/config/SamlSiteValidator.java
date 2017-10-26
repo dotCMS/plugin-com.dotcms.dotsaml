@@ -176,19 +176,27 @@ public class SamlSiteValidator {
         final StringBuilder error = new StringBuilder();
 
         if ( !missingFields.isEmpty() ) {
-            error.append("Missing Fields: ");
-            error.append(org.apache.commons.lang.StringUtils.join(missingFields, ','));
-            error.append("\n");
+            error.append("<h3>Missing Fields: </h3>");
+            error.append("<ul>");
+            missingFields.forEach(missingField -> error.append("<li>").append(missingField).append("</li>"));
+            //error.append(org.apache.commons.lang.StringUtils.join(missingFields, ','));
+            error.append("</ul>");
         }
 
         if ( !missingFiles.isEmpty() ) {
-            error.append("Can NOT open Files: ");
-            error.append(org.apache.commons.lang.StringUtils.join(missingFiles, ','));
-            error.append("\n");
+            error.append("<h3>Can NOT open Files: </h3>");
+            error.append("<ul>");
+            missingFiles.forEach(missingFile -> error.append("<li>").append(missingFile).append("</li>"));
+            //error.append(org.apache.commons.lang.StringUtils.join(missingFiles, ','));
+            error.append("</ul>");
         }
 
         if ( !keyStoreErrors.isEmpty() ) {
-            error.append(org.apache.commons.lang.StringUtils.join(keyStoreErrors, ','));
+            error.append("<h3>Key Store Errors: </h3>");
+            error.append("<ul>");
+            keyStoreErrors.forEach(keyStoreError -> error.append("<li>").append(keyStoreError).append("</li>"));
+            //error.append(org.apache.commons.lang.StringUtils.join(keyStoreErrors, ','));
+            error.append("</ul>");
         }
 
         Logger.debug(this, "Validation errors: " + error);
