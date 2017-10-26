@@ -173,37 +173,44 @@ public class SamlSiteValidator {
         final Set<String> keyStoreErrors = SamlUtils.validateKeyStore
                 (samlProperties);
 
-        final StringBuilder error = new StringBuilder();
+        final StringBuilder errorHtml = new StringBuilder();
+        final StringBuilder errorDebug = new StringBuilder();
 
         if ( !missingFields.isEmpty() ) {
-            error.append("<h3>Missing Fields: </h3>");
-            error.append("<ul>");
-            missingFields.forEach(missingField -> error.append("<li>").append(missingField).append("</li>"));
-            //error.append(org.apache.commons.lang.StringUtils.join(missingFields, ','));
-            error.append("</ul>");
+            errorHtml.append("<h3>Missing Fields: </h3>");
+            errorHtml.append("<ul>");
+            missingFields.forEach(missingField -> errorHtml.append("<li>").append(missingField).append("</li>"));
+            errorHtml.append("</ul>");
+
+            errorDebug.append("\nMissing Fields: \n");
+            errorDebug.append(org.apache.commons.lang.StringUtils.join(missingFields, ','));
         }
 
         if ( !missingFiles.isEmpty() ) {
-            error.append("<h3>Can NOT open Files: </h3>");
-            error.append("<ul>");
-            missingFiles.forEach(missingFile -> error.append("<li>").append(missingFile).append("</li>"));
-            //error.append(org.apache.commons.lang.StringUtils.join(missingFiles, ','));
-            error.append("</ul>");
+            errorHtml.append("<h3>Can NOT open Files: </h3>");
+            errorHtml.append("<ul>");
+            missingFiles.forEach(missingFile -> errorHtml.append("<li>").append(missingFile).append("</li>"));
+            errorHtml.append("</ul>");
+
+            errorDebug.append("\nCan NOT open Files: \n");
+            errorDebug.append(org.apache.commons.lang.StringUtils.join(missingFiles, ','));
         }
 
         if ( !keyStoreErrors.isEmpty() ) {
-            error.append("<h3>Key Store Errors: </h3>");
-            error.append("<ul>");
-            keyStoreErrors.forEach(keyStoreError -> error.append("<li>").append(keyStoreError).append("</li>"));
-            //error.append(org.apache.commons.lang.StringUtils.join(keyStoreErrors, ','));
-            error.append("</ul>");
+            errorHtml.append("<h3>Key Store Errors: </h3>");
+            errorHtml.append("<ul>");
+            keyStoreErrors.forEach(keyStoreError -> errorHtml.append("<li>").append(keyStoreError).append("</li>"));
+            errorHtml.append("</ul>");
+
+            errorDebug.append("\nKey Store Errors: \n");
+            errorDebug.append(org.apache.commons.lang.StringUtils.join(keyStoreErrors, ','));
         }
 
-        Logger.debug(this, "Validation errors: " + error);
-        //If error has any message, throw the Exception with it.
-        if ( UtilMethods.isSet(error.toString()) ) {
-            Logger.error(this, "Errors validating SAML Field config: " + error.toString());
-            throw new DotContentletValidationException(error.toString());
+        Logger.debug(this, "Validation errors: " + errorDebug);
+        //If errorHtml has any message, throw the Exception with it.
+        if ( UtilMethods.isSet(errorHtml.toString()) ) {
+            Logger.error(this, "Errors validating SAML Field config: " + errorDebug.toString());
+            throw new DotContentletValidationException(errorHtml.toString());
         }
     } // doValidationForEnableSite.
 
