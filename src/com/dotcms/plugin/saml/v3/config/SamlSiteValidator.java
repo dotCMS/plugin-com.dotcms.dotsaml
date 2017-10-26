@@ -138,7 +138,7 @@ public class SamlSiteValidator {
 
         Logger.debug(this, "Validation for disabled site: " + hostName);
         this.doValidationForSite(samlProperties,
-                this.fieldsToValidateOnDisabled, this.fileFields,
+                this.fieldsToValidateOnDisabled, this.fileFieldsOnDisabled,
                 hostName);
         Logger.debug(this, "The Validation for disabled site: " + hostName + ", is OK");
     }

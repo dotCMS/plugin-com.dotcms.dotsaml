@@ -490,22 +490,15 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
             try {
 
-                if (attributesBean.isAddRoles() ||
-                        configuration.getStringProperty(DOTCMS_SAML_OPTIONAL_USER_ROLE, null) != null) {
-                    // remove previous roles
+                // remove previous roles
+                if (!DOTCMS_SAML_BUILD_ROLES_STATIC_ADD_VALUE.equalsIgnoreCase(buildRolesStrategy)) {
+
                     Logger.info(this, "Removing user previous roles");
-
-                    if (!DOTCMS_SAML_BUILD_ROLES_STATIC_ADD_VALUE.equalsIgnoreCase(buildRolesStrategy)) {
-
-                        this.roleAPI.removeAllRolesFromUser(user);
-                    } else {
-
-                        Logger.info(this,
-                                "The buildRoles Strategy is: 'staticadd', so didn't remove any dotCMS existing role");
-                    }
+                    this.roleAPI.removeAllRolesFromUser(user);
                 } else {
 
-                    Logger.debug(this, "No roles will be removed");
+                    Logger.info(this,
+                            "The buildRoles Strategy is: 'staticadd', so didn't remove any dotCMS existing role");
                 }
 
                 this.handleRoles(user, attributesBean, configuration, buildRolesStrategy);
