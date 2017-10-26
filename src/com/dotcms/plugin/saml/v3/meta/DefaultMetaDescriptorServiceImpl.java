@@ -306,7 +306,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
                     encryptedKeyDescriptor.setKeyInfo(getKeyInfo(credential));
                     spssoDescriptor.getKeyDescriptors().add(encryptedKeyDescriptor);
                 }
-            } catch (org.opensaml.xml.security.SecurityException e) {
+            } catch (Exception e) {
 
                 Logger.error(this, "Error generating credentials", e);
                 throw new DotSamlException(e.getMessage(), e);
