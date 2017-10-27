@@ -351,7 +351,7 @@ public class SamlAccessFilter implements Filter {
                             // this is safe, just to make a redirection when the user get's logged.
                             originalRequest;
 
-                    Logger.warn(this.getClass(),
+                    Logger.debug(this.getClass(),
                             "Doing Saml Login Redirection when request: " +
                                     redirectAfterLogin);
 
@@ -663,7 +663,7 @@ public class SamlAccessFilter implements Filter {
 
                 if (null != session && null != user.getUserId()) {
                     // this is what the PortalRequestProcessor needs to check the login.
-                    Logger.info(this, "Setting the user id on the session: " + user.getUserId());
+                    Logger.debug(this, "Setting the user id on the session: " + user.getUserId());
 
                     final String uri = session.getAttribute(ORIGINAL_REQUEST) != null ?
                             (String)session.getAttribute(ORIGINAL_REQUEST) : request.getRequestURI();

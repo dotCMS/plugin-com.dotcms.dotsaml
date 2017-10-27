@@ -40,7 +40,7 @@ public class SamlHostPostHook extends ContentletAPIPostHookAbstractImp {
 
         try {
 
-            Logger.info(this, "Validating Saml settings for the host with inode: " + currentContentlet.getInode());
+            Logger.info(this, "Validating Saml settings for the site: " + host.getHostname());
 
             //Validate the configuration.
             final String hostSAMLAuthentication  = (String)host.getMap()
@@ -56,7 +56,7 @@ public class SamlHostPostHook extends ContentletAPIPostHookAbstractImp {
                 this.siteConfigurationParser.validateConfigurationByHost(host);
             }
 
-            Logger.info(this, "DONE Validating Saml settings for the host with inode: " + currentContentlet.getInode());
+            Logger.info(this, "DONE Validating Saml settings for the site: " + host.getHostname());
         } catch (DotDataException | DotSecurityException e) {
             Logger.error(this, "Error Validating Saml configuration", e);
         }

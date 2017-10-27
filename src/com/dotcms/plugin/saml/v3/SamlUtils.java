@@ -568,7 +568,7 @@ public class SamlUtils {
                 Logger.debug(SamlUtils.class, "Done Profile Validation");
             } else {
 
-                Logger.info(SamlUtils.class, "Skipping the Verify Signature Profile check");
+                Logger.debug(SamlUtils.class, "Skipping the Verify Signature Profile check");
             }
 
             // Ask on the config if the app wants signature validator
@@ -587,10 +587,10 @@ public class SamlUtils {
                 }
             } else {
 
-                Logger.info(SamlUtils.class, "Skipping the Verify Signature Profile check");
+                Logger.debug(SamlUtils.class, "Skipping the Verify Signature Profile check");
             }
 
-            Logger.info(SamlUtils.class, "SAML Assertion signature verified");
+            Logger.debug(SamlUtils.class, "SAML Assertion signature verified");
 
         } catch (SignatureException e) {
 
