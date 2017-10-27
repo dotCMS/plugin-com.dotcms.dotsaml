@@ -93,14 +93,14 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 
         if (configuration.isVerifyAssertionSignatureNeeded()) {
 
-            Logger.info(this, "Doing the verification assertion signature.");
+            Logger.debug(this, "Doing the verification assertion signature.");
 
             verifyAssertionSignature(assertion, configuration);
 
             this.verifyStatus (samlResponse);
         } else {
 
-            Logger.info(this, "The verification assertion signature and status code was skipped.");
+            Logger.debug(this, "The verification assertion signature and status code was skipped.");
         }
 
         Logger.debug(this, "Decrypted Assertion: " + toXMLObjectString(assertion));

@@ -285,6 +285,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         validateAttributes(assertion);
 
+        // todo: make a validation config vrs assertion and warn messages.
+
         final String nameId = assertion.getSubject().getNameID().getValue();
         Logger.debug(this, "Resolving attributes - Name ID : " + assertion.getSubject().getNameID().getValue());
         attrBuilder.nameID(assertion.getSubject().getNameID());
@@ -338,6 +340,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             		attrBuilder.addRoles(true).roles(attribute);
             		Logger.debug(this, "Resolving attributes - roles : " + attribute);
         		} else {
+
+        		    // todo: logger.info and apply null value
         			Logger.debug(this, "Attribute did not match any user property");
         		}
         	});
@@ -468,7 +472,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             user.setLastName (attributesBean.getLastName());
 
             this.userAPI.save(user, systemUser, false);
-            Logger.info(this, "User updated. email: " + attributesBean.getEmail());
+            Logger.debug(this, "User updated. email: " + attributesBean.getEmail());
         } catch (Exception e) {
 
             Logger.error(this, "Error creating user:" + e.getMessage(), e);
@@ -493,7 +497,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                 // remove previous roles
                 if (!DOTCMS_SAML_BUILD_ROLES_STATIC_ADD_VALUE.equalsIgnoreCase(buildRolesStrategy)) {
 
-                    Logger.info(this, "Removing user previous roles");
+                    Logger.debug(this, "Removing user previous roles");
                     this.roleAPI.removeAllRolesFromUser(user);
                 } else {
 
@@ -573,7 +577,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                         // when there are role filters and the current roles is not
                         // a valid role, we have to filter it.
 
-                        Logger.info(this, "Skipping the role: " + role);
+                        Logger.debug(this, "Skipping the role: " + role);
                         continue;
                     } else {
 
@@ -610,15 +614,15 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             if (!this.roleAPI.doesUserHaveRole(user, role)) {
 
                 this.roleAPI.addRoleToUser(role, user);
-                Logger.info(this, "Added role: " + role.getName() +
+                Logger.debug(this, "Added role: " + role.getName() +
                         " to user:" + user.getEmailAddress());
             } else {
-                Logger.info(this, "The user: " + user.getEmailAddress() +
+                Logger.debug(this, "The user: " + user.getEmailAddress() +
                         " already has the role: " + role + ", so not added");
             }
         } else {
 
-            Logger.info(this, "The role: " + roleKey
+            Logger.debug(this, "The role: " + roleKey
                     + ", does not exists on dotCMS, not added to the user.");
         }
     } // addRole.
@@ -738,7 +742,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             encoder.initialize();
 
             Logger.debug(this, "XMLObject: " + toXMLObjectString(xmlObject));
-            Logger.info(this, "Redirecting to IDP");
+            Logger.debug(this, "Redirecting to IDP");
 
             encoder.encode();
         } catch (ComponentInitializationException | MessageEncodingException e) {
