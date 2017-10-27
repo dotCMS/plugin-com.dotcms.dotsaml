@@ -3,6 +3,7 @@ package com.dotcms.plugin.saml.v3;
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.exception.AttributesNotFoundException;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
+import com.dotcms.plugin.saml.v3.exception.NotNullEmailAllowedException;
 import com.dotcms.plugin.saml.v3.exception.SamlUnauthorizedException;
 import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandler;
 import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandlerFactory;
@@ -268,18 +269,20 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     // resolve the attributes from the assertion resolved from the OpenSaml artifact resolver via
     protected AttributesBean resolveAttributes (final Assertion assertion, final Configuration configuration) throws AttributesNotFoundException {
 
-        final String emailField       = configuration.getStringProperty
+        final String emailField               = configuration.getStringProperty
                 (DOT_SAML_EMAIL_ATTRIBUTE, "mail");
-        final String firstNameField   = configuration.getStringProperty
+        final String firstNameField           = configuration.getStringProperty
                 (DOT_SAML_FIRSTNAME_ATTRIBUTE, "givenName");
-        final String lastNameField    = configuration.getStringProperty
+        final String lastNameField            = configuration.getStringProperty
                 (DOT_SAML_LASTNAME_ATTRIBUTE, "sn");
-        final String rolesField       = configuration.getStringProperty
+        final String rolesField               = configuration.getStringProperty
                 (DOT_SAML_ROLES_ATTRIBUTE, "authorizations");
-        final String firstNameForNullValue = configuration.getStringProperty
+        final String firstNameForNullValue    = configuration.getStringProperty
                 (DOT_SAML_FIRSTNAME_ATTRIBUTE_NULL_VALUE, null);
-        final String lastNameForNullValue = configuration.getStringProperty
+        final String lastNameForNullValue     = configuration.getStringProperty
                 (DOT_SAML_LASTNAME_ATTRIBUTE_NULL_VALUE, null);
+        final boolean allowNullEmail          = configuration.getBooleanProperty
+                (DOT_SAML_EMAIL_ATTRIBUTE_ALLOW_NULL, true);
 
         final String customConfiguration =
                 new StringBuilder(DOT_SAML_EMAIL_ATTRIBUTE).append("=").append(emailField).append(",")
@@ -310,7 +313,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         		if ( (attribute.getName() != null && attribute.getName().equals(emailField)) 
         				|| (attribute.getFriendlyName() != null && attribute.getFriendlyName().equals(emailField)) ) {
 
-                    this.resolveEmail(emailField, attrBuilder, attribute, nameId);
+                    this.resolveEmail(emailField, attrBuilder, attribute, nameId, allowNullEmail);
         		} else if ( (attribute.getName() != null && attribute.getName().equals(lastNameField))
         				|| (attribute.getFriendlyName() != null && attribute.getFriendlyName().equals(lastNameField)) ) {
 
@@ -357,18 +360,20 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         
 
         return this.doubleCheckAttributes (attrBuilder.build(), firstNameField,
-                firstNameForNullValue, lastNameField, lastNameForNullValue);
+                firstNameForNullValue, lastNameField, lastNameForNullValue, allowNullEmail);
     } // resolveAttributes.
 
     private AttributesBean doubleCheckAttributes(final AttributesBean originalAttributes,
                                                  final String firstNameField,
                                                  final String firstNameForNullValue,
                                                  final String lastNameField,
-                                                 final String lastNameForNullValue) {
+                                                 final String lastNameForNullValue,
+                                                 final boolean allowNullEmail) {
 
         return (this.anyAttributeNullOrBlank (originalAttributes))?
             this.checkDefaultValues (originalAttributes, firstNameField,
-                    firstNameForNullValue, lastNameField, lastNameForNullValue): originalAttributes;
+                    firstNameForNullValue, lastNameField, lastNameForNullValue,
+                    allowNullEmail): originalAttributes;
     }
 
     private boolean anyAttributeNullOrBlank(final AttributesBean originalAttributes) {
@@ -381,7 +386,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                                               final String firstNameField,
                                               final String firstNameForNullValue,
                                               final String lastNameField,
-                                              final String lastNameForNullValue) {
+                                              final String lastNameForNullValue,
+                                              final boolean allowNullEmail) {
 
         final AttributesBean.Builder attrBuilder = new AttributesBean.Builder();
 
@@ -391,7 +397,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         if (!UtilMethods.isSet(originalAttributes.getEmail())) {
 
-            attrBuilder.email(this.createNoReplyEmail(originalAttributes.getNameID().getValue()));
+            attrBuilder.email(this.createNoReplyEmail(originalAttributes.getNameID().getValue(), allowNullEmail));
         } else {
             attrBuilder.email(originalAttributes.getEmail());
         }
@@ -432,7 +438,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     private void resolveEmail(final String                  emailField,
                               final AttributesBean.Builder  attributesBuilder,
                               final Attribute               attribute,
-                              final String                  nameId) {
+                              final String                  nameId,
+                              final boolean                 allowNullEmail) {
 
 
         Logger.debug(this, "Resolving attribute - Email : " + emailField);
@@ -441,14 +448,19 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                 .getDOM().getFirstChild().getNodeValue();
 
         emailValue        = (!UtilMethods.isSet(emailValue))?
-                createNoReplyEmail(nameId):emailValue;
+                createNoReplyEmail(nameId, allowNullEmail):emailValue;
 
         attributesBuilder.email(emailValue);
 
         Logger.debug(this, "Resolved attribute - Email : " + attributesBuilder.email);
     } // resolveEmail.
 
-    private String createNoReplyEmail (final String nameId) {
+    private String createNoReplyEmail (final String nameId, final boolean allowNullEmail) {
+
+        if (!allowNullEmail) {
+
+            throw new NotNullEmailAllowedException("The email is null and it is not allowed");
+        }
 
         Logger.info(this, "The userid : " + nameId
                 + " has the email attribute null, creating a new one");

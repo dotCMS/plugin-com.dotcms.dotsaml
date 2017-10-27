@@ -1,3 +1,4 @@
+
 # plugin-dotcms-openSAML3
 
 This plugin allows to modify the authentication process in DOTCMS
@@ -195,7 +196,13 @@ Valid values (default "all"):
 
 **attribute.email.name**
 
+
 By default, "mail" is the field used to fetch the user email from the Idp response.
+
+**attribute.email.allownull**
+
+Boolean value to allows to build a dummy email based on the NameID from the Idp when the email attribute from the IDP is not present.
+True will apply the email generation, false will throw 401 error.
 
 **attribute.firstname.name**
 
