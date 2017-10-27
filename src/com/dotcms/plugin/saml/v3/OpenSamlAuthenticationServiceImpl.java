@@ -281,11 +281,15 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         final String lastNameForNullValue = configuration.getStringProperty
                 (DOT_SAML_LASTNAME_ATTRIBUTE_NULL_VALUE, null);
 
+        final String customConfiguration =
+                new StringBuilder(DOT_SAML_EMAIL_ATTRIBUTE).append("=").append(emailField).append(",")
+                .append(DOT_SAML_FIRSTNAME_ATTRIBUTE).append("=").append(firstNameField).append(",")
+                .append(DOT_SAML_LASTNAME_ATTRIBUTE).append("=").append(lastNameField).append(",")
+                .append(DOT_SAML_ROLES_ATTRIBUTE).append("=").append(rolesField).toString();
+
         final AttributesBean.Builder attrBuilder = new AttributesBean.Builder();
 
         validateAttributes(assertion);
-
-        // todo: make a validation config vrs assertion and warn messages.
 
         final String nameId = assertion.getSubject().getNameID().getValue();
         Logger.debug(this, "Resolving attributes - Name ID : " + assertion.getSubject().getNameID().getValue());
@@ -314,7 +318,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
         			final String lastName = (UtilMethods.isSet(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue()))?
                             attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue():
-                            checkDefaultValue(lastNameForNullValue, lastNameField + " is null and the default is null too");
+                            checkDefaultValue(lastNameForNullValue, lastNameField + " attribute is null",
+                                    lastNameField + " is null and the default is null too");
 
         			attrBuilder.lastName(lastName);
 
@@ -327,7 +332,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
                     final String firstName = (UtilMethods.isSet(attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue()))?
                             attribute.getAttributeValues().get(0).getDOM().getFirstChild().getNodeValue():
-                            checkDefaultValue(firstNameForNullValue, firstNameField + " is null and the default is null too");
+                            checkDefaultValue(firstNameForNullValue, firstNameField + " attribute is null",
+                                    firstNameField + " is null and the default is null too");
 
         			attrBuilder.firstName(firstName);
 
@@ -341,23 +347,84 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             		Logger.debug(this, "Resolving attributes - roles : " + attribute);
         		} else {
 
-        		    // todo: logger.info and apply null value
-        			Logger.debug(this, "Attribute did not match any user property");
+        		    final String attrName = attribute.getName();
+        			Logger.warn(this, attribute.getName() +
+                            " attribute did not match any user property on the configuration: " +
+                            customConfiguration);
         		}
         	});
         });
         
 
-        return attrBuilder.build();
+        return this.doubleCheckAttributes (attrBuilder.build(), firstNameField,
+                firstNameForNullValue, lastNameField, lastNameForNullValue);
     } // resolveAttributes.
 
+    private AttributesBean doubleCheckAttributes(final AttributesBean originalAttributes,
+                                                 final String firstNameField,
+                                                 final String firstNameForNullValue,
+                                                 final String lastNameField,
+                                                 final String lastNameForNullValue) {
+
+        return (this.anyAttributeNullOrBlank (originalAttributes))?
+            this.checkDefaultValues (originalAttributes, firstNameField,
+                    firstNameForNullValue, lastNameField, lastNameForNullValue): originalAttributes;
+    }
+
+    private boolean anyAttributeNullOrBlank(final AttributesBean originalAttributes) {
+        return !UtilMethods.isSet(originalAttributes.getEmail()) ||
+                !UtilMethods.isSet(originalAttributes.getFirstName()) ||
+                !UtilMethods.isSet(originalAttributes.getLastName());
+    }
+
+    private AttributesBean checkDefaultValues(final AttributesBean originalAttributes,
+                                              final String firstNameField,
+                                              final String firstNameForNullValue,
+                                              final String lastNameField,
+                                              final String lastNameForNullValue) {
+
+        final AttributesBean.Builder attrBuilder = new AttributesBean.Builder();
+
+        attrBuilder.nameID(originalAttributes.getNameID());
+        attrBuilder.roles(originalAttributes.getRoles());
+        attrBuilder.addRoles(originalAttributes.isAddRoles());
+
+        if (!UtilMethods.isSet(originalAttributes.getEmail())) {
+
+            attrBuilder.email(this.createNoReplyEmail(originalAttributes.getNameID().getValue()));
+        } else {
+            attrBuilder.email(originalAttributes.getEmail());
+        }
+
+        if (!UtilMethods.isSet(originalAttributes.getFirstName())) {
+
+            attrBuilder.firstName(checkDefaultValue(firstNameForNullValue, firstNameField + " attribute is null",
+                    firstNameField + " is null and the default is null too"));
+        } else {
+            attrBuilder.firstName(originalAttributes.getFirstName());
+        }
+
+        if (!UtilMethods.isSet(originalAttributes.getLastName())) {
+
+            attrBuilder.lastName(checkDefaultValue(lastNameForNullValue, lastNameField + " attribute is null",
+                    lastNameField + " is null and the default is null too"));
+        } else {
+            attrBuilder.lastName(originalAttributes.getLastName());
+        }
+
+        return attrBuilder.build();
+    }
+
     private String checkDefaultValue(final String lastNameForNullValue,
-                                     final String message) {
+                                     final String logMessage,
+                                     final String exceptionMessage) {
 
         if (!UtilMethods.isSet(lastNameForNullValue)) {
 
-            throw new SamlUnauthorizedException(message);
+            throw new SamlUnauthorizedException(exceptionMessage);
         }
+
+        Logger.info(this, logMessage);
 
         return lastNameForNullValue;
     }
@@ -366,6 +433,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                               final AttributesBean.Builder  attributesBuilder,
                               final Attribute               attribute,
                               final String                  nameId) {
+
 
         Logger.debug(this, "Resolving attribute - Email : " + emailField);
 
@@ -382,8 +450,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
     private String createNoReplyEmail (final String nameId) {
 
-        Logger.debug(this, "The userid : " + nameId
-                + " has the email null, creating a new one");
+        Logger.info(this, "The userid : " + nameId
+                + " has the email attribute null, creating a new one");
 
         final String emailValue =
                 new StringBuilder(NO_REPLY).append(sanitizeNameId(nameId))
