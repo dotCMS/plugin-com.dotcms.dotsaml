@@ -154,6 +154,12 @@ public final class DotSamlConstants {
     public static final String DOT_SAML_EMAIL_ATTRIBUTE = "attribute.email.name";
 
     /**
+     * Boolean value to allow to build a dummy email based on the NameID from the Idp when the email attribute from the IDP is not present.
+     * True will apply the email generation, false will throw 401 error.
+     */
+    public static final String DOT_SAML_EMAIL_ATTRIBUTE_ALLOW_NULL = "attribute.email.allownull";
+
+    /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_NAME)
      * By default dotcms use: "givenName", but you can override it just adding the first name attribute name you want.
      * "givenName" will be the expected field name from the Response comming from the OpenSaml post call.

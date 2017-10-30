@@ -176,6 +176,7 @@ public class SamlSiteValidator {
         final StringBuilder errorHtml = new StringBuilder();
         final StringBuilder errorDebug = new StringBuilder();
 
+
         if ( !missingFields.isEmpty() ) {
             errorHtml.append("<h3>Missing Fields: </h3>");
             errorHtml.append("<ul>");
@@ -206,6 +207,25 @@ public class SamlSiteValidator {
             errorDebug.append(org.apache.commons.lang.StringUtils.join(keyStoreErrors, ','));
         }
 
+        // DOTCMS_SAML_BUILD_ROLES
+        final String buildRoles = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES);
+        Logger.debug(this, "Checking build.roles: " + buildRoles);
+
+        if (UtilMethods.isSet(buildRoles) && !checkBuildRoles (buildRoles)) {
+
+            errorHtml.append("<h3>Build Roles: </h3>");
+            errorHtml.append("<i>Invalid value for: " + DotSamlConstants.DOTCMS_SAML_BUILD_ROLES + ", please use a valid one:</i>");
+            errorHtml.append("<ul>");
+            errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_ALL_VALUE).append("</li>");
+            errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_IDP_VALUE).append("</li>");
+            errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_STATIC_ONLY_VALUE).append("</li>");
+            errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_STATIC_ADD_VALUE).append("</li>");
+            errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_NONE_VALUE).append("</li>");
+            errorHtml.append("</ul>");
+
+            errorDebug.append("\nBuild Roles Errors: not valid value:" + buildRoles +" \n");
+        }
+
         Logger.debug(this, "Validation errors: " + errorDebug);
         //If errorHtml has any message, throw the Exception with it.
         if ( UtilMethods.isSet(errorHtml.toString()) ) {
@@ -213,5 +233,14 @@ public class SamlSiteValidator {
             throw new DotContentletValidationException(errorHtml.toString());
         }
     } // doValidationForEnableSite.
+
+    public static boolean checkBuildRoles(final String buildRolesProperty) {
+
+        return DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_ALL_VALUE.equalsIgnoreCase(buildRolesProperty) ||
+               DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_IDP_VALUE.equalsIgnoreCase(buildRolesProperty) ||
+               DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_STATIC_ONLY_VALUE.equalsIgnoreCase(buildRolesProperty) ||
+               DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_STATIC_ADD_VALUE.equalsIgnoreCase(buildRolesProperty) ||
+               DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_NONE_VALUE.equalsIgnoreCase(buildRolesProperty);
+    }
 
 } // E:O:F:SamlSiteValidator.
