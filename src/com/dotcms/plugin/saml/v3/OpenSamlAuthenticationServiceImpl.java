@@ -569,13 +569,22 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                 (DOTCMS_SAML_BUILD_ROLES, DOTCMS_SAML_BUILD_ROLES_ALL_VALUE);
 
         return SamlSiteValidator.checkBuildRoles(buildRolesStrategy)?
+                buildRolesStrategy: this.getDefaultBuildRoles(buildRolesStrategy);
+    }
+
+    private String getDefaultBuildRoles (final String invalidBuildRolesStrategy) {
+
+        Logger.info(this, "The build.roles: " + invalidBuildRolesStrategy
+                + ", is invalid; using as default: " + DOTCMS_SAML_BUILD_ROLES_ALL_VALUE
+        );
+
+        return DOTCMS_SAML_BUILD_ROLES_ALL_VALUE;
     }
 
     private void addRoles(final User user,
                           final AttributesBean attributesBean, final Configuration configuration) {
 
-        final String buildRolesStrategy = configuration.getStringProperty
-                (DOTCMS_SAML_BUILD_ROLES, DOTCMS_SAML_BUILD_ROLES_ALL_VALUE);
+        final String buildRolesStrategy = this.getBuildRoles(configuration);
 
         Logger.debug(this, "Using the build roles Strategy: " + buildRolesStrategy);
 
@@ -779,7 +788,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
             user.setPasswordEncrypted(true);
 
             this.userAPI.save(user, systemUser, false);
-            Logger.info(this, "new user created. email: " + attributesBean.getEmail());
+            Logger.debug(this, "new user created. email: " + attributesBean.getEmail());
         } catch (Exception e) {
 
             Logger.error(this, "Error creating user:" + e.getMessage(), e);
