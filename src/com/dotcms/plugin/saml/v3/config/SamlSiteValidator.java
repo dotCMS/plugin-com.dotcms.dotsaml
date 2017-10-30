@@ -208,23 +208,9 @@ public class SamlSiteValidator {
         }
 
         // DOTCMS_SAML_BUILD_ROLES
-        final String buildRoles = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES);
-        Logger.debug(this, "Checking build.roles: " + buildRoles);
+        this.validateBuildRoles(samlProperties, errorHtml, errorDebug);
 
-        if (UtilMethods.isSet(buildRoles) && !checkBuildRoles (buildRoles)) {
 
-            errorHtml.append("<h3>Build Roles: </h3>");
-            errorHtml.append("<i>Invalid value for: " + DotSamlConstants.DOTCMS_SAML_BUILD_ROLES + ", please use a valid one:</i>");
-            errorHtml.append("<ul>");
-            errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_ALL_VALUE).append("</li>");
-            errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_IDP_VALUE).append("</li>");
-            errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_STATIC_ONLY_VALUE).append("</li>");
-            errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_STATIC_ADD_VALUE).append("</li>");
-            errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_NONE_VALUE).append("</li>");
-            errorHtml.append("</ul>");
-
-            errorDebug.append("\nBuild Roles Errors: not valid value:" + buildRoles +" \n");
-        }
 
         Logger.debug(this, "Validation errors: " + errorDebug);
         //If errorHtml has any message, throw the Exception with it.
@@ -233,6 +219,53 @@ public class SamlSiteValidator {
             throw new DotContentletValidationException(errorHtml.toString());
         }
     } // doValidationForEnableSite.
+
+    private void validateBuildRoles(final Properties samlProperties,
+                                    final StringBuilder errorHtml,
+                                    final StringBuilder errorDebug) {
+
+        final String buildRoles = samlProperties.getProperty(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES);
+        Logger.debug(this, "Checking build.roles: " + buildRoles);
+
+        if (UtilMethods.isSet(buildRoles)) {
+            if (!checkBuildRoles(buildRoles)) {
+
+                errorHtml.append("<h3>Build Roles: </h3>");
+                errorHtml.append("<i>Invalid value for: " + DotSamlConstants.DOTCMS_SAML_BUILD_ROLES + ", please use a valid one:</i>");
+                errorHtml.append("<ul>");
+                errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_ALL_VALUE).append("</li>");
+                errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_IDP_VALUE).append("</li>");
+                errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_STATIC_ONLY_VALUE).append("</li>");
+                errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_STATIC_ADD_VALUE).append("</li>");
+                errorHtml.append("<li>").append(DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_NONE_VALUE).append("</li>");
+                errorHtml.append("</ul>");
+
+                errorDebug.append("\nBuild Roles Errors: not valid value:" + buildRoles + " \n");
+            } else {
+                // if a valid role
+                this.validateStaticOnly(buildRoles, samlProperties, errorHtml, errorDebug);
+            }
+        }
+    } // validateBuildRoles.
+
+    private void validateStaticOnly(final String buildRoles,
+                                    final Properties samlProperties,
+                                    final StringBuilder errorHtml,
+                                    final StringBuilder errorDebug) {
+
+        final String roleExtra = samlProperties.getProperty
+                (DotSamlConstants.DOTCMS_SAML_OPTIONAL_USER_ROLE);
+
+        if (DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_STATIC_ONLY_VALUE
+                .equalsIgnoreCase(buildRoles) && !UtilMethods.isSet(roleExtra)) {
+
+            errorHtml.append("<h3>Invalid Static Only Build Role: </h3>");
+            errorHtml.append("<p>If the Build role is: " + DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_STATIC_ONLY_VALUE);
+            errorHtml.append(", the " + DotSamlConstants.DOTCMS_SAML_OPTIONAL_USER_ROLE + " must be set");
+
+            errorDebug.append("\nBuild Roles Errors: On staticonly, role.extra must be set \n");
+        }
+    } // validateStaticOnly.
 
     public static boolean checkBuildRoles(final String buildRolesProperty) {
 
