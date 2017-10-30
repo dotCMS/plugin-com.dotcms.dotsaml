@@ -1,6 +1,7 @@
 package com.dotcms.plugin.saml.v3;
 
 import com.dotcms.plugin.saml.v3.config.Configuration;
+import com.dotcms.plugin.saml.v3.config.SamlSiteValidator;
 import com.dotcms.plugin.saml.v3.exception.AttributesNotFoundException;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.exception.NotNullEmailAllowedException;
@@ -536,7 +537,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         } else {
 
             Logger.info(this, "The user " + user.getEmailAddress() +
-                            " is not active");
+                            " is not active, not roles added");
         }
 
         return user;
@@ -562,6 +563,14 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
         return user;
     }
 
+    private String getBuildRoles (final Configuration configuration) {
+
+        final String buildRolesStrategy = configuration.getStringProperty
+                (DOTCMS_SAML_BUILD_ROLES, DOTCMS_SAML_BUILD_ROLES_ALL_VALUE);
+
+        return SamlSiteValidator.checkBuildRoles(buildRolesStrategy)?
+    }
+
     private void addRoles(final User user,
                           final AttributesBean attributesBean, final Configuration configuration) {
 
@@ -581,7 +590,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                     this.roleAPI.removeAllRolesFromUser(user);
                 } else {
 
-                    Logger.info(this,
+                    Logger.debug(this,
                             "The buildRoles Strategy is: 'staticadd', so didn't remove any dotCMS existing role");
                 }
 
