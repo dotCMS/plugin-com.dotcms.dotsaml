@@ -300,7 +300,7 @@ public class SamlAccessFilter implements Filter {
 
         if (this.isByPass(request, session)) {
 
-            Logger.info(this, "Using SAML by pass");
+            Logger.debug(this, "Using SAML by pass");
             chain.doFilter(req, res);
             return;
         }

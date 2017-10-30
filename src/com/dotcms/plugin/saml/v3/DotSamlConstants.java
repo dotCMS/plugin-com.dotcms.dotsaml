@@ -398,9 +398,9 @@ public final class DotSamlConstants {
 
     /**
      * Optional key set on host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_NAME)
-     * Role to be assigned to a logged user besides the default DOTCMS_SAML_USER_ROLE
+     * Role to be assigned to a logged user besides the default SAML User
      */
-    public static final String DOTCMS_SAML_OPTIONAL_USER_ROLE = "saml_user_role";
+    public static final String DOTCMS_SAML_OPTIONAL_USER_ROLE = "role.extra";
 
     /**
      * Optional key to configure the strategy to sync the roles from IDP to DOTCMS
