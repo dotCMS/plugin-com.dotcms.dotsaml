@@ -464,4 +464,9 @@ public final class DotSamlConstants {
      */
     public static final String SCHEDULE_UPDATER_TASK_DELAY_SECONDS = "schedule.updater.task.delay";
 
+    /**
+     * By default any query string included on the endpoints Locations from the IDP metadata will be removed in the moment to redirect to the IDP endpoint.
+     * However you can set this on false in order to keep any query string parameter on the IDP metadata
+     */
+    public static final String  DOTCMS_SAML_CLEAR_LOCATION_QUERY_PARAMS = "location.cleanqueryparams";
 } // E:O:F:DotSamlConstants.
