@@ -98,7 +98,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                 getIdentityProviderDestinationEndpoint(configuration));
 
         this.setSignatureSigningParams(context, configuration);
-        this.doRedirect(context, response, authnRequest);
+        this.doRedirect(context, response, authnRequest, configuration);
     } // authentication.
 
 
@@ -123,7 +123,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
                 getIdentityProviderSLODestinationEndpoint(configuration));
 
         this.setSignatureSigningParams(context, configuration);
-        this.doRedirect(context, response, logoutRequest);
+        this.doRedirect(context, response, logoutRequest, configuration);
     } // logout.
 
     /**
@@ -825,14 +825,16 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
     // this makes the redirect to the IdP
     private void doRedirect (final MessageContext context,
                              final HttpServletResponse response,
-                             final XMLObject xmlObject) {
+                             final XMLObject xmlObject,
+                             final Configuration configuration) {
 
         final HTTPRedirectDeflateEncoder encoder;
-
+        final boolean clearQueryParams = configuration.getBooleanProperty
+                (DotSamlConstants.DOTCMS_SAML_CLEAR_LOCATION_QUERY_PARAMS, true);
         try {
 
             encoder =
-                    new HTTPRedirectDeflateEncoder();
+                    new DotHTTPRedirectDeflateEncoder(clearQueryParams);
 
             encoder.setMessageContext(context);
             encoder.setHttpServletResponse(response);
