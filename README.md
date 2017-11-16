@@ -6,7 +6,7 @@ frontend, backend or both.
 
 The plugin will add the user in dotcms if the user doesn't exist
 and for every user logging from SAML the ROLEs will be reassigned if the roles 
-are sent by the SAML response message. In addition, a system role will be assigned to the user (*SAML User* role), as well as any other role defined in the configuration (for further information, refer to *saml_user_role* usage in the [Configuration](#configuration) section)
+are sent by the SAML response message. In addition, a system role will be assigned to the user (*SAML User* role), as well as any other role defined in the configuration (for further information, refer to *role.extra* usage in the [Configuration](#configuration) section)
 
 The SAML Response should always send the user email, firstname and
 lastname. The roles are optional.
@@ -116,7 +116,7 @@ URL used by the Idp (the Shibboleth server) to redirect to dotCMS when the logou
 If this value is unset, a default endpoint will be created using the *service.provider.issuer*/dotsaml/logout
 
 
-**saml_user_role**
+**role.extra**
 Custom role, set to the logged user during authentication process. This property is optional, however, in case to be included, this role must exist in dotCMS with the proper permissions (at least to Grant Users), otherwise will be ignored.
 
 **policy.allowcreate**
@@ -187,10 +187,10 @@ Depending on your Identity Providers on the IdP, the roles may be returned on th
 
 Optional key to configure the roles strategy to sync them from IDP to DOTCMS
 Valid values (default "all"):
-* "all": Removes all user roles from DOTCMS; adds the roles to DOTCMS from IdP and saml_user_role (if set)
+* "all": Removes all user roles from DOTCMS; adds the roles to DOTCMS from IdP and role.extra (if set)
 * "idp": Removes all user roles and adds the roles to DOTCMS from IdP
-* "staticonly": Removes all user roles, adds roles from saml_user_role (if set) to DOTCMS. Ignore roles from IdP.
-* "staticadd": Do not alter existing user roles, adds the roles from saml_user_role (if set) to DOTCMS. Ignore roles from IdP.
+* "staticonly": Removes all user roles, adds roles from role.extra (if set) to DOTCMS. Ignore roles from IdP.
+* "staticadd": Do not alter existing user roles, adds the roles from role.extra (if set) to DOTCMS. Ignore roles from IdP.
 * "none": Do not alter any user roles on DOTCMS     
 
 **attribute.email.name**
