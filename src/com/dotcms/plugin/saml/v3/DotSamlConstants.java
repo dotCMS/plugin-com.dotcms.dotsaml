@@ -316,7 +316,7 @@ public final class DotSamlConstants {
      */
     public static final String
         DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH =
-        "sevice.provider.custom.metadata.path";
+        "service.provider.custom.metadata.path";
 
     /**
      * Default value "/dotsaml3sp/metadata.xml" for the {@link DotSamlConstants}.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH
