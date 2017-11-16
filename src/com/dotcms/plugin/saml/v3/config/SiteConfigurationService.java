@@ -16,6 +16,11 @@ public class SiteConfigurationService implements Serializable {
     private final Map<String, Configuration> configurationBySiteMap;
     private final Map<String, Configuration> disableConfigurationBySiteMap;
 
+    public SiteConfigurationService() {
+
+        this(new ConcurrentHashMap<>());
+    } // SiteConfigurationService.
+
     public SiteConfigurationService(final Map<String, Configuration> configurationBySiteMap) {
 
         this.configurationBySiteMap        = new ConcurrentHashMap<>(configurationBySiteMap);

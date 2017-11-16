@@ -154,6 +154,12 @@ public final class DotSamlConstants {
     public static final String DOT_SAML_EMAIL_ATTRIBUTE = "attribute.email.name";
 
     /**
+     * Boolean value to allow to build a dummy email based on the NameID from the Idp when the email attribute from the IDP is not present.
+     * True will apply the email generation, false will throw 401 error.
+     */
+    public static final String DOT_SAML_EMAIL_ATTRIBUTE_ALLOW_NULL = "attribute.email.allownull";
+
+    /**
      * Key for host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_NAME)
      * By default dotcms use: "givenName", but you can override it just adding the first name attribute name you want.
      * "givenName" will be the expected field name from the Response comming from the OpenSaml post call.
@@ -392,9 +398,9 @@ public final class DotSamlConstants {
 
     /**
      * Optional key set on host field configuration (see {@link com.dotcms.plugin.saml.v3.DotSamlConstants}.DOTCMS_SAML_CONTENT_TYPE_FIELD_CONFIG_NAME)
-     * Role to be assigned to a logged user besides the default DOTCMS_SAML_USER_ROLE
+     * Role to be assigned to a logged user besides the default SAML User
      */
-    public static final String DOTCMS_SAML_OPTIONAL_USER_ROLE = "saml_user_role";
+    public static final String DOTCMS_SAML_OPTIONAL_USER_ROLE = "role.extra";
 
     /**
      * Optional key to configure the strategy to sync the roles from IDP to DOTCMS
@@ -458,4 +464,9 @@ public final class DotSamlConstants {
      */
     public static final String SCHEDULE_UPDATER_TASK_DELAY_SECONDS = "schedule.updater.task.delay";
 
+    /**
+     * By default any query string included on the endpoints Locations from the IDP metadata will be removed in the moment to redirect to the IDP endpoint.
+     * However you can set this on false in order to keep any query string parameter on the IDP metadata
+     */
+    public static final String  DOTCMS_SAML_CLEAR_LOCATION_QUERY_PARAMS = "location.cleanqueryparams";
 } // E:O:F:DotSamlConstants.

@@ -4,6 +4,7 @@ import com.dotcms.cms.login.LoginServiceAPI;
 import com.dotcms.plugin.saml.v3.*;
 import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
+import com.dotcms.plugin.saml.v3.exception.NotNullEmailAllowedException;
 import com.dotcms.plugin.saml.v3.exception.SamlUnauthorizedException;
 import com.dotcms.plugin.saml.v3.init.DefaultInitializer;
 import com.dotcms.plugin.saml.v3.init.Initializer;
@@ -243,7 +244,7 @@ public class SamlAccessFilter implements Filter {
 
         if (this.isByPass(request, session)) {
 
-            Logger.info(this, "Using SAML by pass");
+            Logger.debug(this, "Using SAML by pass");
             chain.doFilter(req, res);
             return;
         }
@@ -581,6 +582,15 @@ public class SamlAccessFilter implements Filter {
                 Logger.debug(this, "SamlUnauthorizedException, doing redirection error with status: " + e.getStatus());
                 response.sendError(status);
             }
+        } catch (NotNullEmailAllowedException e) {
+
+            autoLogin = new AutoLoginResult(session, false);
+            Logger.debug(this, e.getMessage());
+
+            final int status = e.getStatus() > 0? e.getStatus():HttpServletResponse.SC_UNAUTHORIZED;
+
+            Logger.debug(this, "NotNullEmailAllowedException, doing redirection error with status: " + e.getStatus());
+            response.sendError(status);
         }
 
         return autoLogin;
