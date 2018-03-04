@@ -266,7 +266,7 @@ Default: true. Overwrite this value if you do not want assertions signed.
 
 Default: true. Overwrite this value if you do not want authorization requests signed.
 
-**sevice.provider.custom.metadata.path**
+**service.provider.custom.metadata.path**
 
 By default this is the URL to get the dotCMS Service Provider metadata: */dotsaml/metadata.xml
 *. However, if you want to use a different path, feel free to overwrite it.
