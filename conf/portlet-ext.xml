@@ -1,0 +1,12 @@
+<portlet>
+    <portlet-name>saml-configuration</portlet-name>
+    <display-name>SAML Configuration</display-name>
+    <portlet-class>com.liferay.portlet.JSPPortlet</portlet-class>
+    <init-param>
+        <name>view-jsp</name>
+        <value>/plugins/plugin-com.dotcms.dotsaml/saml/view_saml_configuration.jsp</value>
+    </init-param>
+    <security-role-ref>
+        <role-name>CMS Administrator</role-name>
+    </security-role-ref>
+</portlet>
