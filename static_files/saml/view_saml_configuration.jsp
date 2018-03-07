@@ -1,5 +1,76 @@
 <%@ include file="/html/plugins/plugin-com.dotcms.dotsaml/saml/view_saml_configuration_js_inc.jsp" %>
 
+<script type="text/javascript">
+
+    require(["dojo/ready"], function(ready){
+        ready(function(){
+            renderIdpConfigs();
+        });
+    });
+
+    function renderIdpConfigs() {
+
+        //Node List
+        var idpList;
+
+        xhrArgs = {
+            url: "/api/v1/saml/idps",
+            handleAs: "json",
+            sync: true,
+            load: function (data) {
+                idpList = data.entity;
+                var idpsTableHTML = "";
+
+                dojo.forEach(idpList, function (item, index) {
+
+                    idpsTableHTML +=
+                        "        <tr>" +
+                        "            <td>" +
+                        "                <i class='statusIcon green'></i>" +
+                        "            </td>" +
+                        "            <td>" + item.idpName + "</td>" +
+                        "            <td>" +
+                        "                <button dojoType='dijit.form.Button' onclick='' class='dijitButtonFlat'>" +
+                        "                    <%=LanguageUtil.get(pageContext, "edit")%>" +
+                        "                </button>" +
+                        "                <button dojoType='dijit.form.Button' onclick='' class='dijitButtonFlat'>" +
+                        "                    <%=LanguageUtil.get(pageContext, "delete")%>" +
+                        "                </button>" +
+                        "                <button dojoType='dijit.form.Button' onclick='' class='dijitButtonFlat'>" +
+                        "                    <%=LanguageUtil.get(pageContext, "set-as-default")%>" +
+                        "                </button>" +
+                        "            </td>" +
+                        "            <td>Link to SP Metadata coming soon</td>" +
+                        "        </tr>";
+                });
+
+                idpsTableHTML += "<tr>" +
+                    "                <td>" +
+                    "                </td>" +
+                    "                <td><%=LanguageUtil.get(pageContext, "disabled-sites")%></td>" +
+                    "                <td>" +
+                    "                    <button dojoType='dijit.form.Button' onclick='' class='dijitButtonFlat'>" +
+                    "                        <%=LanguageUtil.get(pageContext, "disable-site")%>" +
+                    "                    </button>" +
+                    "                </td>" +
+                    "                <td>" +
+                    "                </td>" +
+                    "            </tr>"
+
+                dojo.empty(dojo.byId("idpTableBody"));
+                dojo.place(idpsTableHTML, dojo.byId("idpTableBody"));
+                dojo.parser.parse(dojo.byId("idpTableBody"))
+            },
+            error: function (error) {
+                alert("An unexpected error occurred: " + error);
+            }
+        };
+
+        deferred = dojo.xhrGet(xhrArgs);
+
+    }
+</script>
+
 <div class="portlet-main">
 	<!-- START Toolbar -->
 	<div class="portlet-toolbar">
@@ -22,26 +93,6 @@
 
    <!-- END Toolbar -->
 
-   <!-- Empty table to be used when reading from configuration json is done
-
-	<table class="listingTable idp-list">
-		<thead id="idpPTableHeader"></thead>
-		<tbody id="idpTableBody"></tbody>
-		<tbody id="noResultsSection">
-			<tr class="alternate_1" id="rowNoResults">
-				<td colspan="5">
-					<div class="noResultsMessage">
-						<%=LanguageUtil.get(pageContext, "No-Results-Found")%>
-					</div>
-				</td>
-			</tr>
-		</tbody>
-	</table>
-
-	-->
-
-	<!-- Placeholder table -->
-
 	<table class="listingTable idp-list">
 	    <thead id="idpPTableHeader">
 	        <tr>
@@ -52,72 +103,6 @@
 	        </tr>
 	    </thead>
 	    <tbody id="idpTableBody">
-            <tr>
-                <td>
-                    <i class="statusIcon green"></i>
-                </td>
-                <td>idp1.site.com</td>
-                <td>
-                    <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-                        <%=LanguageUtil.get(pageContext, "edit")%>
-                    </button>
-                    <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-                        <%=LanguageUtil.get(pageContext, "delete")%>
-                    </button>
-                    <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-                        <%=LanguageUtil.get(pageContext, "set-as-default")%>
-                    </button>
-                </td>
-                <td>Link to SP Metadata coming soon</td>
-            </tr>
-            <tr>
-                <td>
-                    <i class="statusIcon green"></i>
-                </td>
-                <td>idp2.site.com</td>
-                <td>
-                    <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-                        <%=LanguageUtil.get(pageContext, "edit")%>
-                    </button>
-                    <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-                        <%=LanguageUtil.get(pageContext, "delete")%>
-                    </button>
-                    <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-                        <%=LanguageUtil.get(pageContext, "set-as-default")%>
-                    </button>
-                </td>
-                <td>Link to SP Metadata coming soon</td>
-            </tr>
-            <tr>
-                <td>
-                    <i class="statusIcon green"></i>
-                </td>
-                <td>idp3.site.com</td>
-                <td>
-                    <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-                        <%=LanguageUtil.get(pageContext, "Edit")%>
-                    </button>
-                    <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-                        <%=LanguageUtil.get(pageContext, "Delete")%>
-                    </button>
-                    <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-                        <%=LanguageUtil.get(pageContext, "Set as Defult")%>
-                    </button>
-                </td>
-                <td>Link to SP Metadata coming soon</td>
-            </tr>
-            <tr>
-                <td>
-                </td>
-                <td><%=LanguageUtil.get(pageContext, "disabled-sites")%></td>
-                <td>
-                    <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-                        <%=LanguageUtil.get(pageContext, "disable-site")%>
-                    </button>
-                </td>
-                <td>
-                </td>
-            </tr>
 	    </tbody>
 	</table>
 
