@@ -17,9 +17,6 @@
 		    <button dojoType="dijit.form.Button" onClick="" iconClass="plusIcon">
 		            <%=LanguageUtil.get(pageContext, "add-idp")%>
 		     </button>
-		    <button dojoType="dijit.form.Button" onClick="" iconClass="plusIcon">
-		            <%=LanguageUtil.get(pageContext, "disable-site")%>
-		     </button>
     	</div>
    </div>
 
@@ -108,6 +105,18 @@
                     </button>
                 </td>
                 <td>Link to SP Metadata coming soon</td>
+            </tr>
+            <tr>
+                <td>
+                </td>
+                <td><%=LanguageUtil.get(pageContext, "disabled-sites")%></td>
+                <td>
+                    <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
+                        <%=LanguageUtil.get(pageContext, "disable-site")%>
+                    </button>
+                </td>
+                <td>
+                </td>
             </tr>
 	    </tbody>
 	</table>
