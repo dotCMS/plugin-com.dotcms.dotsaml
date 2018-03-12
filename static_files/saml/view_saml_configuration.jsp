@@ -149,6 +149,10 @@
         document.getElementById("privateKeySavedFile").innerText = "";
         document.getElementById("publicCertSavedFile").innerText = "";
         document.getElementById("idPMetadataSavedFile").innerText = "";
+
+        document.getElementById("privateKey").value = "";
+        document.getElementById("publicCert").value = "";
+        document.getElementById("idPMetadataFile").value = "";
     }
 
     require(['dojo/_base/declare'], function(declare){
