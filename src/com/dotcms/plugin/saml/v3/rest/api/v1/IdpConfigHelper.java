@@ -5,6 +5,7 @@ import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UUIDGenerator;
 import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.json.JSONException;
+import com.liferay.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,12 +14,13 @@ import java.util.List;
 
 public class IdpConfigHelper implements Serializable {
 
-    private final String assetsRealPath;
+    private final String assetsPath;
     private final String idpfilePath;
 
     public IdpConfigHelper() {
-        this.assetsRealPath = Config.getStringProperty("ASSET_REAL_PATH", "/assets");
-        this.idpfilePath = assetsRealPath + File.separator + "saml" + File.separator + "config.json";
+        this.assetsPath = Config.getStringProperty("ASSET_REAL_PATH",
+            FileUtil.getRealPath(Config.getStringProperty("ASSET_PATH", "/assets")));
+        this.idpfilePath = assetsPath + File.separator + "saml" + File.separator + "config.json";
     }
 
     private static class SingletonHolder {
