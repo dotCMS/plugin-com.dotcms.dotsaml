@@ -1,4 +1,5 @@
 <%@page import="com.liferay.portal.language.LanguageUtil"%>
+<%@ page import="com.dotmarketing.util.UtilMethods" %>
 
 <script type="text/javascript" src="/html/plugins/plugin-com.dotcms.dotsaml/saml/view_saml_configuration_js_inc.jsp" ></script>
 
@@ -21,13 +22,20 @@
             load: function (data) {
                 idpList = data.entity;
                 var idpsTableHTML = "";
+                var idpStatusColor = "";
 
                 dojo.forEach(idpList, function (item, index) {
+
+                    if (item.enabled) {
+                       idpStatusColor = "green";
+                    } else {
+                        idpStatusColor = "red";
+                    }
 
                     idpsTableHTML +=
                         "        <tr>" +
                         "            <td>" +
-                        "                <i class='statusIcon green'></i>" +
+                        "               <i class='statusIcon " + idpStatusColor + "'></i>" +
                         "            </td>" +
                         "            <td>" + item.idpName + "</td>" +
                         "            <td>" +
@@ -167,7 +175,9 @@
                 findIdpConfig(id);
             },
             deleteIdp : function(id) {
-                deleteIdpConfig(id);
+                if(confirm('<%= UtilMethods.escapeSingleQuotes(LanguageUtil.get(pageContext, "delete-dialog-text"))%>')) {
+                        deleteIdpConfig(id);
+                }
             },
             setDefaultIdp : function() {
                 window.alert("Set Default Here");
@@ -285,6 +295,17 @@
                 <dl>
                     <dt><label for="idPMetadataFile"><%=LanguageUtil.get(pageContext, "idp-metadata-label")%></label></dt>
                     <dd><div id="idPMetadataSavedFile" id="idPMetadataSavedFile"></div><input type="file" id="idPMetadataFile" name="idPMetadataFile" required="true"></dd>
+                </dl>
+
+
+                <dl>
+                    <dt><label for="signatureValidationType"><%=LanguageUtil.get(pageContext, "idp-validation-label")%></label></dt>
+                    <dd><select id="signatureValidationType" data-dojo-type="dijit/form/Select">
+                            <option value="responseandassertion">Response and Assertion</option>
+                            <option value="response" selected="selected">Response Only</option>
+                            <option value="assertion">Assertion Only</option>
+                        </select>
+                    </dd>
                 </dl>
 
                 <dl>
