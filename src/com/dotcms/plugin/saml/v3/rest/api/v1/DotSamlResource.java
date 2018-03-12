@@ -13,11 +13,14 @@ import com.dotcms.repackage.javax.ws.rs.core.Response;
 import com.dotcms.repackage.org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import com.dotcms.repackage.org.glassfish.jersey.media.multipart.FormDataParam;
 import com.dotcms.repackage.org.glassfish.jersey.server.JSONP;
+import com.dotcms.rest.InitDataObject;
 import com.dotcms.rest.ResponseEntityView;
 import com.dotcms.rest.WebResource;
 import com.dotcms.rest.annotation.NoCache;
 import com.dotcms.rest.exception.mapper.ExceptionMapperUtil;
+import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.json.JSONException;
 import com.dotmarketing.util.json.JSONObject;
 
@@ -66,6 +69,35 @@ public class DotSamlResource implements Serializable {
         return response;
     } // getIdps.
 
+    @GET
+    @Path("/idp/{id}")
+    @JSONP
+    @NoCache
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public Response getIdp(@PathParam("id") final String id, @Context final HttpServletRequest req){
+        final InitDataObject initData = this.webResource.init(null, false, req, false, null);
+        Response response;
+
+        try{
+            final IdpConfig idpConfig = idpConfigHelper.findIdpConfig(id);
+            response = Response.ok(new ResponseEntityView(idpConfig)).build();
+        } catch (DotDataException e) {
+            Logger.error(this,"Idp not found (" + e.getMessage() + ")", e);
+            response = ExceptionMapperUtil.createResponse(null, "Idp not found (" + e.getMessage() + ")");
+        } catch (IOException e) {
+            Logger.error(this,"Idp is not valid (" + e.getMessage() + ")", e);
+            response = ExceptionMapperUtil.createResponse(null, "Idp is not valid (" + e.getMessage() + ")");
+        } catch (JSONException e) {
+            Logger.error(this,"Error handling json (" + e.getMessage() + ")", e);
+            response = ExceptionMapperUtil.createResponse(null, "Error handling json (" + e.getMessage() + ")");
+        } catch (Exception e) { // this is an unknown error, so we report as a 500.
+            Logger.error(this,"Error getting posting idp", e);
+            response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        return response;
+    } //getIdp.
+
     @POST
     @Path("/idp")
     @JSONP
@@ -80,9 +112,9 @@ public class DotSamlResource implements Serializable {
                                           @FormDataParam("sPEndponintHostname") String sPEndponintHostname,
                                           @FormDataParam("privateKey") InputStream privateKeyStream,
                                           @FormDataParam("privateKey") FormDataContentDisposition privateKeyFileDetail,
-                                          @FormDataParam("publicCert") InputStream publicCert,
+                                          @FormDataParam("publicCert") InputStream publicCertStream,
                                           @FormDataParam("publicCert") FormDataContentDisposition publicCertFileDetail,
-                                          @FormDataParam("idPMetadataFile") InputStream idPMetadataFile,
+                                          @FormDataParam("idPMetadataFile") InputStream idPMetadataFileStream,
                                           @FormDataParam("idPMetadataFile") FormDataContentDisposition idPMetadataFileDetail,
                                           @FormDataParam("optionalProperties") String optionalProperties) {
         this.webResource.init(null, true, req, true, null);
@@ -98,9 +130,15 @@ public class DotSamlResource implements Serializable {
             idpConfig.setsPEndponintHostname(sPEndponintHostname);
             idpConfig.setOptionalProperties(optionalProperties);
 
-            /*File privateKey = File.createTempFile("private", "key");
-            FileUtils.copyInputStreamToFile(privateKeyStream, privateKey);
-            idpConfig.setPrivateKey(privateKey);*/
+            if (UtilMethods.isSet(privateKeyFileDetail) && UtilMethods.isSet(privateKeyFileDetail.getFileName())){
+                idpConfig.setPrivateKey(idpConfigHelper.writeCertFile(privateKeyStream, privateKeyFileDetail.getFileName()));
+            }
+            if (UtilMethods.isSet(publicCertFileDetail) && UtilMethods.isSet(publicCertFileDetail.getFileName())){
+                idpConfig.setPublicCert(idpConfigHelper.writeCertFile(publicCertStream, publicCertFileDetail.getFileName()));
+            }
+            if (UtilMethods.isSet(idPMetadataFileDetail) && UtilMethods.isSet(idPMetadataFileDetail.getFileName())){
+                idpConfig.setIdPMetadataFile(idpConfigHelper.writeMetadataFile(idPMetadataFileStream, idPMetadataFileDetail.getFileName()));
+            }
 
             idpConfig = idpConfigHelper.saveIdpConfig(idpConfig);
             response = Response.ok(new ResponseEntityView(idpConfig)).build();
@@ -150,7 +188,7 @@ public class DotSamlResource implements Serializable {
         }
 
         return response;
-    }
+    } // deleteIdpConfig.
 
 }
 
