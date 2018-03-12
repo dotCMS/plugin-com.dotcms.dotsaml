@@ -122,8 +122,14 @@ public class DotSamlResource implements Serializable {
         Response response;
 
         try {
-            IdpConfig idpConfig = new IdpConfig();
-            idpConfig.setId(id);
+            IdpConfig idpConfig;
+
+            if (UtilMethods.isSet(id)){
+                idpConfig = idpConfigHelper.findIdpConfig(id);
+            } else {
+                idpConfig = new IdpConfig();
+            }
+
             idpConfig.setIdpName(idpName);
             idpConfig.setEnabled(enabled);
             idpConfig.setsPIssuerURL(sPIssuerURL);

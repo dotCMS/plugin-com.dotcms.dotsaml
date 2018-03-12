@@ -31,7 +31,7 @@
                         "            </td>" +
                         "            <td>" + item.idpName + "</td>" +
                         "            <td>" +
-                        "                <button dojoType='dijit.form.Button' onclick='idpAdmin.addEditIdp();' class='dijitButtonFlat'>" +
+                        "                <button dojoType='dijit.form.Button' onclick='idpAdmin.editIdp(\"" + item.id + "\");' class='dijitButtonFlat'>" +
                         "                    <%=LanguageUtil.get(pageContext, "edit")%>" +
                         "                </button>" +
                         "                <button dojoType='dijit.form.Button' onclick='idpAdmin.deleteIdp(\"" + item.id +"\");' class='dijitButtonFlat'>" +
@@ -107,12 +107,60 @@
         deferred = dojo.xhrDelete(xhrArgs);
     }
 
+    function findIdpConfig(id) {
+        xhrArgs = {
+            url: "/api/v1/dotsaml/idp/" + id,
+            handleAs: "json",
+            load: function (data) {
+                var idp = data.entity;
+
+                dijit.byId('addEditIdPDialog').show();
+
+                resetIdpConfig();
+
+                addEditIdPForm.elements["id"].value = idp.id;
+                addEditIdPForm.elements["idpName"].value = idp.idpName;
+                if (idp.enabled){
+                    document.getElementById("enabledTrue").checked = true;
+                } else {
+                    document.getElementById("enabledFalse").checked = true;
+                }
+
+                addEditIdPForm.elements["sPIssuerURL"].value = idp.sPIssuerURL;
+                addEditIdPForm.elements["sPEndponintHostname"].value = idp.sPEndponintHostname;
+
+                document.getElementById("privateKeySavedFile").innerText = idp.privateKey.replace(/^.*[\\\/]/, '');
+                document.getElementById("publicCertSavedFile").innerText = idp.publicCert.replace(/^.*[\\\/]/, '');
+                document.getElementById("idPMetadataSavedFile").innerText = idp.idPMetadataFile.replace(/^.*[\\\/]/, '');
+
+                addEditIdPForm.elements["optionalProperties"].value = idp.optionalProperties;
+
+            },
+            error: function (error) {
+                alert("An unexpected error occurred: " + error);
+            }
+        };
+        deferred = dojo.xhrGet(xhrArgs);
+    }
+
+    function resetIdpConfig() {
+        dojo.byId("addEditIdPForm").reset();
+
+        document.getElementById("privateKeySavedFile").innerText = "";
+        document.getElementById("publicCertSavedFile").innerText = "";
+        document.getElementById("idPMetadataSavedFile").innerText = "";
+    }
+
     require(['dojo/_base/declare'], function(declare){
         declare("dotcms.dijit.saml.IdPAdmin", null, {
             constructor: function(){
             },
-            addEditIdp : function() {
+            addIdp : function() {
                 dijit.byId('addEditIdPDialog').show();
+                resetIdpConfig();
+            },
+            editIdp : function(id) {
+                findIdpConfig(id);
             },
             deleteIdp : function(id) {
                 deleteIdpConfig(id);
@@ -146,7 +194,7 @@
 		<div class="portlet-toolbar__info">
 		</div>
     	<div class="portlet-toolbar__actions-secondary">
-		    <button dojoType="dijit.form.Button" onClick="idpAdmin.addEditIdp();" iconClass="plusIcon">
+		    <button dojoType="dijit.form.Button" onClick="idpAdmin.addIdp();" iconClass="plusIcon">
 		            <%=LanguageUtil.get(pageContext, "add-idp")%>
 		     </button>
     	</div>
@@ -204,8 +252,8 @@
                 <dl>
                     <dt><label><%=LanguageUtil.get(pageContext, "idp-status-label")%></label></dt>
                     <dd>
-                        <input type="radio" name="enabled" value="true" id="enabledTrue" dojoType="dijit.form.RadioButton"/> <label for="enabledTrue">Yes</label>
-                        <input type="radio" name="enabled" value="false" id="enabledFalse" dojoType="dijit.form.RadioButton"/> <label for="enabledFalse">No</label>
+                        <input type="radio" name="enabled" value="true" id="enabledTrue" /> <label for="enabledTrue">Yes</label>
+                        <input type="radio" name="enabled" value="false" id="enabledFalse" /> <label for="enabledFalse">No</label>
                     </dd>
 
                 </dl>
@@ -222,17 +270,17 @@
 
                 <dl>
                     <dt><label for="privateKey"><%=LanguageUtil.get(pageContext, "private-key-label")%></label></dt>
-                    <dd><input type="file" id="privateKey" name="privateKey" required="true"></dd>
+                    <dd><div id="privateKeySavedFile" id="privateKeySavedFile"></div><input type="file" id="privateKey" name="privateKey" required="true"></dd>
                 </dl>
 
                 <dl>
                     <dt><label for="publicCert"><%=LanguageUtil.get(pageContext, "public-certificate-label")%></label></dt>
-                    <dd><input type="file" id="publicCert" name="publicCert" required></dd>
+                    <dd><div id="publicCertSavedFile" id="publicCertSavedFile"></div><input type="file" id="publicCert" name="publicCert" required></dd>
                 </dl>
 
                 <dl>
                     <dt><label for="idPMetadataFile"><%=LanguageUtil.get(pageContext, "idp-metadata-label")%></label></dt>
-                    <dd><input type="file" id="idPMetadataFile" name="idPMetadataFile" required="true"></dd>
+                    <dd><div id="idPMetadataSavedFile" id="idPMetadataSavedFile"></div><input type="file" id="idPMetadataFile" name="idPMetadataFile" required="true"></dd>
                 </dl>
 
                 <dl>

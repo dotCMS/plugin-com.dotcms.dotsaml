@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 
 public class IdpConfigHelper implements Serializable {
@@ -40,7 +41,9 @@ public class IdpConfigHelper implements Serializable {
     }
 
     public List<IdpConfig> getIdpConfigs() throws IOException, JSONException {
-        return IdpConfigWriterReader.read(new File(idpfilePath));
+        final List<IdpConfig> idpConfigs = IdpConfigWriterReader.read(new File(idpfilePath));
+        Collections.sort(idpConfigs, new IdpConfigComparator());
+        return idpConfigs;
     }
 
     public IdpConfig findIdpConfig(String id) throws IOException, JSONException, DotDataException{
