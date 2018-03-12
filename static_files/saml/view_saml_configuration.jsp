@@ -137,9 +137,15 @@
                 addEditIdPForm.elements["sPIssuerURL"].value = idp.sPIssuerURL;
                 addEditIdPForm.elements["sPEndponintHostname"].value = idp.sPEndponintHostname;
 
-                document.getElementById("privateKeySavedFile").innerText = idp.privateKey.replace(/^.*[\\\/]/, '');
-                document.getElementById("publicCertSavedFile").innerText = idp.publicCert.replace(/^.*[\\\/]/, '');
-                document.getElementById("idPMetadataSavedFile").innerText = idp.idPMetadataFile.replace(/^.*[\\\/]/, '');
+                if(idp.privateKey){
+                    document.getElementById("privateKeySavedFile").innerText = idp.privateKey.replace(/^.*[\\\/]/, '');
+                }
+                if(idp.publicCert){
+                    document.getElementById("publicCertSavedFile").innerText = idp.publicCert.replace(/^.*[\\\/]/, '');
+                }
+                if(idp.idPMetadataFile){
+                    document.getElementById("idPMetadataSavedFile").innerText = idp.idPMetadataFile.replace(/^.*[\\\/]/, '');
+                }
 
                 addEditIdPForm.elements["optionalProperties"].value = idp.optionalProperties;
 

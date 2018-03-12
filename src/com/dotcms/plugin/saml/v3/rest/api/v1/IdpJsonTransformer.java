@@ -1,5 +1,7 @@
 package com.dotcms.plugin.saml.v3.rest.api.v1;
 
+import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.json.JSONException;
 import com.dotmarketing.util.json.JSONObject;
 
@@ -32,9 +34,9 @@ public class IdpJsonTransformer {
         idpConfig.setEnabled(jsonObject.getBoolean("enabled"));
         idpConfig.setsPIssuerURL(jsonObject.getString("sPIssuerURL"));
         idpConfig.setsPEndponintHostname(jsonObject.getString("sPEndponintHostname"));
-        idpConfig.setPrivateKey(new File(jsonObject.getString("privateKey")));
-        idpConfig.setPublicCert(new File(jsonObject.getString("publicCert")));
-        idpConfig.setIdPMetadataFile(new File(jsonObject.getString("idPMetadataFile")));
+        idpConfig.setPrivateKey(getFileFromCanonicalPath(jsonObject.getString("privateKey")));
+        idpConfig.setPublicCert(getFileFromCanonicalPath(jsonObject.getString("publicCert")));
+        idpConfig.setIdPMetadataFile(getFileFromCanonicalPath(jsonObject.getString("idPMetadataFile")));
         idpConfig.setOptionalProperties(jsonObject.getString("optionalProperties"));
 
         return idpConfig;
@@ -46,5 +48,20 @@ public class IdpJsonTransformer {
             canonicalPath = file.getCanonicalPath();
         }
         return canonicalPath;
+    }
+
+    private static File getFileFromCanonicalPath(String canonicalPath){
+        File file = null;
+
+        if (UtilMethods.isSet(canonicalPath)){
+            File fileFromPath = new File(canonicalPath);
+            if (fileFromPath.exists()){
+                file = fileFromPath;
+            } else {
+                Logger.error(IdpJsonTransformer.class, "File doesn't exists: " + canonicalPath);
+            }
+        }
+
+        return file;
     }
 }
