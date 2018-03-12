@@ -202,9 +202,12 @@
                 </dl>
 
                 <dl>
-                    <input type="hidden" name="enabled" value="1"/>
-                    <dt><input type="checkbox" dojoType="dijit.form.CheckBox" name="enabled" id="enabled"/></dt>
-                    <dd><label for="enabled"><%=LanguageUtil.get(pageContext, "idp-status-label")%></label></dd>
+                    <dt><label><%=LanguageUtil.get(pageContext, "idp-status-label")%></label></dt>
+                    <dd>
+                        <input type="radio" name="enabled" value="true" id="enabledTrue" dojoType="dijit.form.RadioButton"/> <label for="enabledTrue">Yes</label>
+                        <input type="radio" name="enabled" value="false" id="enabledFalse" dojoType="dijit.form.RadioButton"/> <label for="enabledFalse">No</label>
+                    </dd>
+
                 </dl>
 
                 <dl>
