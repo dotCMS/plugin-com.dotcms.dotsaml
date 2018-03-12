@@ -17,7 +17,7 @@ import com.dotcms.rest.ResponseEntityView;
 import com.dotcms.rest.WebResource;
 import com.dotcms.rest.annotation.NoCache;
 import com.dotcms.rest.exception.mapper.ExceptionMapperUtil;
-import com.dotmarketing.util.UtilMethods;
+import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.json.JSONException;
 import com.dotmarketing.util.json.JSONObject;
 
@@ -53,10 +53,13 @@ public class DotSamlResource implements Serializable {
             List<IdpConfig> idps = this.idpConfigHelper.getIdpConfigs();
             response = Response.ok(new ResponseEntityView(idps)).build();
         } catch (IOException e) {
+            Logger.error(this,"Error handling file (" + e.getMessage() + ")", e);
             response = ExceptionMapperUtil.createResponse(null, "Error handling file (" + e.getMessage() + ")");
         } catch (JSONException e) {
+            Logger.error(this,"Error handling json (" + e.getMessage() + ")", e);
             response = ExceptionMapperUtil.createResponse(null, "Error handling json (" + e.getMessage() + ")");
         } catch (Exception e) { // this is an unknown error, so we report as a 500.
+            Logger.error(this,"Error getting idps", e);
             response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
 
@@ -102,10 +105,13 @@ public class DotSamlResource implements Serializable {
             idpConfig = idpConfigHelper.saveIdpConfig(idpConfig);
             response = Response.ok(new ResponseEntityView(idpConfig)).build();
         } catch (IOException e) {
+            Logger.error(this,"Idp is not valid (" + e.getMessage() + ")", e);
             response = ExceptionMapperUtil.createResponse(null, "Idp is not valid (" + e.getMessage() + ")");
         } catch (JSONException e) {
+            Logger.error(this,"Error handling json (" + e.getMessage() + ")", e);
             response = ExceptionMapperUtil.createResponse(null, "Error handling json (" + e.getMessage() + ")");
         } catch (Exception e) { // this is an unknown error, so we report as a 500.
+            Logger.error(this,"Error getting posting idp", e);
             response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
 
@@ -133,10 +139,13 @@ public class DotSamlResource implements Serializable {
 
             response = Response.ok(new ResponseEntityView(joe.toString())).build();
         } catch (IOException e) {
+            Logger.error(this,"Idp is not valid (" + e.getMessage() + ")", e);
             response = ExceptionMapperUtil.createResponse(null, "Idp is not valid (" + e.getMessage() + ")");
         } catch (JSONException e) {
+            Logger.error(this,"Error handling json (" + e.getMessage() + ")", e);
             response = ExceptionMapperUtil.createResponse(null, "Error handling json (" + e.getMessage() + ")");
         } catch (Exception e) { // this is an unknown error, so we report as a 500.
+            Logger.error(this,"Error deleting idps", e);
             response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
         }
 
