@@ -1,22 +1,24 @@
 package com.dotcms.plugin.saml.v3.rest.api.v1;
 
-import com.google.common.collect.Lists;
+import com.dotmarketing.util.Config;
+import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.UUIDGenerator;
+import com.dotmarketing.util.UtilMethods;
+import com.dotmarketing.util.json.JSONException;
 
-import com.dotcms.rest.InitDataObject;
-import com.dotcms.rest.WebResource;
-import com.dotmarketing.exception.DotDataException;
-import com.liferay.portal.language.LanguageException;
-import com.liferay.portal.model.User;
-
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
 public class IdpConfigHelper implements Serializable {
 
+    private final String assetsRealPath;
+    private final String idpfilePath;
+
     public IdpConfigHelper() {
-        this.webResource = new WebResource();
+        this.assetsRealPath = Config.getStringProperty("ASSET_REAL_PATH", "/assets");
+        this.idpfilePath = assetsRealPath + File.separator + "saml" + File.separator + "config.json";
     }
 
     private static class SingletonHolder {
@@ -27,24 +29,36 @@ public class IdpConfigHelper implements Serializable {
         return IdpConfigHelper.SingletonHolder.INSTANCE;
     }
 
-    private final WebResource webResource;
+    public List<IdpConfig> getIdpConfigs() throws IOException, JSONException {
+        return IdpConfigWriterReader.read(new File(idpfilePath));
+    }
 
+    public IdpConfig saveIdpConfig(IdpConfig idpConfig) throws IOException, JSONException {
+        List<IdpConfig> idpConfigList = getIdpConfigs();
 
-    public List<IdpConfig> getIdpConfigs(HttpServletRequest request) throws DotDataException, LanguageException {
-        final InitDataObject initData = this.webResource.init(null, true, request, true, null); // should logged in
-        final User user = initData.getUser();
+        if (UtilMethods.isSet(idpConfig.getId())){
+            //Update.
+            idpConfigList.remove(idpConfig);
+            idpConfigList.add(idpConfig);
+            IdpConfigWriterReader.write(idpConfigList, idpfilePath);
+        } else {
+            //Create.
+            idpConfig.setId(UUIDGenerator.generateUuid());
+            idpConfigList.add(idpConfig);
+            IdpConfigWriterReader.write(idpConfigList, idpfilePath);
+        }
 
-        //TODO: Dummy data.
-        IdpConfig idpConfigA = new IdpConfig("idp.A.sitename");
-        IdpConfig idpConfigB = new IdpConfig("idp.B.sitename");
-        IdpConfig idpConfigC = new IdpConfig("idp.C.sitename");
+        return idpConfig;
+    }
 
-        List<IdpConfig> configs = Lists.newArrayList();
+    public void deleteIdpConfig(IdpConfig idpConfig) throws IOException, JSONException {
+        List<IdpConfig> idpConfigList = getIdpConfigs();
 
-        configs.add(idpConfigA);
-        configs.add(idpConfigB);
-        configs.add(idpConfigC);
-
-        return configs;
+        if (idpConfigList.contains(idpConfig)){
+            idpConfigList.remove(idpConfig);
+            IdpConfigWriterReader.write(idpConfigList, idpfilePath);
+        } else {
+            Logger.warn(this, "IdpConfig with Id: " + idpConfig.getId() + "no longer exists in file.");
+        }
     }
 }

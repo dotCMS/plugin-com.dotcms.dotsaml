@@ -2,6 +2,136 @@
 
 <script type="text/javascript" src="/html/plugins/plugin-com.dotcms.dotsaml/saml/view_saml_configuration_js_inc.jsp" ></script>
 
+<script type="text/javascript">
+    //dojo.require("dotcms.dijit.form.HostFolderFilteringSelect");
+
+    require(["dojo/ready"], function(ready){
+        ready(function(){
+            renderIdpConfigs();
+        });
+    });
+
+    function renderIdpConfigs() {
+        //Node List
+        var idpList;
+
+        xhrArgs = {
+            url: "/api/v1/dotsaml/idps",
+            handleAs: "json",
+            load: function (data) {
+                idpList = data.entity;
+                var idpsTableHTML = "";
+
+                dojo.forEach(idpList, function (item, index) {
+
+                    idpsTableHTML +=
+                        "        <tr>" +
+                        "            <td>" +
+                        "                <i class='statusIcon green'></i>" +
+                        "            </td>" +
+                        "            <td>" + item.idpName + "</td>" +
+                        "            <td>" +
+                        "                <button dojoType='dijit.form.Button' onclick='idpAdmin.addEditIdp();' class='dijitButtonFlat'>" +
+                        "                    <%=LanguageUtil.get(pageContext, "edit")%>" +
+                        "                </button>" +
+                        "                <button dojoType='dijit.form.Button' onclick='idpAdmin.deleteIdp(\"" + item.id +"\");' class='dijitButtonFlat'>" +
+                        "                    <%=LanguageUtil.get(pageContext, "delete")%>" +
+                        "                </button>" +
+                        "                <button dojoType='dijit.form.Button' onclick='idpAdmin.setDefaultIdp();' class='dijitButtonFlat'>" +
+                        "                    <%=LanguageUtil.get(pageContext, "set-as-default")%>" +
+                        "                </button>" +
+                        "            </td>" +
+                        "            <td>" +
+                        "                <button dojoType='dijit.form.Button' onclick='idpAdmin.downloadSPMedatadata();' class='dijitButtonFlat'>" +
+                        "                    <%=LanguageUtil.get(pageContext, "download-sp-metadata")%>" +
+                        "                </button>" +
+                        "            </td>" +
+                        "        </tr>";
+                });
+
+                idpsTableHTML += "<tr>" +
+                    "                <td>" +
+                    "                </td>" +
+                    "                <td><%=LanguageUtil.get(pageContext, "disabled-sites")%></td>" +
+                    "                <td>" +
+                    "                    <button dojoType='dijit.form.Button' onclick='idpAdmin.disableSAMLPerSite();' class='dijitButtonFlat'>" +
+                    "                        <%=LanguageUtil.get(pageContext, "disable-site")%>" +
+                    "                    </button>" +
+                    "                </td>" +
+                    "                <td>" +
+                    "                </td>" +
+                    "            </tr>"
+
+                dojo.empty(dojo.byId("idpTableBody"));
+                dojo.place(idpsTableHTML, dojo.byId("idpTableBody"));
+                dojo.parser.parse(dojo.byId("idpTableBody"))
+            },
+            error: function (error) {
+                alert("An unexpected error occurred: " + error);
+            }
+        };
+
+        deferred = dojo.xhrGet(xhrArgs);
+    }
+
+    function saveIdp() {
+        var addEditIdPForm = dojo.byId("addEditIdPForm");
+
+        var xhrArgs = {
+            url: "/api/v1/dotsaml/idp",
+            headers: { "Content-Type": false },
+            postData: new FormData(addEditIdPForm),
+            handleAs: "json",
+            load: function (data) {
+                dijit.byId('addEditIdPDialog').hide();
+                renderIdpConfigs();
+            },
+            error: function (error) {
+                alert("An unexpected error occurred: " + error);
+            }
+        };
+        deferred = dojo.xhrPost(xhrArgs);
+    }
+
+    function deleteIdpConfig(id) {
+        xhrArgs = {
+            url: "/api/v1/dotsaml/idp/" + id,
+            handleAs: "json",
+            load: function () {
+                renderIdpConfigs();
+            },
+            error: function (error) {
+                alert("An unexpected error occurred: " + error);
+            }
+        };
+        deferred = dojo.xhrDelete(xhrArgs);
+    }
+
+    require(['dojo/_base/declare'], function(declare){
+        declare("dotcms.dijit.saml.IdPAdmin", null, {
+            constructor: function(){
+            },
+            addEditIdp : function() {
+                dijit.byId('addEditIdPDialog').show();
+            },
+            deleteIdp : function(id) {
+                deleteIdpConfig(id);
+            },
+            setDefaultIdp : function() {
+                window.alert("Set Default Here");
+            },
+            disableSAMLPerSite : function() {
+                window.alert("Disable SAML Authentication here");
+            },
+            downloadSPMedatadata : function() {
+                window.alert("This functionality will be available in the next sprint");
+            }
+        });
+    });
+
+    var idpAdmin = new dotcms.dijit.saml.IdPAdmin({});
+</script>
+
 <div class="portlet-main">
 	<!-- START Toolbar -->
 	<div class="portlet-toolbar">
@@ -60,26 +190,31 @@
 
 <div id="addEditIdPDialog" dojoType="dijit.Dialog" disableCloseButton="true" title="<%=LanguageUtil.get(pageContext, "add-edit-dialog-title")%>" style="display: none; width:600px">
     <div>
-        <form id="addEditIdPForm" name="addEditIdPForm" enctype="multipart/form-data" method="post" dojoType="dijit.form.Form">
+        <form id="addEditIdPForm" name="addEditIdPForm" dojoType="dijit.form.Form">
             <div class="form-inline">
                 <dl>
-                    <dt><label for="idpConfigName"><%=LanguageUtil.get(pageContext, "idp-config-name-label")%></label></dt>
-                    <dd><input type="text" name="idpConfigName" id="configName" required="true" onkeydown="" dojoType="dijit.form.TextBox" value="" /></dd>
+                    <dt><label for="id"><%=LanguageUtil.get(pageContext, "idp-id")%></label></dt>
+                    <dd><input type="text" name="id" id="id" value="" dojoType="dijit.form.TextBox" readonly/></dd>
+                </dl>
+                <dl>
+                    <dt><label for="idpName"><%=LanguageUtil.get(pageContext, "idp-config-name-label")%></label></dt>
+                    <dd><input type="text" name="idpName" id="idpName" required="true" onkeydown="" dojoType="dijit.form.TextBox" value="" /></dd>
                 </dl>
 
                 <dl>
-                    <dt><input type="checkbox" dojoType="dijit.form.CheckBox" name="idp-status" id="idp-status" onClick=""/></dt>
-                    <dd><label for="idp-status"><%=LanguageUtil.get(pageContext, "idp-status-label")%></label></dd>
+                    <input type="hidden" name="enabled" value="1"/>
+                    <dt><input type="checkbox" dojoType="dijit.form.CheckBox" name="enabled" id="enabled"/></dt>
+                    <dd><label for="enabled"><%=LanguageUtil.get(pageContext, "idp-status-label")%></label></dd>
                 </dl>
 
                 <dl>
-                    <dt><label for="spIssuerURL"><%=LanguageUtil.get(pageContext, "sp-issuer-url-label")%></label></dt>
-                    <dd><input type="text" name="spIssuerURL" id="spIssuerURL" required="true" onkeydown="" dojoType="dijit.form.TextBox" value="" /></dd>
+                    <dt><label for="sPIssuerURL"><%=LanguageUtil.get(pageContext, "sp-issuer-url-label")%></label></dt>
+                    <dd><input type="text" name="sPIssuerURL" id="sPIssuerURL" required="true" onkeydown="" dojoType="dijit.form.TextBox" value="" /></dd>
                 </dl>
 
                 <dl>
-                    <dt><label for="spEndpointHostname"><%=LanguageUtil.get(pageContext, "sp-endpoint-hostname-label")%></label></dt>
-                    <dd><input type="text" name="spEndpointHostname" id="spEndpointHostname" required="true" onkeydown="" dojoType="dijit.form.TextBox" value="" /></dd>
+                    <dt><label for="sPEndponintHostname"><%=LanguageUtil.get(pageContext, "sp-endpoint-hostname-label")%></label></dt>
+                    <dd><input type="text" name="sPEndponintHostname" id="sPEndponintHostname" required="true" onkeydown="" dojoType="dijit.form.TextBox" value="" /></dd>
                 </dl>
 
                 <dl>
@@ -88,18 +223,18 @@
                 </dl>
 
                 <dl>
-                    <dt><label for="publicCertificate"><%=LanguageUtil.get(pageContext, "public-certificate-label")%></label></dt>
-                    <dd><input type="file" id="publicCertificate" name="publicCertificate" required="true"></dd>
+                    <dt><label for="publicCert"><%=LanguageUtil.get(pageContext, "public-certificate-label")%></label></dt>
+                    <dd><input type="file" id="publicCert" name="publicCert" required></dd>
                 </dl>
 
                 <dl>
-                    <dt><label for="idpMetadata"><%=LanguageUtil.get(pageContext, "idp-metadata-label")%></label></dt>
-                    <dd><input type="file" id="idpMetadata" name="idpMetadata" required="true"></dd>
+                    <dt><label for="idPMetadataFile"><%=LanguageUtil.get(pageContext, "idp-metadata-label")%></label></dt>
+                    <dd><input type="file" id="idPMetadataFile" name="idPMetadataFile" required="true"></dd>
                 </dl>
 
                 <dl>
                     <dt><label for="optionalProperties"><%=LanguageUtil.get(pageContext, "optional-properties-label")%></label></dt>
-                    <dd><input type="text" dojoType="dijit.form.TextBox" name="optionalProperties" size="20" value="" /></dd>
+                    <dd><input type="text" dojoType="dijit.form.TextBox" name="optionalProperties" id="optionalProperties" size="20" value="" /></dd>
                 </dl>
 
 
@@ -123,36 +258,12 @@
                             <th><%=LanguageUtil.get(pageContext, "actions")%></th>
                         </tr>
                     </thead>
-                    <tbody id="idpTableBody">
-                        <tr>
-                            <td>site1.com</td>
-                            <td>
-                                <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-                                    <%=LanguageUtil.get(pageContext, "remove")%>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>site2.com</td>
-                            <td>
-                                <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-                                    <%=LanguageUtil.get(pageContext, "remove")%>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>site3.com</td>
-                            <td>
-                                <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-                                    <%=LanguageUtil.get(pageContext, "remove")%>
-                                </button>
-                            </td>
-                        </tr>
+                    <tbody id="idpAssignedTableBody">
                     </tbody>
                 </table>
             </div>
             <div style="text-align: center">
-                <button  dojoType="dijit.form.Button" onClick="" iconClass="uploadIcon">
+                <button  dojoType="dijit.form.Button" onclick="saveIdp()" iconClass="uploadIcon">
                     <%= LanguageUtil.get(pageContext, "save") %>
                 </button>
                 <button  dojoType="dijit.form.Button" onClick="" iconClass="uploadIcon">

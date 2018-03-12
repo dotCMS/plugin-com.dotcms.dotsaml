@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.dotcms.contenttype.model.field.FieldTypeResource;
-import com.dotcms.plugin.saml.v3.rest.api.v1.SamlResource;
+import com.dotcms.plugin.saml.v3.rest.api.v1.DotSamlResource;
 import com.dotcms.repackage.org.glassfish.jersey.media.multipart.MultiPartFeature;
 import com.dotcms.rest.RulesEnginePortlet;
 import com.dotcms.rest.TagResource;
@@ -127,7 +127,7 @@ public class DotRestApplication extends com.dotcms.repackage.javax.ws.rs.core.Ap
 					REST_CLASSES.add(ContentRelationshipsResource.class);
 
 					//SAML RESOURCES.
-					REST_CLASSES.add(SamlResource.class);
+					REST_CLASSES.add(DotSamlResource.class);
 				}
 			}
 		}
