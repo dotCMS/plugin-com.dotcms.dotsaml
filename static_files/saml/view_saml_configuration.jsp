@@ -1,5 +1,8 @@
 <%@page import="com.dotmarketing.util.UtilMethods"%>
 <%@ page import="com.liferay.portal.language.LanguageUtil" %>
+<%@page import="com.dotmarketing.business.APILocator"%>
+<%@page import="com.dotmarketing.beans.Host"%>
+<%@page import="java.util.List"%>
 
 <script type="text/javascript" src="/html/plugins/plugin-com.dotcms.dotsaml/saml/view_saml_configuration_js_inc.jsp" ></script>
 
@@ -318,8 +321,8 @@
                 <dl>
                     <dt><label for="signatureValidationType"><%=LanguageUtil.get(pageContext, "idp-validation-label")%></label></dt>
                     <dd><select id="signatureValidationType" dojoType="dijit.form.Select">
-                            <option value="responseandassertion">Response and Assertion</option>
-                            <option value="response" selected="selected">Response Only</option>
+                            <option value="responseandassertion" selected="selected">Response and Assertion</option>
+                            <option value="response">Response Only</option>
                             <option value="assertion">Assertion Only</option>
                         </select>
                     </dd>
@@ -334,9 +337,24 @@
                 <dl>
                     <dt><label id="addSite" for=""><%= LanguageUtil.get(pageContext, "add-site") %></label></dt>
                     <dd>
-                        <button dojoType="dijit.form.Button" onclick="" type="button">
-                            <%= LanguageUtil.get(pageContext, "add-site-to-config") %>
-                        </button>
+                        <div>
+                            <%
+                                List<Host> allHosts = APILocator.getHostAPI().findAll(APILocator.getUserAPI().getSystemUser(),true);
+                            %>
+
+                            <select id="addSite" dojoType="dijit.form.FilteringSelect" autocomplete="true" onChange="" style="width: 200px">
+                                <%for (Host h: allHosts){
+                                    if (!h.getIdentifier().equals(Host.SYSTEM_HOST) && h.isLive()) {
+                                        %><option value="<%= h.getIdentifier() %> "><%= h.getHostname() %></option><%
+                                    }
+                                }
+                                %>
+                            </select>
+
+                            <button dojoType="dijit.form.Button" onclick="" type="button">
+                                <%= LanguageUtil.get(pageContext, "add-site-to-config") %>
+                            </button>
+                        </div>
                     </dd>
                 </dl>
 
@@ -358,9 +376,6 @@
             <div style="text-align: center">
                 <button  dojoType="dijit.form.Button" onclick="saveIdp()" iconClass="uploadIcon">
                     <%= LanguageUtil.get(pageContext, "save") %>
-                </button>
-                <button  dojoType="dijit.form.Button" onClick="" iconClass="uploadIcon">
-                    <%= LanguageUtil.get(pageContext, "cancel") %>
                 </button>
             </div>
         </form>
