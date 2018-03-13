@@ -2,6 +2,7 @@ package com.dotcms.plugin.saml.v3.rest.api.v1;
 
 import java.io.File;
 import java.util.Objects;
+import java.util.Properties;
 
 public class IdpConfig {
 
@@ -13,7 +14,8 @@ public class IdpConfig {
     private File privateKey;
     private File publicCert;
     private File idPMetadataFile;
-    private String optionalProperties;
+    private String signatureValidationType;
+    private Properties optionalProperties;
 
     public IdpConfig() {
         this.idpName = "";
@@ -23,19 +25,7 @@ public class IdpConfig {
         this.privateKey = null;
         this.publicCert = null;
         this.idPMetadataFile = null;
-        this.optionalProperties = "";
-    }
-
-    public IdpConfig(String idpName, boolean enabled, String sPIssuerURL, String sPEndponintHostname,
-                     File privateKey, File publicCert, File idPMetadataFile, String optionalProperties) {
-        this.idpName = idpName;
-        this.enabled = enabled;
-        this.sPIssuerURL = sPIssuerURL;
-        this.sPEndponintHostname = sPEndponintHostname;
-        this.privateKey = privateKey;
-        this.publicCert = publicCert;
-        this.idPMetadataFile = idPMetadataFile;
-        this.optionalProperties = optionalProperties;
+        this.optionalProperties = new Properties();
     }
 
     public String getId() {
@@ -102,11 +92,19 @@ public class IdpConfig {
         this.idPMetadataFile = idPMetadataFile;
     }
 
-    public String getOptionalProperties() {
+    public String getSignatureValidationType() {
+        return signatureValidationType;
+    }
+
+    public void setSignatureValidationType(String signatureValidationType) {
+        this.signatureValidationType = signatureValidationType;
+    }
+
+    public Properties getOptionalProperties() {
         return optionalProperties;
     }
 
-    public void setOptionalProperties(String optionalProperties) {
+    public void setOptionalProperties(Properties optionalProperties) {
         this.optionalProperties = optionalProperties;
     }
 

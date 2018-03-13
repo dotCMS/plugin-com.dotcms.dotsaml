@@ -7,6 +7,8 @@ import com.dotmarketing.util.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.Properties;
 
 public class IdpJsonTransformer {
 
@@ -21,7 +23,8 @@ public class IdpJsonTransformer {
         jo.put("privateKey", getCanonicalPathIfExists(idpConfig.getPrivateKey()));
         jo.put("publicCert", getCanonicalPathIfExists(idpConfig.getPublicCert()));
         jo.put("idPMetadataFile", getCanonicalPathIfExists(idpConfig.getIdPMetadataFile()));
-        jo.put("optionalProperties", idpConfig.getOptionalProperties());
+        jo.put("signatureValidationType", idpConfig.getSignatureValidationType());
+        jo.put("optionalProperties", getJsonObjectFromProperties(idpConfig.getOptionalProperties()));
 
         return jo;
     }
@@ -37,7 +40,8 @@ public class IdpJsonTransformer {
         idpConfig.setPrivateKey(getFileFromCanonicalPath(jsonObject.getString("privateKey")));
         idpConfig.setPublicCert(getFileFromCanonicalPath(jsonObject.getString("publicCert")));
         idpConfig.setIdPMetadataFile(getFileFromCanonicalPath(jsonObject.getString("idPMetadataFile")));
-        idpConfig.setOptionalProperties(jsonObject.getString("optionalProperties"));
+        idpConfig.setSignatureValidationType(jsonObject.getString("signatureValidationType"));
+        idpConfig.setOptionalProperties(getPropertiesFromJsonObject(jsonObject.getJSONObject("optionalProperties")));
 
         return idpConfig;
     }
@@ -64,4 +68,31 @@ public class IdpJsonTransformer {
 
         return file;
     }
+
+    private static JSONObject getJsonObjectFromProperties(Properties properties) throws JSONException {
+        JSONObject jo = new JSONObject();
+
+        if (UtilMethods.isSet(properties)){
+            for (String key : properties.stringPropertyNames()) {
+                jo.put(key, properties.getProperty(key));
+            }
+        }
+
+        return jo;
+    }
+
+    private static Properties getPropertiesFromJsonObject(JSONObject jo) throws JSONException {
+        Properties properties = new Properties();
+        Iterator<?> keys = jo.keys();
+
+        while( keys.hasNext() ) {
+            String key = (String)keys.next();
+            String value = jo.getString(key);
+
+            properties.setProperty(key, value);
+        }
+
+        return properties;
+    }
+
 }

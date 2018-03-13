@@ -1,11 +1,9 @@
-<%@page import="com.liferay.portal.language.LanguageUtil"%>
-<%@ page import="com.dotmarketing.util.UtilMethods" %>
+<%@page import="com.dotmarketing.util.UtilMethods"%>
+<%@ page import="com.liferay.portal.language.LanguageUtil" %>
 
 <script type="text/javascript" src="/html/plugins/plugin-com.dotcms.dotsaml/saml/view_saml_configuration_js_inc.jsp" ></script>
 
 <script type="text/javascript">
-    //dojo.require("dotcms.dijit.form.HostFolderFilteringSelect");
-
     require(["dojo/ready"], function(ready){
         ready(function(){
             renderIdpConfigs();
@@ -84,11 +82,14 @@
 
     function saveIdp() {
         var addEditIdPForm = dojo.byId("addEditIdPForm");
+        var formData = new FormData(addEditIdPForm);
+
+        formData.append("signatureValidationType", dijit.byId("signatureValidationType").value);
 
         var xhrArgs = {
             url: "/api/v1/dotsaml/idp",
             headers: { "Content-Type": false },
-            postData: new FormData(addEditIdPForm),
+            postData: formData,
             handleAs: "json",
             load: function (data) {
                 dijit.byId('addEditIdPDialog').hide();
@@ -137,6 +138,8 @@
                 addEditIdPForm.elements["sPIssuerURL"].value = idp.sPIssuerURL;
                 addEditIdPForm.elements["sPEndponintHostname"].value = idp.sPEndponintHostname;
 
+                dijit.byId("signatureValidationType").set("value", idp.signatureValidationType);
+
                 if(idp.privateKey){
                     document.getElementById("privateKeySavedFile").innerText = idp.privateKey.replace(/^.*[\\\/]/, '');
                 }
@@ -147,7 +150,13 @@
                     document.getElementById("idPMetadataSavedFile").innerText = idp.idPMetadataFile.replace(/^.*[\\\/]/, '');
                 }
 
-                addEditIdPForm.elements["optionalProperties"].value = idp.optionalProperties;
+                var optionalPropertiesText = "";
+
+                Object.keys(idp.optionalProperties).forEach(function(key,index) {
+                    optionalPropertiesText += key + "=" + idp.optionalProperties[key]+ "\n"
+                });
+
+                addEditIdPForm.elements["optionalProperties"].value = optionalPropertiesText;
 
             },
             error: function (error) {
@@ -167,6 +176,8 @@
         document.getElementById("privateKey").value = "";
         document.getElementById("publicCert").value = "";
         document.getElementById("idPMetadataFile").value = "";
+
+        document.getElementById("optionalProperties").value = "";
     }
 
     require(['dojo/_base/declare'], function(declare){
@@ -306,7 +317,7 @@
 
                 <dl>
                     <dt><label for="signatureValidationType"><%=LanguageUtil.get(pageContext, "idp-validation-label")%></label></dt>
-                    <dd><select id="signatureValidationType" data-dojo-type="dijit/form/Select">
+                    <dd><select id="signatureValidationType" dojoType="dijit.form.Select">
                             <option value="responseandassertion">Response and Assertion</option>
                             <option value="response" selected="selected">Response Only</option>
                             <option value="assertion">Assertion Only</option>
@@ -316,7 +327,7 @@
 
                 <dl>
                     <dt><label for="optionalProperties"><%=LanguageUtil.get(pageContext, "optional-properties-label")%></label></dt>
-                    <dd><input type="text" dojoType="dijit.form.TextBox" name="optionalProperties" id="optionalProperties" size="20" value="" /></dd>
+                    <dd><textarea name="optionalProperties" id="optionalProperties" cols="50" rows="10"></textarea></dd>
                 </dl>
 
 

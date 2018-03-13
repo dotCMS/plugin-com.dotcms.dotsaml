@@ -27,7 +27,9 @@ import com.dotmarketing.util.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.io.StringReader;
 import java.util.List;
+import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -116,6 +118,7 @@ public class DotSamlResource implements Serializable {
                                           @FormDataParam("publicCert") FormDataContentDisposition publicCertFileDetail,
                                           @FormDataParam("idPMetadataFile") InputStream idPMetadataFileStream,
                                           @FormDataParam("idPMetadataFile") FormDataContentDisposition idPMetadataFileDetail,
+                                          @FormDataParam("signatureValidationType") String signatureValidationType,
                                           @FormDataParam("optionalProperties") String optionalProperties) {
         this.webResource.init(null, true, req, true, null);
 
@@ -134,7 +137,6 @@ public class DotSamlResource implements Serializable {
             idpConfig.setEnabled(enabled);
             idpConfig.setsPIssuerURL(sPIssuerURL);
             idpConfig.setsPEndponintHostname(sPEndponintHostname);
-            idpConfig.setOptionalProperties(optionalProperties);
 
             if (UtilMethods.isSet(privateKeyFileDetail) && UtilMethods.isSet(privateKeyFileDetail.getFileName())){
                 idpConfig.setPrivateKey(idpConfigHelper.writeCertFile(privateKeyStream, privateKeyFileDetail.getFileName()));
@@ -146,6 +148,13 @@ public class DotSamlResource implements Serializable {
                 idpConfig.setIdPMetadataFile(idpConfigHelper.writeMetadataFile(idPMetadataFileStream, idPMetadataFileDetail.getFileName()));
             }
 
+            idpConfig.setSignatureValidationType(signatureValidationType);
+
+            if (UtilMethods.isSet(optionalProperties)){
+                final Properties parsedProperties = new Properties();
+                parsedProperties.load(new StringReader(optionalProperties));
+                idpConfig.setOptionalProperties(parsedProperties);
+            }
             idpConfig = idpConfigHelper.saveIdpConfig(idpConfig);
             response = Response.ok(new ResponseEntityView(idpConfig)).build();
         } catch (IOException e) {
