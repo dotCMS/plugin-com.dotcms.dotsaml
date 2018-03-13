@@ -1,6 +1,7 @@
 package com.dotcms.plugin.saml.v3.rest.api.v1;
 
 import java.io.File;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -16,6 +17,7 @@ public class IdpConfig {
     private File idPMetadataFile;
     private String signatureValidationType;
     private Properties optionalProperties;
+    private Map<String, String> sites;
 
     public IdpConfig() {
         this.idpName = "";
@@ -106,6 +108,14 @@ public class IdpConfig {
 
     public void setOptionalProperties(Properties optionalProperties) {
         this.optionalProperties = optionalProperties;
+    }
+
+    public Map<String, String> getSites() {
+        return sites;
+    }
+
+    public void setSites(Map<String, String> sites) {
+        this.sites = sites;
     }
 
     @Override

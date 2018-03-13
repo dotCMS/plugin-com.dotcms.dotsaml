@@ -23,6 +23,7 @@ import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.json.JSONException;
 import com.dotmarketing.util.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.io.FileUtils;
 
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
@@ -122,7 +124,8 @@ public class DotSamlResource implements Serializable {
                                           @FormDataParam("idPMetadataFile") InputStream idPMetadataFileStream,
                                           @FormDataParam("idPMetadataFile") FormDataContentDisposition idPMetadataFileDetail,
                                           @FormDataParam("signatureValidationType") String signatureValidationType,
-                                          @FormDataParam("optionalProperties") String optionalProperties) {
+                                          @FormDataParam("optionalProperties") String optionalProperties,
+                                          @FormDataParam("sites") String sites) {
         this.webResource.init(null, true, req, true, null);
 
         Response response;
@@ -164,7 +167,12 @@ public class DotSamlResource implements Serializable {
                 parsedProperties.load(new StringReader(optionalProperties));
                 idpConfig.setOptionalProperties(parsedProperties);
             }
+
+            HashMap<String, String> sitesMap = new ObjectMapper().readValue(sites, HashMap.class);
+            idpConfig.setSites(sitesMap);
+
             idpConfig = idpConfigHelper.saveIdpConfig(idpConfig);
+
             response = Response.ok(new ResponseEntityView(idpConfig)).build();
         } catch (IOException e) {
             Logger.error(this,"Idp is not valid (" + e.getMessage() + ")", e);

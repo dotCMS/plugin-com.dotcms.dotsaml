@@ -1,7 +1,7 @@
-<%@page import="com.dotmarketing.util.UtilMethods"%>
-<%@ page import="com.liferay.portal.language.LanguageUtil" %>
-<%@page import="com.dotmarketing.business.APILocator"%>
 <%@page import="com.dotmarketing.beans.Host"%>
+<%@ page import="com.dotmarketing.business.APILocator" %>
+<%@page import="com.dotmarketing.util.UtilMethods"%>
+<%@page import="com.liferay.portal.language.LanguageUtil"%>
 <%@page import="java.util.List"%>
 
 <script type="text/javascript" src="/html/plugins/plugin-com.dotcms.dotsaml/saml/view_saml_configuration_js_inc.jsp" ></script>
@@ -28,7 +28,7 @@
                 dojo.forEach(idpList, function (item, index) {
 
                     if (item.enabled) {
-                       idpStatusColor = "green";
+                        idpStatusColor = "green";
                     } else {
                         idpStatusColor = "red";
                     }
@@ -88,6 +88,17 @@
         var formData = new FormData(addEditIdPForm);
 
         formData.append("signatureValidationType", dijit.byId("signatureValidationType").value);
+
+        var jsonData = {};
+
+        for (var key of mySitesMap.keys()) {
+            var siteId = key;
+            var siteName = mySitesMap.get(key);
+
+            jsonData[siteId] = siteName;
+        }
+
+        formData.append("sites", JSON.stringify(jsonData));
 
         var xhrArgs = {
             url: "/api/v1/dotsaml/idp",
@@ -159,7 +170,13 @@
                     optionalPropertiesText += key + "=" + idp.optionalProperties[key]+ "\n"
                 });
 
+                Object.keys(idp.sites).forEach(function(key,index) {
+                    mySitesMap.set(key, idp.sites[key]);
+                });
+
                 addEditIdPForm.elements["optionalProperties"].value = optionalPropertiesText;
+
+                drawTable();
 
             },
             error: function (error) {
@@ -167,6 +184,50 @@
             }
         };
         deferred = dojo.xhrGet(xhrArgs);
+    }
+
+    var mySitesMap = new Map();
+
+    function addSite(){
+        var siteId = dijit.byId("addSite").value;
+        var siteName = dijit.byId("addSite").attr('displayedValue');
+
+        mySitesMap.set(siteId, siteName);
+        drawTable();
+    }
+
+    function deleteSite(id) {
+        mySitesMap.delete(id);
+        drawTable();
+    }
+
+    function resetTable() {
+        var tableRows = document.getElementById("siteListingTable").rows.length;
+        if (tableRows > 1) {
+            for (i = 1; i < tableRows; i++) {
+                document.getElementById("siteListingTable").deleteRow(i);
+            }
+        }
+    }
+
+    function drawTable(){
+        resetTable();
+
+        for (var key of mySitesMap.keys()) {
+
+            var table = document.getElementById("siteListingTable");
+            var row = table.insertRow(1); // -1 at the end.
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+
+            var siteId = key;
+            var siteName = mySitesMap.get(key);
+
+            cell1.innerHTML = siteName;
+            cell2.innerHTML = siteId;
+            cell3.innerHTML = '<a href="javascript:deleteSite(\''+ siteId + '\');"><span class="deleteIcon"></span></a>';
+        }
     }
 
     function resetIdpConfig() {
@@ -181,6 +242,9 @@
         document.getElementById("idPMetadataFile").value = "";
 
         document.getElementById("optionalProperties").value = "";
+
+        mySitesMap = new Map();
+        resetTable();
     }
 
     require(['dojo/_base/declare'], function(declare){
@@ -196,7 +260,7 @@
             },
             deleteIdp : function(id) {
                 if(confirm('<%= UtilMethods.escapeSingleQuotes(LanguageUtil.get(pageContext, "delete-dialog-text"))%>')) {
-                        deleteIdpConfig(id);
+                    deleteIdpConfig(id);
                 }
             },
             setDefaultIdp : function() {
@@ -215,47 +279,47 @@
 </script>
 
 <div class="portlet-main">
-	<!-- START Toolbar -->
-	<div class="portlet-toolbar">
-		<div class="portlet-toolbar__actions-primary">
-			<div class="inline-form">
-				<input type="text" name="filter" id="filter" onkeydown="" dojoType="dijit.form.TextBox" value="" />
-		        <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-		            <%=LanguageUtil.get(pageContext, "Reset")%>
-		        </button>
-			</div>
-		</div>
-		<div class="portlet-toolbar__info">
-		</div>
-    	<div class="portlet-toolbar__actions-secondary">
-		    <button dojoType="dijit.form.Button" onClick="idpAdmin.addIdp();" iconClass="plusIcon">
-		            <%=LanguageUtil.get(pageContext, "add-idp")%>
-		     </button>
-    	</div>
-   </div>
+    <!-- START Toolbar -->
+    <div class="portlet-toolbar">
+        <div class="portlet-toolbar__actions-primary">
+            <div class="inline-form">
+                <input type="text" name="filter" id="filter" onkeydown="" dojoType="dijit.form.TextBox" value="" />
+                <button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
+                    <%=LanguageUtil.get(pageContext, "Reset")%>
+                </button>
+            </div>
+        </div>
+        <div class="portlet-toolbar__info">
+        </div>
+        <div class="portlet-toolbar__actions-secondary">
+            <button dojoType="dijit.form.Button" onClick="idpAdmin.addIdp();" iconClass="plusIcon">
+                <%=LanguageUtil.get(pageContext, "add-idp")%>
+            </button>
+        </div>
+    </div>
 
-   <!-- END Toolbar -->
+    <!-- END Toolbar -->
 
-	<table class="listingTable idp-list">
-	    <thead id="idpPTableHeader">
-	        <tr>
-	            <th><%=LanguageUtil.get(pageContext, "status")%></th>
-	            <th><%=LanguageUtil.get(pageContext, "idp-name")%></th>
-	            <th><%=LanguageUtil.get(pageContext, "actions")%></th>
-	            <th><%=LanguageUtil.get(pageContext, "sp-metadata-file")%></th>
-	        </tr>
-	    </thead>
-	    <tbody id="idpTableBody">
-	    </tbody>
-	</table>
+    <table class="listingTable idp-list">
+        <thead id="idpPTableHeader">
+        <tr>
+            <th><%=LanguageUtil.get(pageContext, "status")%></th>
+            <th><%=LanguageUtil.get(pageContext, "idp-name")%></th>
+            <th><%=LanguageUtil.get(pageContext, "actions")%></th>
+            <th><%=LanguageUtil.get(pageContext, "sp-metadata-file")%></th>
+        </tr>
+        </thead>
+        <tbody id="idpTableBody">
+        </tbody>
+    </table>
 
 
-	<div class="yui-gb buttonRow">
+    <div class="yui-gb buttonRow">
         <div class="yui-u first" style="text-align: left;" id="buttonPreviousResultsWrapper">
-    	    <button dojoType="dijit.form.Button" id="buttonPreviousResults" onclick="" iconClass="previousIcon">
-    		    <%=LanguageUtil.get(pageContext, "Previous")%>
-    		</button>
-    	</div>
+            <button dojoType="dijit.form.Button" id="buttonPreviousResults" onclick="" iconClass="previousIcon">
+                <%=LanguageUtil.get(pageContext, "Previous")%>
+            </button>
+        </div>
     </div>
 
     <div class="yui-u" style="text-align: center;" id="resultsSummary">
@@ -264,8 +328,8 @@
 
     <div class="yui-u" style="text-align: right;" id="buttonNextResultsWrapper">
         <button dojoType="dijit.form.Button" id="buttonNextResults" onclick="" iconClass="nextIcon">
-    	    <%=LanguageUtil.get(pageContext, "Next")%>
-    	</button>
+            <%=LanguageUtil.get(pageContext, "Next")%>
+        </button>
     </div>
 
 </div>
@@ -321,10 +385,10 @@
                 <dl>
                     <dt><label for="signatureValidationType"><%=LanguageUtil.get(pageContext, "idp-validation-label")%></label></dt>
                     <dd><select id="signatureValidationType" dojoType="dijit.form.Select">
-                            <option value="responseandassertion" selected="selected">Response and Assertion</option>
-                            <option value="response">Response Only</option>
-                            <option value="assertion">Assertion Only</option>
-                        </select>
+                        <option value="responseandassertion" selected="selected">Response and Assertion</option>
+                        <option value="response">Response Only</option>
+                        <option value="assertion">Assertion Only</option>
+                    </select>
                     </dd>
                 </dl>
 
@@ -335,7 +399,7 @@
 
 
                 <dl>
-                    <dt><label id="addSite" for=""><%= LanguageUtil.get(pageContext, "add-site") %></label></dt>
+                    <dt><label for="addSite"><%= LanguageUtil.get(pageContext, "add-site") %></label></dt>
                     <dd>
                         <div>
                             <%
@@ -348,10 +412,10 @@
                                         %><option value="<%= h.getIdentifier() %> "><%= h.getHostname() %></option><%
                                     }
                                 }
-                                %>
+                            %>
                             </select>
 
-                            <button dojoType="dijit.form.Button" onclick="" type="button">
+                            <button dojoType="dijit.form.Button" onclick="addSite();" type="button">
                                 <%= LanguageUtil.get(pageContext, "add-site-to-config") %>
                             </button>
                         </div>
@@ -362,12 +426,13 @@
                 <!-- Placeholder table with sites already assigned to the current IdP configuration .. Not sure if
                 a table is what we need here, though-->
 
-                <table class="listingTable">
+                <table id="siteListingTable" class="listingTable">
                     <thead id="siteTableHeader">
-                        <tr>
-                            <th><%=LanguageUtil.get(pageContext, "site")%></th>
-                            <th><%=LanguageUtil.get(pageContext, "actions")%></th>
-                        </tr>
+                    <tr>
+                        <th><%=LanguageUtil.get(pageContext, "site")%></th>
+                        <th><%=LanguageUtil.get(pageContext, "id")%></th>
+                        <th><%=LanguageUtil.get(pageContext, "Actions")%></th>
+                    </tr>
                     </thead>
                     <tbody id="idpAssignedTableBody">
                     </tbody>

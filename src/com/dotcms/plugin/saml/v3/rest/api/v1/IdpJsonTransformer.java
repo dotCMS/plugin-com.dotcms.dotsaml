@@ -7,7 +7,9 @@ import com.dotmarketing.util.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 
 public class IdpJsonTransformer {
@@ -25,6 +27,7 @@ public class IdpJsonTransformer {
         jo.put("idPMetadataFile", getCanonicalPathIfExists(idpConfig.getIdPMetadataFile()));
         jo.put("signatureValidationType", idpConfig.getSignatureValidationType());
         jo.put("optionalProperties", getJsonObjectFromProperties(idpConfig.getOptionalProperties()));
+        jo.put("sites", getJsonObjecFromtMap(idpConfig.getSites()));
 
         return jo;
     }
@@ -42,6 +45,7 @@ public class IdpJsonTransformer {
         idpConfig.setIdPMetadataFile(getFileFromCanonicalPath(jsonObject.getString("idPMetadataFile")));
         idpConfig.setSignatureValidationType(jsonObject.getString("signatureValidationType"));
         idpConfig.setOptionalProperties(getPropertiesFromJsonObject(jsonObject.getJSONObject("optionalProperties")));
+        idpConfig.setSites(getMapFromJsonObject(jsonObject.getJSONObject("sites")));
 
         return idpConfig;
     }
@@ -93,6 +97,33 @@ public class IdpJsonTransformer {
         }
 
         return properties;
+    }
+
+    private static JSONObject getJsonObjecFromtMap(Map<String, String> map) throws JSONException {
+        JSONObject jo = new JSONObject();
+
+        if (UtilMethods.isSet(map)){
+            for (Map.Entry<String, String> entry : map.entrySet())
+            {
+                jo.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return jo;
+    }
+
+    private static Map<String, String> getMapFromJsonObject(JSONObject jo) throws JSONException {
+        Map<String, String> map = new HashMap<>();
+        Iterator<?> keys = jo.keys();
+
+        while( keys.hasNext() ) {
+            String key = (String)keys.next();
+            String value = jo.getString(key);
+
+            map.put(key, value);
+        }
+
+        return map;
     }
 
 }
