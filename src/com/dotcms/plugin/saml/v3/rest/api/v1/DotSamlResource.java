@@ -24,6 +24,9 @@ import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.json.JSONException;
 import com.dotmarketing.util.json.JSONObject;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -139,13 +142,19 @@ public class DotSamlResource implements Serializable {
             idpConfig.setsPEndponintHostname(sPEndponintHostname);
 
             if (UtilMethods.isSet(privateKeyFileDetail) && UtilMethods.isSet(privateKeyFileDetail.getFileName())){
-                idpConfig.setPrivateKey(idpConfigHelper.writeCertFile(privateKeyStream, privateKeyFileDetail.getFileName()));
+                File privateKey = File.createTempFile("privateKey", "key");
+                FileUtils.copyInputStreamToFile(privateKeyStream, privateKey);
+                idpConfig.setPrivateKey(privateKey);
             }
             if (UtilMethods.isSet(publicCertFileDetail) && UtilMethods.isSet(publicCertFileDetail.getFileName())){
-                idpConfig.setPublicCert(idpConfigHelper.writeCertFile(publicCertStream, publicCertFileDetail.getFileName()));
+                File publicCert = File.createTempFile("publicCert", "crt");
+                FileUtils.copyInputStreamToFile(publicCertStream, publicCert);
+                idpConfig.setPublicCert(publicCert);
             }
             if (UtilMethods.isSet(idPMetadataFileDetail) && UtilMethods.isSet(idPMetadataFileDetail.getFileName())){
-                idpConfig.setIdPMetadataFile(idpConfigHelper.writeMetadataFile(idPMetadataFileStream, idPMetadataFileDetail.getFileName()));
+                File idPMetadataFile = File.createTempFile("idPMetadataFile", "xml");
+                FileUtils.copyInputStreamToFile(idPMetadataFileStream, idPMetadataFile);
+                idpConfig.setIdPMetadataFile(idPMetadataFile);
             }
 
             idpConfig.setSignatureValidationType(signatureValidationType);

@@ -8,12 +8,12 @@ import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.json.JSONException;
 import com.liferay.util.FileUtil;
 
-import org.apache.commons.io.FileUtils;
-
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,21 +30,21 @@ public class IdpConfigHelper implements Serializable {
         this.idpfilePath = assetsPath + File.separator + "saml" + File.separator + "config.json";
         this.certsParentPath = assetsPath + File.separator + "certs" + File.separator;
         this.metadataParentPath = assetsPath + File.separator + "metadata" + File.separator;
-    }
+    } // IdpConfigHelper.
 
     private static class SingletonHolder {
         private static final IdpConfigHelper INSTANCE = new IdpConfigHelper();
-    }
+    } // SingletonHolder
 
     public static IdpConfigHelper getInstance() {
         return IdpConfigHelper.SingletonHolder.INSTANCE;
-    }
+    } // getInstance.
 
     public List<IdpConfig> getIdpConfigs() throws IOException, JSONException {
         final List<IdpConfig> idpConfigs = IdpConfigWriterReader.read(new File(idpfilePath));
         Collections.sort(idpConfigs, new IdpConfigComparator());
         return idpConfigs;
-    }
+    } // getIdpConfigs.
 
     public IdpConfig findIdpConfig(String id) throws IOException, JSONException, DotDataException{
         List<IdpConfig> idpConfigList = getIdpConfigs();
@@ -55,25 +55,34 @@ public class IdpConfigHelper implements Serializable {
         } else {
             throw new DotDataException("Idp with id:" + id + " not found in file.");
         }
-    }
+    } // findIdpConfig.
 
     public IdpConfig saveIdpConfig(IdpConfig idpConfig) throws IOException, JSONException {
         List<IdpConfig> idpConfigList = getIdpConfigs();
 
         if (UtilMethods.isSet(idpConfig.getId())){
             //Update.
+
+            //Renaming files
+            idpConfig = renameIdpConfigFiles(idpConfig);
+
             idpConfigList.remove(idpConfig);
             idpConfigList.add(idpConfig);
             IdpConfigWriterReader.write(idpConfigList, idpfilePath);
         } else {
             //Create.
+
+            //Creating new UUID.
             idpConfig.setId(UUIDGenerator.generateUuid());
+            //Renaming files
+            idpConfig = renameIdpConfigFiles(idpConfig);
+
             idpConfigList.add(idpConfig);
             IdpConfigWriterReader.write(idpConfigList, idpfilePath);
         }
 
         return idpConfig;
-    }
+    } // saveIdpConfig.
 
     public void deleteIdpConfig(IdpConfig idpConfig) throws IOException, JSONException {
         List<IdpConfig> idpConfigList = getIdpConfigs();
@@ -91,28 +100,42 @@ public class IdpConfigHelper implements Serializable {
         } else {
             Logger.warn(this, "IdpConfig with Id: " + idpConfig.getId() + "no longer exists in file.");
         }
-    }
+    } // deleteIdpConfig.
 
-    public File writeCertFile(InputStream stream, String fileName) throws IOException{
-        return this.writeFile(stream, this.certsParentPath, fileName);
-    }
-
-    public File writeMetadataFile(InputStream stream, String fileName) throws IOException{
-        return this.writeFile(stream, this.metadataParentPath, fileName);
-    }
-
-    private File writeFile(InputStream stream, String parentPath, String fileName) throws IOException{
-        File file = new File(parentPath + fileName);
-
-        if (!file.exists()) {
-            file.getParentFile().mkdirs();
-            file.createNewFile();
+    private IdpConfig renameIdpConfigFiles(IdpConfig idpConfig) throws IOException {
+        if (UtilMethods.isSet(idpConfig.getPrivateKey())){
+            idpConfig.setPrivateKey(writeCertFile(idpConfig.getPrivateKey(), idpConfig.getId() + ".key"));
+        }
+        if (UtilMethods.isSet(idpConfig.getPublicCert())){
+            idpConfig.setPublicCert(writeCertFile(idpConfig.getPublicCert(), idpConfig.getId() + ".crt"));
+        }
+        if (UtilMethods.isSet(idpConfig.getIdPMetadataFile())){
+            idpConfig.setIdPMetadataFile(writeMetadataFile(idpConfig.getIdPMetadataFile(), idpConfig.getId() + ".xml"));
         }
 
-        FileUtils.copyInputStreamToFile(stream, file);
+        return idpConfig;
+    } // renameIdpConfigFiles.
 
-        return file;
-    }
+    private File writeCertFile(File sourceFile, String fileName) throws IOException{
+        return this.writeFile(sourceFile, this.certsParentPath, fileName);
+    } // writeCertFile.
+
+    private File writeMetadataFile(File sourceFile, String fileName) throws IOException{
+        return this.writeFile(sourceFile, this.metadataParentPath, fileName);
+    } // writeMetadataFile.
+
+    private File writeFile(File sourceFile, String parentPath, String fileName) throws IOException{
+        File targetFile = new File(parentPath + fileName);
+
+        if (!targetFile.exists()) {
+            targetFile.getParentFile().mkdirs();
+            targetFile.createNewFile();
+        }
+
+        final Path movedPath = Files.move(sourceFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+        return movedPath.toFile();
+    } // writeFile.
 
     private void deleteFile(File fileToDelete){
         if (fileToDelete != null){
@@ -122,5 +145,5 @@ public class IdpConfigHelper implements Serializable {
                 Logger.warn(this, "File doesn't exist: " + fileToDelete.getName());
             }
         }
-    }
+    } // deleteFile.
 }
