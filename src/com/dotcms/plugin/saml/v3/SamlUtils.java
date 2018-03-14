@@ -839,7 +839,7 @@ public class SamlUtils {
     } // invokeMessageHandlerChain.
 
     /**
-     * Check if we can read the KeyStore from file using the SAML properties.
+     * Check if we can readIdpConfigs the KeyStore from file using the SAML properties.
      *
      * @param samlProperties {@link Properties} with the values needed.
      * @return
@@ -867,11 +867,11 @@ public class SamlUtils {
             if (InputStreamUtils.isResourceFile(pathToKeyStore)) {
 
                 Logger.debug(SamlUtils.class,
-                        "The " + pathToKeyStore + ", is a file, checking if exists and can read");
+                        "The " + pathToKeyStore + ", is a file, checking if exists and can readIdpConfigs");
                 final File pathToKeyStoreFile = new File(InputStreamUtils.normalizeFile(pathToKeyStore));
 
                 if (!pathToKeyStoreFile.exists() || !pathToKeyStoreFile.canRead()) {
-                    otherErrors.add("The Key Store path: " + pathToKeyStore + ", does not exists or can not read.");
+                    otherErrors.add("The Key Store path: " + pathToKeyStore + ", does not exists or can not readIdpConfigs.");
                     return otherErrors;
                 }
             }
@@ -906,7 +906,7 @@ public class SamlUtils {
     } // validateKeyStore.
 
     /**
-     * Check if the File Path exists, can access and read.
+     * Check if the File Path exists, can access and readIdpConfigs.
      *
      * @param properties {@link Properties} (Key, Value) = (PropertyName, FilePath).
      * @param filePathPropertyKeys keys name that have File path in the value.

@@ -18,11 +18,11 @@ import com.dotcms.rest.ResponseEntityView;
 import com.dotcms.rest.WebResource;
 import com.dotcms.rest.annotation.NoCache;
 import com.dotcms.rest.exception.mapper.ExceptionMapperUtil;
+import com.dotcms.util.CollectionsUtils;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.json.JSONException;
-import com.dotmarketing.util.json.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.io.FileUtils;
@@ -204,10 +204,7 @@ public class DotSamlResource implements Serializable {
 
             idpConfigHelper.deleteIdpConfig(idpConfig);
 
-            JSONObject joe = new JSONObject();
-            joe.put("deleted", idpConfig.getId());
-
-            response = Response.ok(new ResponseEntityView(joe.toString())).build();
+            response = Response.ok(new ResponseEntityView(CollectionsUtils.map("deleted", id))).build();
         } catch (IOException e) {
             Logger.error(this,"Idp is not valid (" + e.getMessage() + ")", e);
             response = ExceptionMapperUtil.createResponse(null, "Idp is not valid (" + e.getMessage() + ")");
@@ -221,6 +218,66 @@ public class DotSamlResource implements Serializable {
 
         return response;
     } // deleteIdpConfig.
+
+    @POST
+    @Path("/default/{id}")
+    @JSONP
+    @NoCache
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public Response setDefault(@PathParam("id") final String id, @Context final HttpServletRequest req){
+        this.webResource.init(null, true, req, true, null);
+
+        Response response;
+
+        try {
+            idpConfigHelper.setDefaultIdpConfig(id);
+
+            response = Response.ok(new ResponseEntityView(CollectionsUtils.map("default", id))).build();
+        } catch (DotDataException e) {
+            Logger.error(this,"Idp not found (" + e.getMessage() + ")", e);
+            response = ExceptionMapperUtil.createResponse(null, "Idp not found (" + e.getMessage() + ")");
+        } catch (IOException e) {
+            Logger.error(this,"Idp is not valid (" + e.getMessage() + ")", e);
+            response = ExceptionMapperUtil.createResponse(null, "Idp is not valid (" + e.getMessage() + ")");
+        } catch (JSONException e) {
+            Logger.error(this,"Error handling json (" + e.getMessage() + ")", e);
+            response = ExceptionMapperUtil.createResponse(null, "Error handling json (" + e.getMessage() + ")");
+        } catch (Exception e) { // this is an unknown error, so we report as a 500.
+            Logger.error(this,"Error getting setting idp", e);
+            response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        return response;
+    } // setDefault.
+
+    @GET
+    @Path("/default")
+    @JSONP
+    @NoCache
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public Response getDefault(@Context final HttpServletRequest req){
+        this.webResource.init(null, true, req, true, null);
+
+        Response response;
+
+        try {
+            final String defaultIdpConfigId = idpConfigHelper.getDefaultIdpConfigId();
+
+            response = Response.ok(new ResponseEntityView(CollectionsUtils.map("default", defaultIdpConfigId))).build();
+
+        } catch (IOException e) {
+            Logger.error(this,"Error reading file with Idps (" + e.getMessage() + ")", e);
+            response = ExceptionMapperUtil.createResponse(null, "Idp is not valid (" + e.getMessage() + ")");
+        } catch (JSONException e) {
+            Logger.error(this,"Error handling json with Idps (" + e.getMessage() + ")", e);
+            response = ExceptionMapperUtil.createResponse(null, "Error handling json (" + e.getMessage() + ")");
+        } catch (Exception e) { // this is an unknown error, so we report as a 500.
+            Logger.error(this,"Error getting default idp", e);
+            response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        return response;
+    } // getDefault.
 
 }
 

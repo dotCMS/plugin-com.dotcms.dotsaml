@@ -16,6 +16,7 @@
     function renderIdpConfigs() {
         //Node List
         var idpList;
+        var defaultIdp = getDefaultIdpConfig();
 
         xhrArgs = {
             url: "/api/v1/dotsaml/idps",
@@ -33,12 +34,26 @@
                         idpStatusColor = "red";
                     }
 
+                    var defaultButtonHTML = "<button dojoType='dijit.form.Button' onclick='idpAdmin.setDefaultIdp(\"" + item.id +"\");' class='dijitButtonFlat'>" +
+                        "                        <%=LanguageUtil.get(pageContext, "set-as-default")%>" +
+                        "                    </button>";
+
+                    if(defaultIdp && defaultIdp == item.id){
+                        defaultButtonHTML = "";
+                    }
+
+                    var defaultTranslation = ""
+
+                    if(defaultIdp && defaultIdp == item.id){
+                        defaultTranslation = "<b>(Default)</b>";
+                    }
+
                     idpsTableHTML +=
                         "        <tr>" +
                         "            <td>" +
                         "               <i class='statusIcon " + idpStatusColor + "'></i>" +
                         "            </td>" +
-                        "            <td>" + item.idpName + "</td>" +
+                        "            <td>" + item.idpName + defaultTranslation + "</td>" +
                         "            <td>" +
                         "                <button dojoType='dijit.form.Button' onclick='idpAdmin.editIdp(\"" + item.id + "\");' class='dijitButtonFlat'>" +
                         "                    <%=LanguageUtil.get(pageContext, "edit")%>" +
@@ -46,9 +61,7 @@
                         "                <button dojoType='dijit.form.Button' onclick='idpAdmin.deleteIdp(\"" + item.id +"\");' class='dijitButtonFlat'>" +
                         "                    <%=LanguageUtil.get(pageContext, "delete")%>" +
                         "                </button>" +
-                        "                <button dojoType='dijit.form.Button' onclick='idpAdmin.setDefaultIdp();' class='dijitButtonFlat'>" +
-                        "                    <%=LanguageUtil.get(pageContext, "set-as-default")%>" +
-                        "                </button>" +
+                                         defaultButtonHTML +
                         "            </td>" +
                         "            <td>" +
                         "                <button dojoType='dijit.form.Button' onclick='idpAdmin.downloadSPMedatadata();' class='dijitButtonFlat'>" +
@@ -128,6 +141,42 @@
             }
         };
         deferred = dojo.xhrDelete(xhrArgs);
+    }
+
+    function setDefaultIdpConfig(id) {
+        xhrArgs = {
+            url: "/api/v1/dotsaml/default/" + id,
+            handleAs: "json",
+            load: function () {
+                renderIdpConfigs();
+            },
+            error: function (error) {
+                alert("An unexpected error occurred: " + error);
+            }
+        };
+        deferred = dojo.xhrPost(xhrArgs);
+    }
+
+    function getDefaultIdpConfig(){
+        var defaultIdp = "";
+
+        xhrArgs = {
+            url: "/api/v1/dotsaml/default",
+            sync: true,
+            handleAs: "json",
+            load: function (data) {
+                idp = data.entity;
+                if(idp && idp.default){
+                    defaultIdp = idp.default;
+                }
+            },
+            error: function (error) {
+                alert("An unexpected error occurred: " + error);
+            }
+        }
+        deferred = dojo.xhrGet(xhrArgs);
+
+        return defaultIdp;
     }
 
     function findIdpConfig(id) {
@@ -263,8 +312,8 @@
                     deleteIdpConfig(id);
                 }
             },
-            setDefaultIdp : function() {
-                window.alert("Set Default Here");
+            setDefaultIdp : function(id) {
+                setDefaultIdpConfig(id);
             },
             disableSAMLPerSite : function() {
                 window.alert("Disable SAML Authentication here");

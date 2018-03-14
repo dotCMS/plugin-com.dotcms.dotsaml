@@ -41,7 +41,7 @@ public class IdpConfigHelper implements Serializable {
     } // getInstance.
 
     public List<IdpConfig> getIdpConfigs() throws IOException, JSONException {
-        final List<IdpConfig> idpConfigs = IdpConfigWriterReader.read(new File(idpfilePath));
+        final List<IdpConfig> idpConfigs = IdpConfigWriterReader.readIdpConfigs(new File(idpfilePath));
         Collections.sort(idpConfigs, new IdpConfigComparator());
         return idpConfigs;
     } // getIdpConfigs.
@@ -86,12 +86,18 @@ public class IdpConfigHelper implements Serializable {
 
     public void deleteIdpConfig(IdpConfig idpConfig) throws IOException, JSONException {
         List<IdpConfig> idpConfigList = getIdpConfigs();
+        String defaultIdpConfigId = IdpConfigWriterReader.readDefaultIdpConfigId(new File(idpfilePath));
+
+        //We need to clean the defaultIdpConfigId if we are deleting the same IDP.
+        if (idpConfig.getId().equals(defaultIdpConfigId)){
+            defaultIdpConfigId = "";
+        }
 
         if (idpConfigList.contains(idpConfig)){
             //Delete from list.
             idpConfig = idpConfigList.get(idpConfigList.indexOf(idpConfig));
             idpConfigList.remove(idpConfig);
-            IdpConfigWriterReader.write(idpConfigList, idpfilePath);
+            IdpConfigWriterReader.write(idpConfigList, defaultIdpConfigId, idpfilePath);
             //Delete files from FS.
             deleteFile(idpConfig.getPrivateKey());
             deleteFile(idpConfig.getPublicCert());
@@ -101,6 +107,25 @@ public class IdpConfigHelper implements Serializable {
             Logger.warn(this, "IdpConfig with Id: " + idpConfig.getId() + "no longer exists in file.");
         }
     } // deleteIdpConfig.
+
+    public void setDefaultIdpConfig(String idpConfigId) throws IOException, JSONException, DotDataException{
+        List<IdpConfig> idpConfigList = getIdpConfigs();
+
+        final IdpConfig idpConfig = new IdpConfig();
+        idpConfig.setId(idpConfigId);
+
+        if (idpConfigList.contains(idpConfig)){
+            IdpConfigWriterReader.write(idpConfigList, idpConfigId, idpfilePath);
+        }
+        else {
+            Logger.error(this, "IdpConfig with Id: " + idpConfig.getId() + "no longer exists in file.");
+            throw new DotDataException("IdpConfig with Id: " + idpConfig.getId() + "no longer exists in file.");
+        }
+    } // setDefaultIdpConfig.
+
+    public String getDefaultIdpConfigId() throws IOException, JSONException, DotDataException{
+        return IdpConfigWriterReader.readDefaultIdpConfigId(new File(idpfilePath));
+    } // setDefaultIdpConfig.
 
     private IdpConfig renameIdpConfigFiles(IdpConfig idpConfig) throws IOException {
         if (UtilMethods.isSet(idpConfig.getPrivateKey())){

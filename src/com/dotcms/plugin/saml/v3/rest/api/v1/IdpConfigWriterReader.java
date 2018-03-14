@@ -15,8 +15,13 @@ import java.util.List;
 public class IdpConfigWriterReader {
 
     public static final String IDP_CONFIGS = "samlConfigs";
+    public static final String DEFAULT_SAML_CONFIG = "defaultSamlConfig";
 
     public static File write(List<IdpConfig> idpConfigList, String idpConfigPath) throws IOException, JSONException {
+        return write(idpConfigList, readDefaultIdpConfigId(new File(idpConfigPath)), idpConfigPath);
+    }
+
+    public static File write(List<IdpConfig> idpConfigList, String defaultIdpConfigId, String idpConfigPath) throws IOException, JSONException {
         JSONArray jsonArray = new JSONArray();
         for (IdpConfig idpConfig : idpConfigList) {
             final JSONObject joIdp = IdpJsonTransformer.idpToJson(idpConfig);
@@ -25,6 +30,7 @@ public class IdpConfigWriterReader {
         }
 
         JSONObject jo = new JSONObject();
+        jo.put(DEFAULT_SAML_CONFIG, defaultIdpConfigId);
         jo.put(IDP_CONFIGS, jsonArray);
 
         File idpConfigFile = new File(idpConfigPath);
@@ -41,7 +47,19 @@ public class IdpConfigWriterReader {
         return new File(idpConfigPath);
     }
 
-    public static List<IdpConfig> read(final File idpConfigFile) throws IOException, JSONException {
+    public static String readDefaultIdpConfigId(final File idpConfigFile) throws IOException, JSONException {
+        String defaultIdpConfigId = "";
+
+        if (idpConfigFile.exists()) {
+            String content = new String(Files.readAllBytes(idpConfigFile.toPath()));
+            JSONObject jsonObject = new JSONObject(content);
+            defaultIdpConfigId = jsonObject.getString(DEFAULT_SAML_CONFIG);
+        }
+
+        return defaultIdpConfigId;
+    }
+
+    public static List<IdpConfig> readIdpConfigs(final File idpConfigFile) throws IOException, JSONException {
         List<IdpConfig> idpConfigList = new ArrayList<>();
 
         if (idpConfigFile.exists()) {

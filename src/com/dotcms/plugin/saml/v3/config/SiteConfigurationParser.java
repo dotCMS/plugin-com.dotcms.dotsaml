@@ -34,7 +34,7 @@ public class SiteConfigurationParser implements Serializable {
     /**
      * Read the SAML configuration field from each host and
      * put it into a map String -> {@link SiteConfigurationBean}
-     * Each configuration is read as a pattern of key=value
+     * Each configuration is readIdpConfigs as a pattern of key=value
      *
      * @return Map
      */
@@ -50,7 +50,7 @@ public class SiteConfigurationParser implements Serializable {
     /**
      * Read the SAML configuration field from each host pass by parameter and
      * put it into a map String -> {@link SiteConfigurationBean}
-     * Each configuration is read as a pattern of key=value
+     * Each configuration is readIdpConfigs as a pattern of key=value
      *
      * @param hosts List of Host
      * @return Map
@@ -75,7 +75,7 @@ public class SiteConfigurationParser implements Serializable {
     /**
      * Read the SAML configuration for each disable host and
      * put it into a map String -> {@link SiteConfigurationBean}
-     * Each configuration is read as a pattern of key=value
+     * Each configuration is readIdpConfigs as a pattern of key=value
      *
      * @return Map
      */
@@ -91,7 +91,7 @@ public class SiteConfigurationParser implements Serializable {
     /**
      * Read the SAML configuration for each disable host and
      * put it into a map String -> {@link SiteConfigurationBean}
-     * Each configuration is read as a pattern of key=value
+     * Each configuration is readIdpConfigs as a pattern of key=value
      *
      * @param hosts List of Host
      * @return Map
@@ -181,7 +181,7 @@ public class SiteConfigurationParser implements Serializable {
     /**
      * Read the SAML configuration field from the specified host and
      * put it into a map String -> {@link SiteConfigurationBean}
-     * Each configuration is read as a pattern of key=value
+     * Each configuration is readIdpConfigs as a pattern of key=value
      *
      * @return Map
      */
@@ -213,8 +213,8 @@ public class SiteConfigurationParser implements Serializable {
      * include.roles.pattern
      *
      * 1. Validate that the properties exist.
-     * 2. Validate that the File properties exist, can access and read.
-     * 3. Validate we can read the Key Store.
+     * 2. Validate that the File properties exist, can access and readIdpConfigs.
+     * 3. Validate we can readIdpConfigs the Key Store.
      *
      * @param host
      * @throws DotDataException
@@ -259,8 +259,8 @@ public class SiteConfigurationParser implements Serializable {
      * include.roles.pattern
      *
      * 1. Validate that the properties exist.
-     * 2. Validate that the File properties exist, can access and read.
-     * 3. Validate we can read the Key Store.
+     * 2. Validate that the File properties exist, can access and readIdpConfigs.
+     * 3. Validate we can readIdpConfigs the Key Store.
      *
      * Assumes you send the defaultHost.
      *

@@ -98,7 +98,7 @@ public class DefaultInitializer implements Initializer {
     } // addPostHook.
 
     /**
-     * Init the task that read the hosts and update the saml configuration if they changed.
+     * Init the task that readIdpConfigs the hosts and update the saml configuration if they changed.
      */
     private void initScheduleUpdaterSAMLConfiguration() {
 
