@@ -9,19 +9,18 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class IdpConfigWriterReader {
 
     public static final String IDP_CONFIGS = "samlConfigs";
     public static final String DEFAULT_SAML_CONFIG = "defaultSamlConfig";
+    public static final String DISABLE_SAML_SITES = "disabledSamlSites";
 
-    public static File write(List<IdpConfig> idpConfigList, String idpConfigPath) throws IOException, JSONException {
-        return write(idpConfigList, readDefaultIdpConfigId(new File(idpConfigPath)), idpConfigPath);
-    }
-
-    public static File write(List<IdpConfig> idpConfigList, String defaultIdpConfigId, String idpConfigPath) throws IOException, JSONException {
+    public static File write(List<IdpConfig> idpConfigList, String defaultIdpConfigId, Map<String, String> disabledSitesMap, String idpConfigPath) throws IOException, JSONException {
         JSONArray jsonArray = new JSONArray();
         for (IdpConfig idpConfig : idpConfigList) {
             final JSONObject joIdp = IdpJsonTransformer.idpToJson(idpConfig);
@@ -32,6 +31,7 @@ public class IdpConfigWriterReader {
         JSONObject jo = new JSONObject();
         jo.put(DEFAULT_SAML_CONFIG, defaultIdpConfigId);
         jo.put(IDP_CONFIGS, jsonArray);
+        jo.put(DISABLE_SAML_SITES, SiteJsonTransformer.getJsonObjecFromtMap(disabledSitesMap));
 
         File idpConfigFile = new File(idpConfigPath);
         if (!idpConfigFile.exists()) {
@@ -53,10 +53,19 @@ public class IdpConfigWriterReader {
         if (idpConfigFile.exists()) {
             String content = new String(Files.readAllBytes(idpConfigFile.toPath()));
             JSONObject jsonObject = new JSONObject(content);
-            defaultIdpConfigId = jsonObject.getString(DEFAULT_SAML_CONFIG);
+            if (jsonObject.has(DEFAULT_SAML_CONFIG)){
+                defaultIdpConfigId = jsonObject.getString(DEFAULT_SAML_CONFIG);
+            }
         }
 
         return defaultIdpConfigId;
+    }
+
+    public static File writeDefaultIdpConfigId(String defaultIdpConfigId, String idpConfigPath) throws IOException, JSONException {
+        return write(readIdpConfigs(new File(idpConfigPath)),
+            defaultIdpConfigId,
+            readDisabledSiteIds(new File(idpConfigPath)),
+            idpConfigPath);
     }
 
     public static List<IdpConfig> readIdpConfigs(final File idpConfigFile) throws IOException, JSONException {
@@ -83,5 +92,35 @@ public class IdpConfigWriterReader {
         }
 
         return idpConfigList;
+    }
+
+    public static File writeIdpConfigs(List<IdpConfig> idpConfigList, String idpConfigPath) throws IOException, JSONException {
+        return write(idpConfigList, readDefaultIdpConfigId(new File(idpConfigPath)), readDisabledSiteIds(new File(idpConfigPath)), idpConfigPath);
+    }
+
+    public static Map<String, String> readDisabledSiteIds(final File idpConfigFile)
+        throws IOException, JSONException {
+
+        Map<String, String> disabledSites = new HashMap<>();
+
+        if (idpConfigFile.exists()) {
+            String content = new String(Files.readAllBytes(idpConfigFile.toPath()));
+            JSONObject jo = new JSONObject(content);
+
+            if (jo.has(DEFAULT_SAML_CONFIG)) {
+                final JSONObject joDisabledSites = jo.getJSONObject(DISABLE_SAML_SITES);
+                disabledSites = SiteJsonTransformer.getMapFromJsonObject(joDisabledSites);
+            }
+        }
+
+        return disabledSites;
+    }
+
+    public static File writeDisabledSIteIds(Map<String, String> disabledSitesMap, String idpConfigPath) throws IOException, JSONException {
+
+        return write(readIdpConfigs(new File(idpConfigPath)),
+            readDefaultIdpConfigId(new File(idpConfigPath)),
+            disabledSitesMap,
+            idpConfigPath);
     }
 }

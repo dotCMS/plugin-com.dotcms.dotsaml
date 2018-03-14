@@ -129,26 +129,26 @@
         deferred = dojo.xhrPost(xhrArgs);
     }
 
-    function deleteIdpConfig(id) {
-        xhrArgs = {
-            url: "/api/v1/dotsaml/idp/" + id,
-            handleAs: "json",
-            load: function () {
-                renderIdpConfigs();
-            },
-            error: function (error) {
-                alert("An unexpected error occurred: " + error);
-            }
-        };
-        deferred = dojo.xhrDelete(xhrArgs);
-    }
+    function saveDisabledSites() {
+        var formData = new FormData();
+        var jsonData = {};
 
-    function setDefaultIdpConfig(id) {
-        xhrArgs = {
-            url: "/api/v1/dotsaml/default/" + id,
+        for (var key of myDisabledSitesMap.keys()) {
+            var siteId = key;
+            var siteName = myDisabledSitesMap.get(key);
+
+            jsonData[siteId] = siteName;
+        }
+
+        formData.append("disabledsites", JSON.stringify(jsonData));
+
+        var xhrArgs = {
+            url: "/api/v1/dotsaml/disabledsites",
+            headers: { "Content-Type": false },
+            postData: formData,
             handleAs: "json",
-            load: function () {
-                renderIdpConfigs();
+            load: function (data) {
+                dijit.byId('disableSamlSiteDialog').hide();
             },
             error: function (error) {
                 alert("An unexpected error occurred: " + error);
@@ -166,8 +166,63 @@
             handleAs: "json",
             load: function (data) {
                 idp = data.entity;
-                if(idp && idp.default){
-                    defaultIdp = idp.default;
+                if(idp && idp.defaultSamlConfig){
+                    defaultIdp = idp.defaultSamlConfig;
+                }
+            },
+            error: function (error) {
+                alert("An unexpected error occurred: " + error);
+            }
+        }
+        deferred = dojo.xhrGet(xhrArgs);
+
+        return defaultIdp;
+    }
+
+    function deleteIdpConfig(id) {
+        xhrArgs = {
+            url: "/api/v1/dotsaml/idp/" + id,
+            handleAs: "json",
+            load: function () {
+                renderIdpConfigs();
+            },
+            error: function (error) {
+                alert("An unexpected error occurred: " + error);
+            }
+        };
+        deferred = dojo.xhrDelete(xhrArgs);
+    }
+
+    function getDisabledSites() {
+        xhrArgs = {
+            url: "/api/v1/dotsaml/disabledsites/",
+            handleAs: "json",
+            load: function (data ) {
+                var entity = data.entity;
+
+                Object.keys(entity.disabledSamlSites).forEach(function(key,index) {
+                    myDisabledSitesMap.set(key, entity.disabledSamlSites[key]);
+                });
+                drawTable(myDisabledSitesMap, "myDisabledSitesMap", "disabledSiteListingTable");
+            },
+            error: function (error) {
+                alert("An unexpected error occurred: " + error);
+            }
+        };
+        deferred = dojo.xhrGet(xhrArgs);
+    }
+
+    function getDefaultIdpConfig(){
+        var defaultIdp = "";
+
+        xhrArgs = {
+            url: "/api/v1/dotsaml/default",
+            sync: true,
+            handleAs: "json",
+            load: function (data) {
+                idp = data.entity;
+                if(idp && idp.defaultSamlConfig){
+                    defaultIdp = idp.defaultSamlConfig;
                 }
             },
             error: function (error) {
@@ -188,7 +243,7 @@
 
                 dijit.byId('addEditIdPDialog').show();
 
-                resetIdpConfig();
+                resetIdpConfig(mySitesMap, "siteListingTable");
 
                 addEditIdPForm.elements["id"].value = idp.id;
                 addEditIdPForm.elements["idpName"].value = idp.idpName;
@@ -225,7 +280,7 @@
 
                 addEditIdPForm.elements["optionalProperties"].value = optionalPropertiesText;
 
-                drawTable();
+                drawTable(mySitesMap, "mySitesMap", "siteListingTable");
 
             },
             error: function (error) {
@@ -236,50 +291,51 @@
     }
 
     var mySitesMap = new Map();
+    var myDisabledSitesMap = new Map();
 
-    function addSite(){
-        var siteId = dijit.byId("addSite").value;
-        var siteName = dijit.byId("addSite").attr('displayedValue');
+    function addSite(sitesMap, sitesMapName, selectId, tableId){
+        var siteId = dijit.byId(selectId).value;
+        var siteName = dijit.byId(selectId).attr('displayedValue');
 
-        mySitesMap.set(siteId, siteName);
-        drawTable();
+        sitesMap.set(siteId, siteName);
+        drawTable(sitesMap, sitesMapName,  tableId);
     }
 
-    function deleteSite(id) {
-        mySitesMap.delete(id);
-        drawTable();
+    function deleteSite(id, sitesMap, sitesMapName, tableId) {
+        sitesMap.delete(id);
+        drawTable(sitesMap, sitesMapName, tableId);
     }
 
-    function resetTable() {
-        var tableRows = document.getElementById("siteListingTable").rows.length;
+    function resetTable(tableId) {
+        var tableRows = document.getElementById(tableId).rows.length;
         if (tableRows > 1) {
             for (i = 1; i < tableRows; i++) {
-                document.getElementById("siteListingTable").deleteRow(i);
+                document.getElementById(tableId).deleteRow(i);
             }
         }
     }
 
-    function drawTable(){
-        resetTable();
+    function drawTable(sitesMap, sitesMapName, tableId){
+        resetTable(tableId);
 
-        for (var key of mySitesMap.keys()) {
+        for (var key of sitesMap.keys()) {
 
-            var table = document.getElementById("siteListingTable");
+            var table = document.getElementById(tableId);
             var row = table.insertRow(1); // -1 at the end.
             var cell1 = row.insertCell(0);
             var cell2 = row.insertCell(1);
             var cell3 = row.insertCell(2);
 
             var siteId = key;
-            var siteName = mySitesMap.get(key);
+            var siteName = sitesMap.get(key);
 
             cell1.innerHTML = siteName;
             cell2.innerHTML = siteId;
-            cell3.innerHTML = '<a href="javascript:deleteSite(\''+ siteId + '\');"><span class="deleteIcon"></span></a>';
+            cell3.innerHTML = '<a href="javascript:deleteSite(\''+ siteId + '\', '+ sitesMapName +',\''+ sitesMapName +'\', \''+tableId+'\');"><span class="deleteIcon"></span></a>';
         }
     }
 
-    function resetIdpConfig() {
+    function resetIdpConfig(sitesMap, tableId) {
         dojo.byId("addEditIdPForm").reset();
 
         document.getElementById("privateKeySavedFile").innerText = "";
@@ -292,8 +348,8 @@
 
         document.getElementById("optionalProperties").value = "";
 
-        mySitesMap = new Map();
-        resetTable();
+        sitesMap.clear();
+        resetTable(tableId);
     }
 
     require(['dojo/_base/declare'], function(declare){
@@ -302,7 +358,7 @@
             },
             addIdp : function() {
                 dijit.byId('addEditIdPDialog').show();
-                resetIdpConfig();
+                resetIdpConfig(mySitesMap, "siteListingTable");
             },
             editIdp : function(id) {
                 findIdpConfig(id);
@@ -316,7 +372,8 @@
                 setDefaultIdpConfig(id);
             },
             disableSAMLPerSite : function() {
-                window.alert("Disable SAML Authentication here");
+                dijit.byId('disableSamlSiteDialog').show();
+                getDisabledSites();
             },
             downloadSPMedatadata : function() {
                 window.alert("This functionality will be available in the next sprint");
@@ -464,7 +521,7 @@
                             %>
                             </select>
 
-                            <button dojoType="dijit.form.Button" onclick="addSite();" type="button">
+                            <button dojoType="dijit.form.Button" onclick="addSite(mySitesMap, 'mySitesMap', 'addSite', 'siteListingTable');" type="button">
                                 <%= LanguageUtil.get(pageContext, "add-site-to-config") %>
                             </button>
                         </div>
@@ -489,6 +546,55 @@
             </div>
             <div style="text-align: center">
                 <button  dojoType="dijit.form.Button" onclick="saveIdp()" iconClass="uploadIcon">
+                    <%= LanguageUtil.get(pageContext, "save") %>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="disableSamlSiteDialog" dojoType="dijit.Dialog" disableCloseButton="true" title="<%=LanguageUtil.get(pageContext, "disabled-sites-dialog-title")%>" style="display: none; width:600px">
+    <div>
+        <form id="disableSamlSiteForm" name="disableSamlSiteForm" dojoType="dijit.form.Form">
+            <div class="form-inline">
+                <dl>
+                    <dt><label for="addSite"><%= LanguageUtil.get(pageContext, "add-site") %></label></dt>
+                    <dd>
+                        <div>
+                            <%
+                                allHosts = APILocator.getHostAPI().findAll(APILocator.getUserAPI().getSystemUser(),true);
+                            %>
+
+                            <select id="addDisabledSite" dojoType="dijit.form.FilteringSelect" autocomplete="true" onChange="" style="width: 200px">
+                                <%for (Host h: allHosts){
+                                    if (!h.getIdentifier().equals(Host.SYSTEM_HOST) && h.isLive()) {
+                                        %><option value="<%= h.getIdentifier() %> "><%= h.getHostname() %></option><%
+                                    }
+                                }
+                            %>
+                            </select>
+
+                            <button dojoType="dijit.form.Button" onclick="addSite(myDisabledSitesMap, 'myDisabledSitesMap', 'addDisabledSite', 'disabledSiteListingTable');" type="button">
+                                <%= LanguageUtil.get(pageContext, "add-site-to-config") %>
+                            </button>
+                        </div>
+                    </dd>
+                </dl>
+
+                <table id="disabledSiteListingTable" class="listingTable">
+                    <thead id="disabledSiteTableHeader">
+                    <tr>
+                        <th><%=LanguageUtil.get(pageContext, "site")%></th>
+                        <th><%=LanguageUtil.get(pageContext, "id")%></th>
+                        <th><%=LanguageUtil.get(pageContext, "Actions")%></th>
+                    </tr>
+                    </thead>
+                    <tbody id="disabledSiteTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div style="text-align: center">
+                <button  dojoType="dijit.form.Button" onclick="saveDisabledSites()" iconClass="uploadIcon">
                     <%= LanguageUtil.get(pageContext, "save") %>
                 </button>
             </div>

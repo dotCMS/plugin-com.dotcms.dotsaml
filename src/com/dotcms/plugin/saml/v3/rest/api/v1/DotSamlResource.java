@@ -34,6 +34,7 @@ import java.io.Serializable;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
@@ -263,7 +264,9 @@ public class DotSamlResource implements Serializable {
         try {
             final String defaultIdpConfigId = idpConfigHelper.getDefaultIdpConfigId();
 
-            response = Response.ok(new ResponseEntityView(CollectionsUtils.map("default", defaultIdpConfigId))).build();
+            response =
+                Response.ok(new ResponseEntityView(
+                    CollectionsUtils.map(IdpConfigWriterReader.DEFAULT_SAML_CONFIG, defaultIdpConfigId))).build();
 
         } catch (IOException e) {
             Logger.error(this,"Error reading file with Idps (" + e.getMessage() + ")", e);
@@ -278,6 +281,69 @@ public class DotSamlResource implements Serializable {
 
         return response;
     } // getDefault.
+
+    @GET
+    @Path("/disabledsites")
+    @JSONP
+    @NoCache
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public Response getDisabledSites(@Context final HttpServletRequest req){
+        this.webResource.init(null, true, req, true, null);
+
+        Response response;
+
+        try {
+            final Map<String, String> disabledSiteIds = idpConfigHelper.getDisabledSiteIds();
+
+            response = Response.ok(new ResponseEntityView(
+                CollectionsUtils.map(IdpConfigWriterReader.DISABLE_SAML_SITES, disabledSiteIds)))
+                .build();
+
+        } catch (IOException e) {
+            Logger.error(this,"Error reading file with disabled sites (" + e.getMessage() + ")", e);
+            response = ExceptionMapperUtil.createResponse(null, "disable site is not valid (" + e.getMessage() + ")");
+        } catch (JSONException e) {
+            Logger.error(this,"Error handling json with Idps (" + e.getMessage() + ")", e);
+            response = ExceptionMapperUtil.createResponse(null, "Error handling disabled site json (" + e.getMessage() + ")");
+        } catch (Exception e) { // this is an unknown error, so we report as a 500.
+            Logger.error(this,"Error getting default idp", e);
+            response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        return response;
+    } // getDisabledSites.
+
+    @POST
+    @Path("/disabledsites")
+    @JSONP
+    @NoCache
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public final Response saveDisabledSited(@Context final HttpServletRequest req,
+                                          @FormDataParam("disabledsites") String disabledSites) {
+        this.webResource.init(null, true, req, true, null);
+
+        Response response;
+
+        try {
+            HashMap<String, String> disabledSitesMap = new ObjectMapper().readValue(disabledSites, HashMap.class);
+            idpConfigHelper.saveDisabledSiteIds(disabledSitesMap);
+
+            response = Response.ok().build();
+
+        } catch (IOException e) {
+            Logger.error(this,"Error reading file with disabled sites (" + e.getMessage() + ")", e);
+            response = ExceptionMapperUtil.createResponse(null, "disable site is not valid (" + e.getMessage() + ")");
+        } catch (JSONException e) {
+            Logger.error(this,"Error handling json with Idps (" + e.getMessage() + ")", e);
+            response = ExceptionMapperUtil.createResponse(null, "Error handling disabled site json (" + e.getMessage() + ")");
+        } catch (Exception e) { // this is an unknown error, so we report as a 500.
+            Logger.error(this,"Error getting default idp", e);
+            response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+
+        return response;
+    }
 
 }
 

@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class IdpConfigHelper implements Serializable {
 
@@ -68,7 +69,7 @@ public class IdpConfigHelper implements Serializable {
 
             idpConfigList.remove(idpConfig);
             idpConfigList.add(idpConfig);
-            IdpConfigWriterReader.write(idpConfigList, idpfilePath);
+            IdpConfigWriterReader.writeIdpConfigs(idpConfigList, idpfilePath);
         } else {
             //Create.
 
@@ -78,7 +79,7 @@ public class IdpConfigHelper implements Serializable {
             idpConfig = renameIdpConfigFiles(idpConfig);
 
             idpConfigList.add(idpConfig);
-            IdpConfigWriterReader.write(idpConfigList, idpfilePath);
+            IdpConfigWriterReader.writeIdpConfigs(idpConfigList, idpfilePath);
         }
 
         return idpConfig;
@@ -97,7 +98,7 @@ public class IdpConfigHelper implements Serializable {
             //Delete from list.
             idpConfig = idpConfigList.get(idpConfigList.indexOf(idpConfig));
             idpConfigList.remove(idpConfig);
-            IdpConfigWriterReader.write(idpConfigList, defaultIdpConfigId, idpfilePath);
+            IdpConfigWriterReader.writeDefaultIdpConfigId(defaultIdpConfigId, idpfilePath);
             //Delete files from FS.
             deleteFile(idpConfig.getPrivateKey());
             deleteFile(idpConfig.getPublicCert());
@@ -115,7 +116,7 @@ public class IdpConfigHelper implements Serializable {
         idpConfig.setId(idpConfigId);
 
         if (idpConfigList.contains(idpConfig)){
-            IdpConfigWriterReader.write(idpConfigList, idpConfigId, idpfilePath);
+            IdpConfigWriterReader.writeDefaultIdpConfigId(idpConfigId, idpfilePath);
         }
         else {
             Logger.error(this, "IdpConfig with Id: " + idpConfig.getId() + "no longer exists in file.");
@@ -123,9 +124,17 @@ public class IdpConfigHelper implements Serializable {
         }
     } // setDefaultIdpConfig.
 
-    public String getDefaultIdpConfigId() throws IOException, JSONException, DotDataException{
+    public String getDefaultIdpConfigId() throws IOException, JSONException{
         return IdpConfigWriterReader.readDefaultIdpConfigId(new File(idpfilePath));
     } // setDefaultIdpConfig.
+
+    public void saveDisabledSiteIds(Map<String, String> disablebSitesMap) throws IOException, JSONException{
+        IdpConfigWriterReader.writeDisabledSIteIds(disablebSitesMap, idpfilePath);
+    } // saveDisabledSiteIds.
+
+    public Map<String, String> getDisabledSiteIds() throws IOException, JSONException{
+        return IdpConfigWriterReader.readDisabledSiteIds(new File(idpfilePath));
+    } // getDisabledSiteIds.
 
     private IdpConfig renameIdpConfigFiles(IdpConfig idpConfig) throws IOException {
         if (UtilMethods.isSet(idpConfig.getPrivateKey())){
