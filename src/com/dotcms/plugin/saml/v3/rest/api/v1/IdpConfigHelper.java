@@ -14,7 +14,6 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +42,7 @@ public class IdpConfigHelper implements Serializable {
 
     public List<IdpConfig> getIdpConfigs() throws IOException, JSONException {
         final List<IdpConfig> idpConfigs = IdpConfigWriterReader.readIdpConfigs(new File(idpfilePath));
-        Collections.sort(idpConfigs, new IdpConfigComparator());
+        //Collections.sort(idpConfigs, new IdpConfigComparator());
         return idpConfigs;
     } // getIdpConfigs.
 

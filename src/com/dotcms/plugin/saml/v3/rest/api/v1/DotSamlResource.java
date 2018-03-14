@@ -1,12 +1,15 @@
 package com.dotcms.plugin.saml.v3.rest.api.v1;
 
+import com.dotcms.plugin.saml.v3.util.pagination.IdpConfigPaginator;
 import com.dotcms.repackage.javax.ws.rs.Consumes;
 import com.dotcms.repackage.javax.ws.rs.DELETE;
+import com.dotcms.repackage.javax.ws.rs.DefaultValue;
 import com.dotcms.repackage.javax.ws.rs.GET;
 import com.dotcms.repackage.javax.ws.rs.POST;
 import com.dotcms.repackage.javax.ws.rs.Path;
 import com.dotcms.repackage.javax.ws.rs.PathParam;
 import com.dotcms.repackage.javax.ws.rs.Produces;
+import com.dotcms.repackage.javax.ws.rs.QueryParam;
 import com.dotcms.repackage.javax.ws.rs.core.Context;
 import com.dotcms.repackage.javax.ws.rs.core.MediaType;
 import com.dotcms.repackage.javax.ws.rs.core.Response;
@@ -19,11 +22,13 @@ import com.dotcms.rest.WebResource;
 import com.dotcms.rest.annotation.NoCache;
 import com.dotcms.rest.exception.mapper.ExceptionMapperUtil;
 import com.dotcms.util.CollectionsUtils;
+import com.dotcms.util.PaginationUtil;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.json.JSONException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.liferay.portal.model.User;
 
 import org.apache.commons.io.FileUtils;
 
@@ -33,7 +38,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -44,10 +48,12 @@ public class DotSamlResource implements Serializable {
 
     private final IdpConfigHelper idpConfigHelper;
     private final WebResource webResource;
+    private final PaginationUtil paginationUtil;
 
     public DotSamlResource() {
         this.idpConfigHelper = IdpConfigHelper.getInstance();
         this.webResource = new WebResource();
+        this.paginationUtil = new PaginationUtil(new IdpConfigPaginator());
     }
 
     @GET
@@ -55,20 +61,20 @@ public class DotSamlResource implements Serializable {
     @JSONP
     @NoCache
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
-    public final Response getIdps(@Context final HttpServletRequest request) {
-        this.webResource.init(null, true, request, true, null);
+    public final Response getIdps(@Context final HttpServletRequest request,
+                                  @QueryParam(PaginationUtil.FILTER)   final String filter,
+                                  @QueryParam(PaginationUtil.PAGE) final int page,
+                                  @QueryParam(PaginationUtil.PER_PAGE) final int perPage,
+                                  @DefaultValue("upper(name)") @QueryParam(PaginationUtil.ORDER_BY) String orderbyParam,
+                                  @DefaultValue("ASC") @QueryParam(PaginationUtil.DIRECTION) String direction) {
+        final InitDataObject initData = this.webResource.init(null, true, request, true, null);
+        final User user = initData.getUser();
 
         Response response;
 
         try {
-            List<IdpConfig> idps = this.idpConfigHelper.getIdpConfigs();
-            response = Response.ok(new ResponseEntityView(idps)).build();
-        } catch (IOException e) {
-            Logger.error(this,"Error handling file (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Error handling file (" + e.getMessage() + ")");
-        } catch (JSONException e) {
-            Logger.error(this,"Error handling json (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Error handling json (" + e.getMessage() + ")");
+            response = this.paginationUtil.getPage(request, user, filter, page, perPage, orderbyParam, direction);
+
         } catch (Exception e) { // this is an unknown error, so we report as a 500.
             Logger.error(this,"Error getting idps", e);
             response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);

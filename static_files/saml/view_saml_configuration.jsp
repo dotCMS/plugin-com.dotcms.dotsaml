@@ -9,92 +9,9 @@
 <script type="text/javascript">
     require(["dojo/ready"], function(ready){
         ready(function(){
-            renderIdpConfigs();
+            idpAdmin.renderIdpConfigs();
         });
     });
-
-    function renderIdpConfigs() {
-        //Node List
-        var idpList;
-        var defaultIdp = getDefaultIdpConfig();
-
-        xhrArgs = {
-            url: "/api/v1/dotsaml/idps",
-            handleAs: "json",
-            load: function (data) {
-                idpList = data.entity;
-                var idpsTableHTML = "";
-                var idpStatusColor = "";
-
-                dojo.forEach(idpList, function (item, index) {
-
-                    if (item.enabled) {
-                        idpStatusColor = "green";
-                    } else {
-                        idpStatusColor = "red";
-                    }
-
-                    var defaultButtonHTML = "<button dojoType='dijit.form.Button' onclick='idpAdmin.setDefaultIdp(\"" + item.id +"\");' class='dijitButtonFlat'>" +
-                        "                        <%=LanguageUtil.get(pageContext, "set-as-default")%>" +
-                        "                    </button>";
-
-                    if(defaultIdp && defaultIdp == item.id){
-                        defaultButtonHTML = "";
-                    }
-
-                    var defaultTranslation = ""
-
-                    if(defaultIdp && defaultIdp == item.id){
-                        defaultTranslation = "<b>(Default)</b>";
-                    }
-
-                    idpsTableHTML +=
-                        "        <tr>" +
-                        "            <td>" +
-                        "               <i class='statusIcon " + idpStatusColor + "'></i>" +
-                        "            </td>" +
-                        "            <td>" + item.idpName + defaultTranslation + "</td>" +
-                        "            <td>" +
-                        "                <button dojoType='dijit.form.Button' onclick='idpAdmin.editIdp(\"" + item.id + "\");' class='dijitButtonFlat'>" +
-                        "                    <%=LanguageUtil.get(pageContext, "edit")%>" +
-                        "                </button>" +
-                        "                <button dojoType='dijit.form.Button' onclick='idpAdmin.deleteIdp(\"" + item.id +"\");' class='dijitButtonFlat'>" +
-                        "                    <%=LanguageUtil.get(pageContext, "delete")%>" +
-                        "                </button>" +
-                                         defaultButtonHTML +
-                        "            </td>" +
-                        "            <td>" +
-                        "                <button dojoType='dijit.form.Button' onclick='idpAdmin.downloadSPMedatadata();' class='dijitButtonFlat'>" +
-                        "                    <%=LanguageUtil.get(pageContext, "download-sp-metadata")%>" +
-                        "                </button>" +
-                        "            </td>" +
-                        "        </tr>";
-                });
-
-                idpsTableHTML += "<tr>" +
-                    "                <td>" +
-                    "                </td>" +
-                    "                <td><%=LanguageUtil.get(pageContext, "disabled-sites")%></td>" +
-                    "                <td>" +
-                    "                    <button dojoType='dijit.form.Button' onclick='idpAdmin.disableSAMLPerSite();' class='dijitButtonFlat'>" +
-                    "                        <%=LanguageUtil.get(pageContext, "disable-site")%>" +
-                    "                    </button>" +
-                    "                </td>" +
-                    "                <td>" +
-                    "                </td>" +
-                    "            </tr>"
-
-                dojo.empty(dojo.byId("idpTableBody"));
-                dojo.place(idpsTableHTML, dojo.byId("idpTableBody"));
-                dojo.parser.parse(dojo.byId("idpTableBody"))
-            },
-            error: function (error) {
-                alert("An unexpected error occurred: " + error);
-            }
-        };
-
-        deferred = dojo.xhrGet(xhrArgs);
-    }
 
     function saveIdp() {
         var addEditIdPForm = dojo.byId("addEditIdPForm");
@@ -120,7 +37,7 @@
             handleAs: "json",
             load: function (data) {
                 dijit.byId('addEditIdPDialog').hide();
-                renderIdpConfigs();
+                idpAdmin.renderIdpConfigs();
             },
             error: function (error) {
                 alert("An unexpected error occurred: " + error);
@@ -184,7 +101,7 @@
             url: "/api/v1/dotsaml/idp/" + id,
             handleAs: "json",
             load: function () {
-                renderIdpConfigs();
+                idpAdmin.renderIdpConfigs();
             },
             error: function (error) {
                 alert("An unexpected error occurred: " + error);
@@ -355,7 +272,55 @@
     require(['dojo/_base/declare'], function(declare){
         declare("dotcms.dijit.saml.IdPAdmin", null, {
             constructor: function(){
+                this.currentPage = 1;
+                this.RESULTS_PER_PAGE = 10;
+                this.total = 0;
             },
+
+            tableResultSummaryTemplate: '<%= LanguageUtil.get(pageContext, "Viewing-Results") %> {startRecord} <%= LanguageUtil.get(pageContext, "to") %> \
+            {endRecord} <%= LanguageUtil.get(pageContext, "of") %> {total}',
+
+            renderPagination: function (total) {
+                //Rendering the results summary bottom section of the table
+                var startRecord = (this.currentPage - 1) * this.RESULTS_PER_PAGE + 1;
+                if (startRecord > total)
+                    startRecord = total;
+                var endRecord = startRecord + this.RESULTS_PER_PAGE - 1;
+                if (endRecord > total)
+                    endRecord = total;
+
+                var summaryHTML = dojo.replace(this.tableResultSummaryTemplate, {
+                    startRecord: startRecord,
+                    endRecord: endRecord,
+                    total: total
+                });
+                dojo.byId('resultsSummary').innerHTML = summaryHTML;
+                //Rendering the next and previous buttons
+                dojo.style('buttonNextResultsWrapper', {
+                    visibility: 'hidden'
+                });
+                dojo.style('buttonPreviousResultsWrapper', {
+                    visibility: 'hidden'
+                });
+                if (endRecord < total)
+                    dojo.style('buttonNextResultsWrapper', {
+                        visibility: 'visible'
+                    });
+                if (startRecord > 1)
+                    dojo.style('buttonPreviousResultsWrapper', {
+                        visibility: 'visible'
+                    });
+
+                if (total == 0)
+                    dojo.style('resultsSummary', {
+                        visibility: 'hidden'
+                    })
+                else
+                    dojo.style('resultsSummary', {
+                        visibility: 'visible'
+                    })
+            },
+
             addIdp : function() {
                 dijit.byId('addEditIdPDialog').show();
                 resetIdpConfig(mySitesMap, "siteListingTable");
@@ -377,11 +342,110 @@
             },
             downloadSPMedatadata : function() {
                 window.alert("This functionality will be available in the next sprint");
+            },
+            gotoNextPage: function(){
+                this.currentPage++;
+                this.renderIdpConfigs();
+            },
+            gotoPreviousPage: function(){
+                this.currentPage--;
+                this.renderIdpConfigs();
+            },
+            renderIdpConfigs : function() {
+                //Node List
+                var idpList;
+                var defaultIdp = getDefaultIdpConfig();
+
+                xhrArgs = {
+                    url: "/api/v1/dotsaml/idps",
+                    content: {
+                        page: this.currentPage,
+                    },
+                    handleAs: "json",
+                    load: function (data) {
+                        idpList = data.entity;
+                        var idpsTableHTML = "";
+                        var idpStatusColor = "";
+
+                        dojo.forEach(idpList, function (item, index) {
+
+                            if (item.enabled) {
+                                idpStatusColor = "green";
+                            } else {
+                                idpStatusColor = "red";
+                            }
+
+                            var defaultButtonHTML = "<button dojoType='dijit.form.Button' onclick='idpAdmin.setDefaultIdp(\"" + item.id +"\");' class='dijitButtonFlat'>" +
+                                "                        <%=LanguageUtil.get(pageContext, "set-as-default")%>" +
+                                "                    </button>";
+
+                            if(defaultIdp && defaultIdp == item.id){
+                                defaultButtonHTML = "";
+                            }
+
+                            var defaultTranslation = ""
+
+                            if(defaultIdp && defaultIdp == item.id){
+                                defaultTranslation = "<b>(Default)</b>";
+                            }
+
+                            idpsTableHTML +=
+                                "        <tr>" +
+                                "            <td>" +
+                                "               <i class='statusIcon " + idpStatusColor + "'></i>" +
+                                "            </td>" +
+                                "            <td>" + item.idpName + defaultTranslation + "</td>" +
+                                "            <td>" +
+                                "                <button dojoType='dijit.form.Button' onclick='idpAdmin.editIdp(\"" + item.id + "\");' class='dijitButtonFlat'>" +
+                                "                    <%=LanguageUtil.get(pageContext, "edit")%>" +
+                                "                </button>" +
+                                "                <button dojoType='dijit.form.Button' onclick='idpAdmin.deleteIdp(\"" + item.id +"\");' class='dijitButtonFlat'>" +
+                                "                    <%=LanguageUtil.get(pageContext, "delete")%>" +
+                                "                </button>" +
+                                defaultButtonHTML +
+                                "            </td>" +
+                                "            <td>" +
+                                "                <button dojoType='dijit.form.Button' onclick='idpAdmin.downloadSPMedatadata();' class='dijitButtonFlat'>" +
+                                "                    <%=LanguageUtil.get(pageContext, "download-sp-metadata")%>" +
+                                "                </button>" +
+                                "            </td>" +
+                                "        </tr>";
+                        });
+
+                        idpsTableHTML += "<tr>" +
+                            "                <td>" +
+                            "                </td>" +
+                            "                <td><%=LanguageUtil.get(pageContext, "disabled-sites")%></td>" +
+                            "                <td>" +
+                            "                    <button dojoType='dijit.form.Button' onclick='idpAdmin.disableSAMLPerSite();' class='dijitButtonFlat'>" +
+                            "                        <%=LanguageUtil.get(pageContext, "disable-site")%>" +
+                            "                    </button>" +
+                            "                </td>" +
+                            "                <td>" +
+                            "                </td>" +
+                            "            </tr>"
+
+                        dojo.empty(dojo.byId("idpTableBody"));
+                        dojo.place(idpsTableHTML, dojo.byId("idpTableBody"));
+                        dojo.parser.parse(dojo.byId("idpTableBody"))
+                    },
+                    error: function (error) {
+                        alert("An unexpected error occurred: " + error);
+                    }
+                };
+
+                deferred = dojo.xhrGet(xhrArgs);
+                deferred.then(function (response) {
+                    var total = deferred.ioArgs.xhr.getResponseHeader("X-Pagination-Total-Entries");
+                    idpAdmin.renderPagination(total);
+                });
+
             }
         });
     });
 
     var idpAdmin = new dotcms.dijit.saml.IdPAdmin({});
+
 </script>
 
 <div class="portlet-main">
@@ -422,20 +486,18 @@
 
     <div class="yui-gb buttonRow">
         <div class="yui-u first" style="text-align: left;" id="buttonPreviousResultsWrapper">
-            <button dojoType="dijit.form.Button" id="buttonPreviousResults" onclick="" iconClass="previousIcon">
+            <button dojoType="dijit.form.Button" id="buttonPreviousResults" onclick="idpAdmin.gotoPreviousPage()" iconClass="previousIcon">
                 <%=LanguageUtil.get(pageContext, "Previous")%>
             </button>
         </div>
-    </div>
-
-    <div class="yui-u" style="text-align: center;" id="resultsSummary">
-        <%=LanguageUtil.get(pageContext, "Viewing-Results-From")%>
-    </div>
-
-    <div class="yui-u" style="text-align: right;" id="buttonNextResultsWrapper">
-        <button dojoType="dijit.form.Button" id="buttonNextResults" onclick="" iconClass="nextIcon">
-            <%=LanguageUtil.get(pageContext, "Next")%>
-        </button>
+        <div class="yui-u" style="text-align: center;" id="resultsSummary">
+            <%=LanguageUtil.get(pageContext, "Viewing-Results-From")%>
+        </div>
+        <div class="yui-u" style="text-align: right;" id="buttonNextResultsWrapper">
+            <button dojoType="dijit.form.Button" id="buttonNextResults" onclick="idpAdmin.gotoNextPage()" iconClass="nextIcon">
+                <%=LanguageUtil.get(pageContext, "Next")%>
+            </button>
+        </div>
     </div>
 
 </div>
