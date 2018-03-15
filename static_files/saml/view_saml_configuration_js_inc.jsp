@@ -76,6 +76,20 @@
         deferred = dojo.xhrPost(xhrArgs);
     }
 
+    function setDefaultIdpConfig(id) {
+        xhrArgs = {
+            url: "/api/v1/dotsaml/default/" + id,
+            handleAs: "json",
+            load: function () {
+                idpAdmin.renderIdpConfigs();
+            },
+            error: function (error) {
+                alert("An unexpected error occurred: " + error);
+            }
+        };
+        deferred = dojo.xhrPost(xhrArgs);
+    }
+
     function getDefaultIdpConfig(){
         var defaultIdp = "";
 

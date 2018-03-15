@@ -68,6 +68,13 @@ public class IdpConfigWriterReader {
             idpConfigPath);
     }
 
+    public static File writeDefaultIdpConfigId(List<IdpConfig> idpConfigList, String defaultIdpConfigId, String idpConfigPath) throws IOException, JSONException {
+        return write(idpConfigList,
+            defaultIdpConfigId,
+            readDisabledSiteIds(new File(idpConfigPath)),
+            idpConfigPath);
+    }
+
     public static List<IdpConfig> readIdpConfigs(final File idpConfigFile) throws IOException, JSONException {
         List<IdpConfig> idpConfigList = new ArrayList<>();
 

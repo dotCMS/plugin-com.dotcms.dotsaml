@@ -24,12 +24,15 @@ public class IdpConfigHelper implements Serializable {
     private final String certsParentPath;
     private final String metadataParentPath;
 
+    final static String SAML = "saml";
+
     public IdpConfigHelper() {
         this.assetsPath = Config.getStringProperty("ASSET_REAL_PATH",
             FileUtil.getRealPath(Config.getStringProperty("ASSET_PATH", "/assets")));
-        this.idpfilePath = assetsPath + File.separator + "saml" + File.separator + "config.json";
-        this.certsParentPath = assetsPath + File.separator + "certs" + File.separator;
-        this.metadataParentPath = assetsPath + File.separator + "metadata" + File.separator;
+
+        this.idpfilePath = assetsPath + File.separator + SAML + File.separator + "config.json";
+        this.certsParentPath = assetsPath + File.separator + SAML + File.separator + "certs" + File.separator;
+        this.metadataParentPath = assetsPath + File.separator + SAML + File.separator + "metadata" + File.separator;
     } // IdpConfigHelper.
 
     private static class SingletonHolder {
@@ -97,7 +100,7 @@ public class IdpConfigHelper implements Serializable {
             //Delete from list.
             idpConfig = idpConfigList.get(idpConfigList.indexOf(idpConfig));
             idpConfigList.remove(idpConfig);
-            IdpConfigWriterReader.writeDefaultIdpConfigId(defaultIdpConfigId, idpfilePath);
+            IdpConfigWriterReader.writeDefaultIdpConfigId(idpConfigList, defaultIdpConfigId, idpfilePath);
             //Delete files from FS.
             deleteFile(idpConfig.getPrivateKey());
             deleteFile(idpConfig.getPublicCert());
