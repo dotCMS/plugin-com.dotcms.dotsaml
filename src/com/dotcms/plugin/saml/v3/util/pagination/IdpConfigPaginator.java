@@ -7,6 +7,7 @@ import com.dotcms.util.pagination.Paginator;
 import com.dotmarketing.exception.DotRuntimeException;
 import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.json.JSONException;
 import com.liferay.portal.model.User;
 import com.liferay.util.FileUtil;
@@ -43,12 +44,26 @@ public class IdpConfigPaginator implements Paginator<IdpConfig> {
                                           final Map<String, Object> extraParams) {
 
         try {
-            final List<IdpConfig> idpConfigs = IdpConfigWriterReader.readIdpConfigs(new File(idpfilePath));
-            final List<IdpConfig> paginated = idpConfigs.stream().skip(offset).limit(limit).collect(Collectors.toList());
+            final String trimFilter = filter.trim();
+
+            List<IdpConfig> idpConfigs = IdpConfigWriterReader.readIdpConfigs(new File(idpfilePath));
+
+            if (UtilMethods.isSet(trimFilter)){
+                idpConfigs = idpConfigs.stream()
+                        .filter(x -> x.getIdpName()
+                                .toLowerCase()
+                                .contains(trimFilter.toLowerCase()))
+                        .collect(Collectors.toList());
+            }
+
+            List<IdpConfig> paginatedAndFiltered = idpConfigs.stream()
+                    .skip(offset)
+                    .limit(limit)
+                    .collect(Collectors.toList());
 
             lastTotalRecords.set(idpConfigs.size());
 
-            return paginated;
+            return paginatedAndFiltered;
 
         } catch (IOException | JSONException e) {
             Logger.error(IdpConfigPaginator.class, "Error getting paginated IdpConfigs", e);
