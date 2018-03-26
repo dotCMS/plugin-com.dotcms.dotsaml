@@ -28,6 +28,7 @@ import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.json.JSONException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.liferay.portal.model.User;
 
 import org.apache.commons.io.FileUtils;
@@ -43,313 +44,367 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
-@Path("/v1/dotsaml")
-public class DotSamlResource implements Serializable {
+@Path( "/v1/dotsaml" )
+public class DotSamlResource implements Serializable
+{
+	private static final long serialVersionUID = 8015545653539491684L;
+	private final IdpConfigHelper idpConfigHelper;
+	private final WebResource webResource;
+	private final PaginationUtil paginationUtil;
 
-    private final IdpConfigHelper idpConfigHelper;
-    private final WebResource webResource;
-    private final PaginationUtil paginationUtil;
+	public DotSamlResource()
+	{
+		this.idpConfigHelper = IdpConfigHelper.getInstance();
+		this.webResource = new WebResource();
+		this.paginationUtil = new PaginationUtil( new IdpConfigPaginator() );
+	}
 
-    public DotSamlResource() {
-        this.idpConfigHelper = IdpConfigHelper.getInstance();
-        this.webResource = new WebResource();
-        this.paginationUtil = new PaginationUtil(new IdpConfigPaginator());
-    }
+	@GET
+	@Path( "/idps" )
+	@JSONP
+	@NoCache
+	@Produces( { MediaType.APPLICATION_JSON, "application/javascript" } )
+	public final Response getIdps( @Context final HttpServletRequest request, @QueryParam( PaginationUtil.FILTER ) final String filter, @QueryParam( PaginationUtil.PAGE ) final int page, @QueryParam( PaginationUtil.PER_PAGE ) final int perPage, @DefaultValue( "upper(name)" ) @QueryParam( PaginationUtil.ORDER_BY ) String orderbyParam, @DefaultValue( "ASC" ) @QueryParam( PaginationUtil.DIRECTION ) String direction )
+	{
+		final InitDataObject initData = this.webResource.init( null, true, request, true, null );
+		final User user = initData.getUser();
 
-    @GET
-    @Path("/idps")
-    @JSONP
-    @NoCache
-    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
-    public final Response getIdps(@Context final HttpServletRequest request,
-                                  @QueryParam(PaginationUtil.FILTER)   final String filter,
-                                  @QueryParam(PaginationUtil.PAGE) final int page,
-                                  @QueryParam(PaginationUtil.PER_PAGE) final int perPage,
-                                  @DefaultValue("upper(name)") @QueryParam(PaginationUtil.ORDER_BY) String orderbyParam,
-                                  @DefaultValue("ASC") @QueryParam(PaginationUtil.DIRECTION) String direction) {
-        final InitDataObject initData = this.webResource.init(null, true, request, true, null);
-        final User user = initData.getUser();
+		Response response;
 
-        Response response;
+		try
+		{
+			response = this.paginationUtil.getPage( request, user, filter, page, perPage, orderbyParam, direction );
+		}
+		catch ( Exception e )
+		{
+			// this is an unknown error, so we report as a 500.
+			Logger.error( this, "Error getting idps", e );
+			response = ExceptionMapperUtil.createResponse( e, Response.Status.INTERNAL_SERVER_ERROR );
+		}
 
-        try {
-            response = this.paginationUtil.getPage(request, user, filter, page, perPage, orderbyParam, direction);
+		return response;
+	}
 
-        } catch (Exception e) { // this is an unknown error, so we report as a 500.
-            Logger.error(this,"Error getting idps", e);
-            response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
+	@GET
+	@Path( "/idp/{id}" )
+	@JSONP
+	@NoCache
+	@Produces( { MediaType.APPLICATION_JSON, "application/javascript" } )
+	public Response getIdp( @PathParam( "id" ) final String id, @Context final HttpServletRequest req )
+	{
+		Response response;
 
-        return response;
-    } // getIdps.
+		try
+		{
+			final IdpConfig idpConfig = idpConfigHelper.findIdpConfig( id );
+			response = Response.ok( new ResponseEntityView( idpConfig ) ).build();
+		}
+		catch ( DotDataException e )
+		{
+			Logger.error( this, "Idp not found (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Idp not found (" + e.getMessage() + ")" );
+		}
+		catch ( IOException e )
+		{
+			Logger.error( this, "Idp is not valid (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Idp is not valid (" + e.getMessage() + ")" );
+		}
+		catch ( JSONException e )
+		{
+			Logger.error( this, "Error handling json (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Error handling json (" + e.getMessage() + ")" );
+		}
+		catch ( Exception e )
+		{
+			// this is an unknown error, so we report as a 500.
+			Logger.error( this, "Error getting posting idp", e );
+			response = ExceptionMapperUtil.createResponse( e, Response.Status.INTERNAL_SERVER_ERROR );
+		}
 
-    @GET
-    @Path("/idp/{id}")
-    @JSONP
-    @NoCache
-    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
-    public Response getIdp(@PathParam("id") final String id, @Context final HttpServletRequest req){
-        final InitDataObject initData = this.webResource.init(null, false, req, false, null);
-        Response response;
+		return response;
+	}
 
-        try{
-            final IdpConfig idpConfig = idpConfigHelper.findIdpConfig(id);
-            response = Response.ok(new ResponseEntityView(idpConfig)).build();
-        } catch (DotDataException e) {
-            Logger.error(this,"Idp not found (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Idp not found (" + e.getMessage() + ")");
-        } catch (IOException e) {
-            Logger.error(this,"Idp is not valid (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Idp is not valid (" + e.getMessage() + ")");
-        } catch (JSONException e) {
-            Logger.error(this,"Error handling json (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Error handling json (" + e.getMessage() + ")");
-        } catch (Exception e) { // this is an unknown error, so we report as a 500.
-            Logger.error(this,"Error getting posting idp", e);
-            response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
+	@SuppressWarnings( "unchecked" )
+	@POST
+	@Path( "/idp" )
+	@JSONP
+	@NoCache
+	@Consumes( MediaType.MULTIPART_FORM_DATA )
+	@Produces( { MediaType.APPLICATION_JSON, "application/javascript" } )
+	public final Response createIdpConfig( @Context final HttpServletRequest req, @FormDataParam( "id" ) String id, @FormDataParam( "idpName" ) String idpName, @FormDataParam( "enabled" ) boolean enabled, @FormDataParam( "sPIssuerURL" ) String sPIssuerURL, @FormDataParam( "sPEndponintHostname" ) String sPEndponintHostname, @FormDataParam( "privateKey" ) InputStream privateKeyStream, @FormDataParam( "privateKey" ) FormDataContentDisposition privateKeyFileDetail, @FormDataParam( "publicCert" ) InputStream publicCertStream, @FormDataParam( "publicCert" ) FormDataContentDisposition publicCertFileDetail, @FormDataParam( "idPMetadataFile" ) InputStream idPMetadataFileStream, @FormDataParam( "idPMetadataFile" ) FormDataContentDisposition idPMetadataFileDetail, @FormDataParam( "signatureValidationType" ) String signatureValidationType, @FormDataParam( "optionalProperties" ) String optionalProperties, @FormDataParam( "sites" ) String sites )
+	{
+		this.webResource.init( null, true, req, true, null );
 
-        return response;
-    } //getIdp.
+		Response response;
 
-    @POST
-    @Path("/idp")
-    @JSONP
-    @NoCache
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
-    public final Response createIdpConfig(@Context final HttpServletRequest req,
-                                          @FormDataParam("id") String id,
-                                          @FormDataParam("idpName") String idpName,
-                                          @FormDataParam("enabled") boolean enabled,
-                                          @FormDataParam("sPIssuerURL") String sPIssuerURL,
-                                          @FormDataParam("sPEndponintHostname") String sPEndponintHostname,
-                                          @FormDataParam("privateKey") InputStream privateKeyStream,
-                                          @FormDataParam("privateKey") FormDataContentDisposition privateKeyFileDetail,
-                                          @FormDataParam("publicCert") InputStream publicCertStream,
-                                          @FormDataParam("publicCert") FormDataContentDisposition publicCertFileDetail,
-                                          @FormDataParam("idPMetadataFile") InputStream idPMetadataFileStream,
-                                          @FormDataParam("idPMetadataFile") FormDataContentDisposition idPMetadataFileDetail,
-                                          @FormDataParam("signatureValidationType") String signatureValidationType,
-                                          @FormDataParam("optionalProperties") String optionalProperties,
-                                          @FormDataParam("sites") String sites) {
-        this.webResource.init(null, true, req, true, null);
+		try
+		{
+			IdpConfig idpConfig;
 
-        Response response;
+			if ( UtilMethods.isSet( id ) )
+			{
+				idpConfig = idpConfigHelper.findIdpConfig( id );
+			}
+			else
+			{
+				idpConfig = new IdpConfig();
+			}
 
-        try {
-            IdpConfig idpConfig;
+			idpConfig.setIdpName( idpName );
+			idpConfig.setEnabled( enabled );
+			idpConfig.setsPIssuerURL( sPIssuerURL );
+			idpConfig.setsPEndponintHostname( sPEndponintHostname );
 
-            if (UtilMethods.isSet(id)){
-                idpConfig = idpConfigHelper.findIdpConfig(id);
-            } else {
-                idpConfig = new IdpConfig();
-            }
+			if ( UtilMethods.isSet( privateKeyFileDetail ) && UtilMethods.isSet( privateKeyFileDetail.getFileName() ) )
+			{
+				File privateKey = File.createTempFile( "privateKey", "key" );
+				FileUtils.copyInputStreamToFile( privateKeyStream, privateKey );
+				idpConfig.setPrivateKey( privateKey );
+			}
 
-            idpConfig.setIdpName(idpName);
-            idpConfig.setEnabled(enabled);
-            idpConfig.setsPIssuerURL(sPIssuerURL);
-            idpConfig.setsPEndponintHostname(sPEndponintHostname);
+			if ( UtilMethods.isSet( publicCertFileDetail ) && UtilMethods.isSet( publicCertFileDetail.getFileName() ) )
+			{
+				File publicCert = File.createTempFile( "publicCert", "crt" );
+				FileUtils.copyInputStreamToFile( publicCertStream, publicCert );
+				idpConfig.setPublicCert( publicCert );
+			}
 
-            if (UtilMethods.isSet(privateKeyFileDetail) && UtilMethods.isSet(privateKeyFileDetail.getFileName())){
-                File privateKey = File.createTempFile("privateKey", "key");
-                FileUtils.copyInputStreamToFile(privateKeyStream, privateKey);
-                idpConfig.setPrivateKey(privateKey);
-            }
-            if (UtilMethods.isSet(publicCertFileDetail) && UtilMethods.isSet(publicCertFileDetail.getFileName())){
-                File publicCert = File.createTempFile("publicCert", "crt");
-                FileUtils.copyInputStreamToFile(publicCertStream, publicCert);
-                idpConfig.setPublicCert(publicCert);
-            }
-            if (UtilMethods.isSet(idPMetadataFileDetail) && UtilMethods.isSet(idPMetadataFileDetail.getFileName())){
-                File idPMetadataFile = File.createTempFile("idPMetadataFile", "xml");
-                FileUtils.copyInputStreamToFile(idPMetadataFileStream, idPMetadataFile);
-                idpConfig.setIdPMetadataFile(idPMetadataFile);
-            }
+			if ( UtilMethods.isSet( idPMetadataFileDetail ) && UtilMethods.isSet( idPMetadataFileDetail.getFileName() ) )
+			{
+				File idPMetadataFile = File.createTempFile( "idPMetadataFile", "xml" );
+				FileUtils.copyInputStreamToFile( idPMetadataFileStream, idPMetadataFile );
+				idpConfig.setIdPMetadataFile( idPMetadataFile );
+			}
 
-            idpConfig.setSignatureValidationType(signatureValidationType);
+			idpConfig.setSignatureValidationType( signatureValidationType );
 
-            if (UtilMethods.isSet(optionalProperties)){
-                final Properties parsedProperties = new Properties();
-                parsedProperties.load(new StringReader(optionalProperties));
-                idpConfig.setOptionalProperties(parsedProperties);
-            }
+			if ( UtilMethods.isSet( optionalProperties ) )
+			{
+				final Properties parsedProperties = new Properties();
+				parsedProperties.load( new StringReader( optionalProperties ) );
+				idpConfig.setOptionalProperties( parsedProperties );
+			}
 
-            HashMap<String, String> sitesMap = new ObjectMapper().readValue(sites, HashMap.class);
-            idpConfig.setSites(sitesMap);
+			HashMap<String, String> sitesMap = new ObjectMapper().readValue( sites, HashMap.class );
+			idpConfig.setSites( sitesMap );
 
-            idpConfig = idpConfigHelper.saveIdpConfig(idpConfig);
+			idpConfig = idpConfigHelper.saveIdpConfig( idpConfig );
 
-            response = Response.ok(new ResponseEntityView(idpConfig)).build();
-        } catch (IOException e) {
-            Logger.error(this,"Idp is not valid (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Idp is not valid (" + e.getMessage() + ")");
-        } catch (JSONException e) {
-            Logger.error(this,"Error handling json (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Error handling json (" + e.getMessage() + ")");
-        } catch (Exception e) { // this is an unknown error, so we report as a 500.
-            Logger.error(this,"Error getting posting idp", e);
-            response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
+			response = Response.ok( new ResponseEntityView( idpConfig ) ).build();
+		}
+		catch ( IOException e )
+		{
+			Logger.error( this, "Idp is not valid (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Idp is not valid (" + e.getMessage() + ")" );
+		}
+		catch ( JSONException e )
+		{
+			Logger.error( this, "Error handling json (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Error handling json (" + e.getMessage() + ")" );
+		}
+		catch ( Exception e )
+		{
+			// this is an unknown error, so we report as a 500.
+			Logger.error( this, "Error getting posting idp", e );
+			response = ExceptionMapperUtil.createResponse( e, Response.Status.INTERNAL_SERVER_ERROR );
+		}
 
-        return response;
-    } // createIdpConfig.
+		return response;
+	}
 
-    @DELETE
-    @Path("/idp/{id}")
-    @JSONP
-    @NoCache
-    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
-    public Response deleteIdpConfig(@PathParam("id") final String id, @Context final HttpServletRequest req){
-        this.webResource.init(null, true, req, true, null);
+	@DELETE
+	@Path( "/idp/{id}" )
+	@JSONP
+	@NoCache
+	@Produces( { MediaType.APPLICATION_JSON, "application/javascript" } )
+	public Response deleteIdpConfig( @PathParam( "id" ) final String id, @Context final HttpServletRequest req )
+	{
+		this.webResource.init( null, true, req, true, null );
 
-        Response response;
+		Response response;
 
-        try {
-            IdpConfig idpConfig = new IdpConfig();
-            idpConfig.setId(id);
+		try
+		{
+			IdpConfig idpConfig = new IdpConfig();
+			idpConfig.setId( id );
 
-            idpConfigHelper.deleteIdpConfig(idpConfig);
+			idpConfigHelper.deleteIdpConfig( idpConfig );
 
-            response = Response.ok(new ResponseEntityView(CollectionsUtils.map("deleted", id))).build();
-        } catch (IOException e) {
-            Logger.error(this,"Idp is not valid (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Idp is not valid (" + e.getMessage() + ")");
-        } catch (JSONException e) {
-            Logger.error(this,"Error handling json (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Error handling json (" + e.getMessage() + ")");
-        } catch (Exception e) { // this is an unknown error, so we report as a 500.
-            Logger.error(this,"Error deleting idps", e);
-            response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
+			response = Response.ok( new ResponseEntityView( CollectionsUtils.map( "deleted", id ) ) ).build();
+		}
+		catch ( IOException e )
+		{
+			Logger.error( this, "Idp is not valid (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Idp is not valid (" + e.getMessage() + ")" );
+		}
+		catch ( JSONException e )
+		{
+			Logger.error( this, "Error handling json (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Error handling json (" + e.getMessage() + ")" );
+		}
+		catch ( Exception e )
+		{
+			// this is an unknown error, so we report as a 500.
+			Logger.error( this, "Error deleting idps", e );
+			response = ExceptionMapperUtil.createResponse( e, Response.Status.INTERNAL_SERVER_ERROR );
+		}
 
-        return response;
-    } // deleteIdpConfig.
+		return response;
+	}
 
-    @POST
-    @Path("/default/{id}")
-    @JSONP
-    @NoCache
-    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
-    public Response setDefault(@PathParam("id") final String id, @Context final HttpServletRequest req){
-        this.webResource.init(null, true, req, true, null);
+	@POST
+	@Path( "/default/{id}" )
+	@JSONP
+	@NoCache
+	@Produces( { MediaType.APPLICATION_JSON, "application/javascript" } )
+	public Response setDefault( @PathParam( "id" ) final String id, @Context final HttpServletRequest req )
+	{
+		this.webResource.init( null, true, req, true, null );
 
-        Response response;
+		Response response;
 
-        try {
-            idpConfigHelper.setDefaultIdpConfig(id);
+		try
+		{
+			idpConfigHelper.setDefaultIdpConfig( id );
 
-            response = Response.ok(new ResponseEntityView(CollectionsUtils.map("default", id))).build();
-        } catch (DotDataException e) {
-            Logger.error(this,"Idp not found (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Idp not found (" + e.getMessage() + ")");
-        } catch (IOException e) {
-            Logger.error(this,"Idp is not valid (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Idp is not valid (" + e.getMessage() + ")");
-        } catch (JSONException e) {
-            Logger.error(this,"Error handling json (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Error handling json (" + e.getMessage() + ")");
-        } catch (Exception e) { // this is an unknown error, so we report as a 500.
-            Logger.error(this,"Error getting setting idp", e);
-            response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
+			response = Response.ok( new ResponseEntityView( CollectionsUtils.map( "default", id ) ) ).build();
+		}
+		catch ( DotDataException e )
+		{
+			Logger.error( this, "Idp not found (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Idp not found (" + e.getMessage() + ")" );
+		}
+		catch ( IOException e )
+		{
+			Logger.error( this, "Idp is not valid (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Idp is not valid (" + e.getMessage() + ")" );
+		}
+		catch ( JSONException e )
+		{
+			Logger.error( this, "Error handling json (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Error handling json (" + e.getMessage() + ")" );
+		}
+		catch ( Exception e )
+		{
+			// this is an unknown error, so we report as a 500.
+			Logger.error( this, "Error getting setting idp", e );
+			response = ExceptionMapperUtil.createResponse( e, Response.Status.INTERNAL_SERVER_ERROR );
+		}
 
-        return response;
-    } // setDefault.
+		return response;
+	}
 
-    @GET
-    @Path("/default")
-    @JSONP
-    @NoCache
-    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
-    public Response getDefault(@Context final HttpServletRequest req){
-        this.webResource.init(null, true, req, true, null);
+	@GET
+	@Path( "/default" )
+	@JSONP
+	@NoCache
+	@Produces( { MediaType.APPLICATION_JSON, "application/javascript" } )
+	public Response getDefault( @Context final HttpServletRequest req )
+	{
+		this.webResource.init( null, true, req, true, null );
 
-        Response response;
+		Response response;
 
-        try {
-            final String defaultIdpConfigId = idpConfigHelper.getDefaultIdpConfigId();
+		try
+		{
+			final String defaultIdpConfigId = idpConfigHelper.getDefaultIdpConfigId();
 
-            response =
-                Response.ok(new ResponseEntityView(
-                    CollectionsUtils.map(IdpConfigWriterReader.DEFAULT_SAML_CONFIG, defaultIdpConfigId))).build();
+			response = Response.ok( new ResponseEntityView( CollectionsUtils.map( IdpConfigWriterReader.DEFAULT_SAML_CONFIG, defaultIdpConfigId ) ) ).build();
+		}
+		catch ( IOException e )
+		{
+			Logger.error( this, "Error reading file with Idps (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Idp is not valid (" + e.getMessage() + ")" );
+		}
+		catch ( JSONException e )
+		{
+			Logger.error( this, "Error handling json with Idps (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Error handling json (" + e.getMessage() + ")" );
+		}
+		catch ( Exception e )
+		{
+			// this is an unknown error, so we report as a 500.
+			Logger.error( this, "Error getting default idp", e );
+			response = ExceptionMapperUtil.createResponse( e, Response.Status.INTERNAL_SERVER_ERROR );
+		}
 
-        } catch (IOException e) {
-            Logger.error(this,"Error reading file with Idps (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Idp is not valid (" + e.getMessage() + ")");
-        } catch (JSONException e) {
-            Logger.error(this,"Error handling json with Idps (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Error handling json (" + e.getMessage() + ")");
-        } catch (Exception e) { // this is an unknown error, so we report as a 500.
-            Logger.error(this,"Error getting default idp", e);
-            response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
+		return response;
+	}
 
-        return response;
-    } // getDefault.
+	@GET
+	@Path( "/disabledsites" )
+	@JSONP
+	@NoCache
+	@Produces( { MediaType.APPLICATION_JSON, "application/javascript" } )
+	public Response getDisabledSites( @Context final HttpServletRequest req )
+	{
+		this.webResource.init( null, true, req, true, null );
 
-    @GET
-    @Path("/disabledsites")
-    @JSONP
-    @NoCache
-    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
-    public Response getDisabledSites(@Context final HttpServletRequest req){
-        this.webResource.init(null, true, req, true, null);
+		Response response;
 
-        Response response;
+		try
+		{
+			final Map<String, String> disabledSiteIds = idpConfigHelper.getDisabledSiteIds();
 
-        try {
-            final Map<String, String> disabledSiteIds = idpConfigHelper.getDisabledSiteIds();
+			response = Response.ok( new ResponseEntityView( CollectionsUtils.map( IdpConfigWriterReader.DISABLE_SAML_SITES, disabledSiteIds ) ) ).build();
+		}
+		catch ( IOException e )
+		{
+			Logger.error( this, "Error reading file with disabled sites (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "disable site is not valid (" + e.getMessage() + ")" );
+		}
+		catch ( JSONException e )
+		{
+			Logger.error( this, "Error handling json with Idps (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Error handling disabled site json (" + e.getMessage() + ")" );
+		}
+		catch ( Exception e )
+		{
+			// this is an unknown error, so we report as a 500.
+			Logger.error( this, "Error getting default idp", e );
+			response = ExceptionMapperUtil.createResponse( e, Response.Status.INTERNAL_SERVER_ERROR );
+		}
 
-            response = Response.ok(new ResponseEntityView(
-                CollectionsUtils.map(IdpConfigWriterReader.DISABLE_SAML_SITES, disabledSiteIds)))
-                .build();
+		return response;
+	}
 
-        } catch (IOException e) {
-            Logger.error(this,"Error reading file with disabled sites (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "disable site is not valid (" + e.getMessage() + ")");
-        } catch (JSONException e) {
-            Logger.error(this,"Error handling json with Idps (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Error handling disabled site json (" + e.getMessage() + ")");
-        } catch (Exception e) { // this is an unknown error, so we report as a 500.
-            Logger.error(this,"Error getting default idp", e);
-            response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
+	@SuppressWarnings( "unchecked" )
+	@POST
+	@Path( "/disabledsites" )
+	@JSONP
+	@NoCache
+	@Consumes( MediaType.MULTIPART_FORM_DATA )
+	@Produces( { MediaType.APPLICATION_JSON, "application/javascript" } )
+	public final Response saveDisabledSited( @Context final HttpServletRequest req, @FormDataParam( "disabledsites" ) String disabledSites )
+	{
+		this.webResource.init( null, true, req, true, null );
 
-        return response;
-    } // getDisabledSites.
+		Response response;
 
-    @POST
-    @Path("/disabledsites")
-    @JSONP
-    @NoCache
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
-    public final Response saveDisabledSited(@Context final HttpServletRequest req,
-                                          @FormDataParam("disabledsites") String disabledSites) {
-        this.webResource.init(null, true, req, true, null);
+		try
+		{
+			HashMap<String, String> disabledSitesMap = new ObjectMapper().readValue( disabledSites, HashMap.class );
+			idpConfigHelper.saveDisabledSiteIds( disabledSitesMap );
 
-        Response response;
+			response = Response.ok().build();
+		}
+		catch ( IOException e )
+		{
+			Logger.error( this, "Error reading file with disabled sites (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "disable site is not valid (" + e.getMessage() + ")" );
+		}
+		catch ( JSONException e )
+		{
+			Logger.error( this, "Error handling json with Idps (" + e.getMessage() + ")", e );
+			response = ExceptionMapperUtil.createResponse( null, "Error handling disabled site json (" + e.getMessage() + ")" );
+		}
+		catch ( Exception e )
+		{
+			// this is an unknown error, so we report as a 500.
+			Logger.error( this, "Error getting default idp", e );
+			response = ExceptionMapperUtil.createResponse( e, Response.Status.INTERNAL_SERVER_ERROR );
+		}
 
-        try {
-            HashMap<String, String> disabledSitesMap = new ObjectMapper().readValue(disabledSites, HashMap.class);
-            idpConfigHelper.saveDisabledSiteIds(disabledSitesMap);
-
-            response = Response.ok().build();
-
-        } catch (IOException e) {
-            Logger.error(this,"Error reading file with disabled sites (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "disable site is not valid (" + e.getMessage() + ")");
-        } catch (JSONException e) {
-            Logger.error(this,"Error handling json with Idps (" + e.getMessage() + ")", e);
-            response = ExceptionMapperUtil.createResponse(null, "Error handling disabled site json (" + e.getMessage() + ")");
-        } catch (Exception e) { // this is an unknown error, so we report as a 500.
-            Logger.error(this,"Error getting default idp", e);
-            response = ExceptionMapperUtil.createResponse(e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-
-        return response;
-    }
-
+		return response;
+	}
 }
-

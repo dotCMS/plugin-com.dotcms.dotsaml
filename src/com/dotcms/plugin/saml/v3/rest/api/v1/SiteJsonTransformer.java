@@ -8,31 +8,36 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class SiteJsonTransformer {
+public class SiteJsonTransformer
+{
+	public static JSONObject getJsonObjecFromtMap( Map<String, String> map ) throws JSONException
+	{
+		JSONObject jsonObject = new JSONObject();
 
-    public static JSONObject getJsonObjecFromtMap(Map<String, String> map) throws JSONException {
-        JSONObject jo = new JSONObject();
+		if ( UtilMethods.isSet( map ) )
+		{
+			for ( Map.Entry<String, String> entry : map.entrySet() )
+			{
+				jsonObject.put( entry.getKey(), entry.getValue() );
+			}
+		}
 
-        if (UtilMethods.isSet(map)) {
-            for (Map.Entry<String, String> entry : map.entrySet()) {
-                jo.put(entry.getKey(), entry.getValue());
-            }
-        }
+		return jsonObject;
+	}
 
-        return jo;
-    }
+	public static Map<String, String> getMapFromJsonObject( JSONObject jsonObject ) throws JSONException
+	{
+		Map<String, String> map = new HashMap<>();
+		Iterator<?> keys = jsonObject.keys();
 
-    public static Map<String, String> getMapFromJsonObject(JSONObject jo) throws JSONException {
-        Map<String, String> map = new HashMap<>();
-        Iterator<?> keys = jo.keys();
+		while ( keys.hasNext() )
+		{
+			String key = (String) keys.next();
+			String value = jsonObject.getString( key );
 
-        while (keys.hasNext()) {
-            String key = (String) keys.next();
-            String value = jo.getString(key);
+			map.put( key, value );
+		}
 
-            map.put(key, value);
-        }
-
-        return map;
-    }
+		return map;
+	}
 }

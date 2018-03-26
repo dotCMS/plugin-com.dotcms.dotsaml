@@ -10,6 +10,7 @@ import com.dotmarketing.beans.Host;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.util.Logger;
+
 import com.liferay.util.InstancePool;
 
 import java.io.IOException;
@@ -18,106 +19,95 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * This service is in charge of create/refresh the configuration and set the services needed to get the
- * saml configuration.
+ * This service is in charge of create/refresh the configuration and set the
+ * services needed to get the saml configuration.
+ * 
  * @author jsanca
  */
-public class SiteCofigurationInitializerService implements Initializer {
+public class SiteCofigurationInitializerService implements Initializer
+{
+	private static final long serialVersionUID = 1763769161434377458L;
+	public static final String HOST_LIST_CONTEXT_KEY = "hostList";
+	private final AtomicBoolean isDone = new AtomicBoolean( false );
+	private final SiteConfigurationParser siteConfigurationParser = new SiteConfigurationParser();
 
-    public static final String HOST_LIST_CONTEXT_KEY = "hostList";
-    private final AtomicBoolean isDone = new AtomicBoolean(false);
-    private final SiteConfigurationParser siteConfigurationParser
-            = new SiteConfigurationParser();
+	@Override
+	public void init( final Map<String, Object> context )
+	{
+		this.isDone.set( false );
 
-    @Override
-    public void init(final Map<String, Object> context) {
+		final SiteConfigurationService siteConfigurationService;
+		final Map<String, Configuration> configurationMap;
+		final Map<String, Configuration> disableConfigurationMap;
+		final List<Host> hostList = (List<Host>) context.get( HOST_LIST_CONTEXT_KEY );
 
-        this.isDone.set(false);
+		try
+		{
+			Logger.debug( this, "Parsing SAML configuration" );
+			configurationMap = ( null != hostList ) ? this.siteConfigurationParser.getConfiguration( hostList ) : this.siteConfigurationParser.getConfiguration();
 
-        final SiteConfigurationService siteConfigurationService;
-        final Map<String, Configuration> configurationMap;
-        final Map<String, Configuration> disableConfigurationMap;
-        final List<Host>  hostList    = (List<Host>) context.get(HOST_LIST_CONTEXT_KEY);
+			disableConfigurationMap = ( null != hostList ) ? this.siteConfigurationParser.getConfigurationForDisableHosts( hostList ) : this.siteConfigurationParser.getConfigurationForDisableHosts();
+		}
+		catch ( IOException | DotDataException | DotSecurityException e )
+		{
+			Logger.error( this, e.getMessage(), e );
+			throw new DotSamlException( e.getMessage(), e );
+		}
 
-        try {
+		Logger.debug( this, "SAML configuration, map = " + configurationMap );
+		Logger.debug( this, "SAML configuration for disabled saml sites, map = " + disableConfigurationMap );
+		if ( null != hostList && null != InstancePool.get( SiteConfigurationService.class.getName() ) )
+		{
+			this.update( hostList, configurationMap, disableConfigurationMap );
+		}
+		else
+		{
+			final SiteConfigurationResolver siteConfigurationResolver = new SiteConfigurationResolver();
 
-            Logger.debug(this, "Parsing SAML configuration");
-            configurationMap = (null != hostList)?
-                    this.siteConfigurationParser.getConfiguration(hostList):
-                    this.siteConfigurationParser.getConfiguration();
+			siteConfigurationService = new SiteConfigurationService( configurationMap );
+			siteConfigurationService.updateDisableConfiguration( disableConfigurationMap );
 
-            disableConfigurationMap = (null != hostList)?
-                    this.siteConfigurationParser.getConfigurationForDisableHosts(hostList):
-                    this.siteConfigurationParser.getConfigurationForDisableHosts();
-        } catch (IOException | DotDataException | DotSecurityException e) {
+			InstancePool.put( SiteConfigurationService.class.getName(), siteConfigurationService );
+			InstancePool.put( SiteConfigurationResolver.class.getName(), siteConfigurationResolver );
+		}
 
-            Logger.error(this, e.getMessage(), e);
-            throw new DotSamlException(e.getMessage(), e);
-        }
+		this.isDone.set( true );
+	}
 
-        Logger.debug(this, "SAML configuration, map = " + configurationMap);
-        Logger.debug(this,
-                "SAML configuration for disabled saml sites, map = " + disableConfigurationMap);
-        if (null != hostList && null != InstancePool.get(SiteConfigurationService.class.getName())) {
+	private void update( final List<Host> hostList, final Map<String, Configuration> configurationMap, final Map<String, Configuration> disableConfigurationMap )
+	{
+		Logger.debug( this, "This is a SAML configuration update..." );
+		final SiteConfigurationService siteConfigurationService = (SiteConfigurationService) InstancePool.get( SiteConfigurationService.class.getName() );
+		final HostService hostService = (HostService) InstancePool.get( HostService.class.getName() );
 
-            this.update(hostList, configurationMap,
-                    disableConfigurationMap);
-        } else {
+		siteConfigurationService.updateConfigurations( configurationMap );
+		siteConfigurationService.updateDisableConfiguration( disableConfigurationMap );
 
-            final SiteConfigurationResolver siteConfigurationResolver =
-                    new SiteConfigurationResolver();
+		// if a host in the list, does not retrieve any configuration, means it is invalid or has been disabled.
+		for ( final Host host : hostList )
+		{
+			if ( !configurationMap.containsKey( host.getHostname() ) )
+			{
+				Logger.debug( this, "Removing the configuration for: " + host.getHostname() + " and aliases, them have been removed/unpublish/archive/disable" );
+				remove( host, hostService, siteConfigurationService );
+			}
+		}
 
-            siteConfigurationService = new SiteConfigurationService(configurationMap);
-            siteConfigurationService.updateDisableConfiguration(disableConfigurationMap);
+	}
 
-            InstancePool.put(SiteConfigurationService.class.getName(), siteConfigurationService);
-            InstancePool.put(SiteConfigurationResolver.class.getName(), siteConfigurationResolver);
-        }
+	private void remove( final Host host, final HostService hostService, final SiteConfigurationService siteConfigurationService )
+	{
+		if ( null != host )
+		{
+			siteConfigurationService.setConfigurationBySite( host.getHostname(), null );
+			hostService.getHostAlias( host ).forEach( alias -> siteConfigurationService.setConfigurationBySite( alias, null ) );
+		}
+	}
 
-        this.isDone.set(true);
-    } // init.
+	@Override
+	public boolean isInitializationDone()
+	{
+		return this.isDone.get();
+	}
 
-    private void update (final List<Host>  hostList,
-                         final Map<String, Configuration> configurationMap,
-                         final Map<String, Configuration> disableConfigurationMap) {
-
-        Logger.debug(this, "This is a SAML configuration update...");
-        final SiteConfigurationService siteConfigurationService =
-                (SiteConfigurationService)InstancePool.get(SiteConfigurationService.class.getName());
-        final HostService hostService =
-                (HostService) InstancePool.get(HostService.class.getName());
-
-        siteConfigurationService.updateConfigurations(configurationMap);
-        siteConfigurationService.updateDisableConfiguration(disableConfigurationMap);
-
-        // if a host in the list, does not retrieve any configuration, means it is invalid or has been disabled.
-        for (final Host host : hostList) {
-
-            if (!configurationMap.containsKey(host.getHostname())) {
-
-                Logger.debug(this, "Removing the configuration for: " + host.getHostname() +
-                             " and aliases, them have been removed/unpublish/archive/disable");
-                remove(host, hostService, siteConfigurationService);
-            }
-        }
-    } // update.
-
-    private void remove (final Host host,
-                         final HostService hostService,
-                         final SiteConfigurationService siteConfigurationService) {
-
-        if (null != host) {
-
-            siteConfigurationService.setConfigurationBySite(host.getHostname(), null);
-            hostService.getHostAlias(host).forEach
-                    (alias -> siteConfigurationService.setConfigurationBySite(alias, null));
-        }
-    } // remove
-
-    @Override
-    public boolean isInitializationDone() {
-        return this.isDone.get();
-    }
-
-
-} // E:O:F:SiteCofigurationInitializerService.
+}

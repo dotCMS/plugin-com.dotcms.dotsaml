@@ -6,22 +6,27 @@ import java.io.Serializable;
 
 /**
  * A field strategy helps about what to do
+ * 
  * @author jsanca
  */
-public interface FieldStrategy extends Serializable {
+public interface FieldStrategy extends Serializable
+{
+	/**
+	 * Determine if the fieldValue can be applied by the strategy
+	 * 
+	 * @param fieldValue
+	 *            Object
+	 * @return boolean
+	 */
+	boolean canApply( Object fieldValue );
 
-    /**
-     * Determine if the fieldValue can be applied by the strategy
-     * @param fieldValue Object
-     * @return boolean
-     */
-    boolean canApply(Object fieldValue);
+	/**
+	 * Apply the strategy logic
+	 * 
+	 * @param attributesBean
+	 *            {@link AttributesBean}
+	 * @return Object
+	 */
+	Object apply( final AttributesBean attributesBean );
 
-    /**
-     * Apply the strategy logic
-     * @param attributesBean {@link AttributesBean}
-     * @return Object
-     */
-    Object apply(final AttributesBean attributesBean);
-
-} // E:O:F:FieldStrategy.
+}

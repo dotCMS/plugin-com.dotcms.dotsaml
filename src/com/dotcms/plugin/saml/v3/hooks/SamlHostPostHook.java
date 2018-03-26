@@ -11,55 +11,52 @@ import com.dotmarketing.portlets.contentlet.business.ContentletAPIPostHookAbstra
 import com.dotmarketing.portlets.contentlet.model.Contentlet;
 import com.dotmarketing.portlets.structure.model.ContentletRelationships;
 import com.dotmarketing.util.Logger;
+
 import com.liferay.portal.model.User;
 
 import java.util.List;
 
 /**
- * This Hook is called when the Host is checking and it is only doing a configuration fields validation, not affecting the saml configuration.
+ * This Hook is called when the Host is checking and it is only doing a
+ * configuration fields validation, not affecting the saml configuration.
  * Created by nollymar on 3/17/17.
  */
-public class SamlHostPostHook extends ContentletAPIPostHookAbstractImp {
+public class SamlHostPostHook extends ContentletAPIPostHookAbstractImp
+{
+	private final SiteConfigurationParser siteConfigurationParser = new SiteConfigurationParser();
 
-    private final SiteConfigurationParser siteConfigurationParser = new SiteConfigurationParser();
+	public SamlHostPostHook()
+	{
+		super();
+	}
 
-    public SamlHostPostHook() {
-        super();
-    }
+	@Override
+	public void checkin( final Contentlet currentContentlet, final ContentletRelationships relationshipsData, final List<Category> cats, final List<Permission> selectedPermissions, final User user, final boolean respectFrontendRoles, final Contentlet returnValue )
+	{
+		final Host host = new Host( currentContentlet );
 
-    @Override
-    public void checkin(final Contentlet currentContentlet,
-                        final ContentletRelationships relationshipsData,
-                        final List<Category> cats,
-                        final List<Permission> selectedPermissions,
-                        final User user,
-                        final boolean respectFrontendRoles,
-                        final Contentlet returnValue) {
+		try
+		{
+			Logger.info( this, "Validating Saml settings for the site: " + host.getHostname() );
 
-        final Host host = new Host(currentContentlet);
+			// Validate the configuration.
+			final String hostSAMLAuthentication = (String) host.getMap().get( SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_VELOCITY_VAR_NAME );
+			final boolean isDisabled = SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_DISABLED.equalsIgnoreCase( hostSAMLAuthentication );
 
-        try {
+			if ( isDisabled )
+			{
+				this.siteConfigurationParser.validateConfigurationByDisableHost( host, hostSAMLAuthentication );
+			}
+			else
+			{
+				this.siteConfigurationParser.validateConfigurationByHost( host );
+			}
 
-            Logger.info(this, "Validating Saml settings for the site: " + host.getHostname());
-
-            //Validate the configuration.
-            final String hostSAMLAuthentication  = (String)host.getMap()
-                    .get(SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_VELOCITY_VAR_NAME);
-            final boolean isDisabled =
-                    SamlContentTypeUtil.DOTCMS_SAML_CONTENT_TYPE_FIELD_AUTHENTICATION_DISABLED
-                            .equalsIgnoreCase(hostSAMLAuthentication);
-
-            if (isDisabled) {
-
-                this.siteConfigurationParser.validateConfigurationByDisableHost(host, hostSAMLAuthentication);
-            } else {
-                this.siteConfigurationParser.validateConfigurationByHost(host);
-            }
-
-            Logger.info(this, "DONE Validating Saml settings for the site: " + host.getHostname());
-        } catch (DotDataException | DotSecurityException e) {
-            Logger.error(this, "Error Validating Saml configuration", e);
-        }
-    } // checkin.
-
-} // E:O:F:SamlHostPostHook.
+			Logger.info( this, "DONE Validating Saml settings for the site: " + host.getHostname() );
+		}
+		catch ( DotDataException | DotSecurityException e )
+		{
+			Logger.error( this, "Error Validating Saml configuration", e );
+		}
+	}
+}

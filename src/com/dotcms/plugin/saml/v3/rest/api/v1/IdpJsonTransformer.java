@@ -10,91 +10,105 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Properties;
 
-public class IdpJsonTransformer {
+public class IdpJsonTransformer
+{
+	public static JSONObject idpToJson( IdpConfig idpConfig ) throws JSONException, IOException
+	{
+		JSONObject jsonObject = new JSONObject();
 
-    public static JSONObject idpToJson(IdpConfig idpConfig) throws JSONException, IOException {
-        JSONObject jo = new JSONObject();
+		jsonObject.put( "id", idpConfig.getId() );
+		jsonObject.put( "idpName", idpConfig.getIdpName() );
+		jsonObject.put( "enabled", idpConfig.isEnabled() );
+		jsonObject.put( "sPIssuerURL", idpConfig.getsPIssuerURL() );
+		jsonObject.put( "sPEndponintHostname", idpConfig.getsPEndponintHostname() );
+		jsonObject.put( "privateKey", getCanonicalPathIfExists( idpConfig.getPrivateKey() ) );
+		jsonObject.put( "publicCert", getCanonicalPathIfExists( idpConfig.getPublicCert() ) );
+		jsonObject.put( "idPMetadataFile", getCanonicalPathIfExists( idpConfig.getIdPMetadataFile() ) );
+		jsonObject.put( "signatureValidationType", idpConfig.getSignatureValidationType() );
+		jsonObject.put( "optionalProperties", getJsonObjectFromProperties( idpConfig.getOptionalProperties() ) );
+		jsonObject.put( "sites", SiteJsonTransformer.getJsonObjecFromtMap( idpConfig.getSites() ) );
 
-        jo.put("id", idpConfig.getId());
-        jo.put("idpName", idpConfig.getIdpName());
-        jo.put("enabled", idpConfig.isEnabled());
-        jo.put("sPIssuerURL", idpConfig.getsPIssuerURL());
-        jo.put("sPEndponintHostname", idpConfig.getsPEndponintHostname());
-        jo.put("privateKey", getCanonicalPathIfExists(idpConfig.getPrivateKey()));
-        jo.put("publicCert", getCanonicalPathIfExists(idpConfig.getPublicCert()));
-        jo.put("idPMetadataFile", getCanonicalPathIfExists(idpConfig.getIdPMetadataFile()));
-        jo.put("signatureValidationType", idpConfig.getSignatureValidationType());
-        jo.put("optionalProperties", getJsonObjectFromProperties(idpConfig.getOptionalProperties()));
-        jo.put("sites", SiteJsonTransformer.getJsonObjecFromtMap(idpConfig.getSites()));
+		return jsonObject;
+	}
 
-        return jo;
-    }
+	public static IdpConfig jsonToIdp( JSONObject jsonObject ) throws JSONException
+	{
+		IdpConfig idpConfig = new IdpConfig();
 
-    public static IdpConfig jsonToIdp(JSONObject jsonObject) throws JSONException {
-        IdpConfig idpConfig = new IdpConfig();
+		idpConfig.setId( jsonObject.getString( "id" ) );
+		idpConfig.setIdpName( jsonObject.getString( "idpName" ) );
+		idpConfig.setEnabled( jsonObject.getBoolean( "enabled" ) );
+		idpConfig.setsPIssuerURL( jsonObject.getString( "sPIssuerURL" ) );
+		idpConfig.setsPEndponintHostname( jsonObject.getString( "sPEndponintHostname" ) );
+		idpConfig.setPrivateKey( getFileFromCanonicalPath( jsonObject.getString( "privateKey" ) ) );
+		idpConfig.setPublicCert( getFileFromCanonicalPath( jsonObject.getString( "publicCert" ) ) );
+		idpConfig.setIdPMetadataFile( getFileFromCanonicalPath( jsonObject.getString( "idPMetadataFile" ) ) );
+		idpConfig.setSignatureValidationType( jsonObject.getString( "signatureValidationType" ) );
+		idpConfig.setOptionalProperties( getPropertiesFromJsonObject( jsonObject.getJSONObject( "optionalProperties" ) ) );
+		idpConfig.setSites( SiteJsonTransformer.getMapFromJsonObject( jsonObject.getJSONObject( "sites" ) ) );
 
-        idpConfig.setId(jsonObject.getString("id"));
-        idpConfig.setIdpName(jsonObject.getString("idpName"));
-        idpConfig.setEnabled(jsonObject.getBoolean("enabled"));
-        idpConfig.setsPIssuerURL(jsonObject.getString("sPIssuerURL"));
-        idpConfig.setsPEndponintHostname(jsonObject.getString("sPEndponintHostname"));
-        idpConfig.setPrivateKey(getFileFromCanonicalPath(jsonObject.getString("privateKey")));
-        idpConfig.setPublicCert(getFileFromCanonicalPath(jsonObject.getString("publicCert")));
-        idpConfig.setIdPMetadataFile(getFileFromCanonicalPath(jsonObject.getString("idPMetadataFile")));
-        idpConfig.setSignatureValidationType(jsonObject.getString("signatureValidationType"));
-        idpConfig.setOptionalProperties(getPropertiesFromJsonObject(jsonObject.getJSONObject("optionalProperties")));
-        idpConfig.setSites(SiteJsonTransformer. getMapFromJsonObject(jsonObject.getJSONObject("sites")));
+		return idpConfig;
+	}
 
-        return idpConfig;
-    }
+	private static String getCanonicalPathIfExists( File file ) throws IOException
+	{
+		String canonicalPath = "";
+		if ( file != null )
+		{
+			canonicalPath = file.getCanonicalPath();
+		}
+		return canonicalPath;
+	}
 
-    private static String getCanonicalPathIfExists(File file) throws IOException{
-        String canonicalPath = "";
-        if (file != null){
-            canonicalPath = file.getCanonicalPath();
-        }
-        return canonicalPath;
-    }
+	private static File getFileFromCanonicalPath( String canonicalPath )
+	{
+		File file = null;
 
-    private static File getFileFromCanonicalPath(String canonicalPath){
-        File file = null;
+		if ( UtilMethods.isSet( canonicalPath ) )
+		{
+			File fileFromPath = new File( canonicalPath );
+			if ( fileFromPath.exists() )
+			{
+				file = fileFromPath;
+			}
+			else
+			{
+				Logger.error( IdpJsonTransformer.class, "File doesn't exists: " + canonicalPath );
+			}
+		}
 
-        if (UtilMethods.isSet(canonicalPath)){
-            File fileFromPath = new File(canonicalPath);
-            if (fileFromPath.exists()){
-                file = fileFromPath;
-            } else {
-                Logger.error(IdpJsonTransformer.class, "File doesn't exists: " + canonicalPath);
-            }
-        }
+		return file;
+	}
 
-        return file;
-    }
+	private static JSONObject getJsonObjectFromProperties( Properties properties ) throws JSONException
+	{
+		JSONObject jsonObject = new JSONObject();
 
-    private static JSONObject getJsonObjectFromProperties(Properties properties) throws JSONException {
-        JSONObject jo = new JSONObject();
+		if ( UtilMethods.isSet( properties ) )
+		{
+			for ( String key : properties.stringPropertyNames() )
+			{
+				jsonObject.put( key, properties.getProperty( key ) );
+			}
+		}
 
-        if (UtilMethods.isSet(properties)){
-            for (String key : properties.stringPropertyNames()) {
-                jo.put(key, properties.getProperty(key));
-            }
-        }
+		return jsonObject;
+	}
 
-        return jo;
-    }
+	private static Properties getPropertiesFromJsonObject( JSONObject jsonObject ) throws JSONException
+	{
+		Properties properties = new Properties();
+		Iterator<?> keys = jsonObject.keys();
 
-    private static Properties getPropertiesFromJsonObject(JSONObject jo) throws JSONException {
-        Properties properties = new Properties();
-        Iterator<?> keys = jo.keys();
+		while ( keys.hasNext() )
+		{
+			String key = (String) keys.next();
+			String value = jsonObject.getString( key );
 
-        while( keys.hasNext() ) {
-            String key = (String)keys.next();
-            String value = jo.getString(key);
+			properties.setProperty( key, value );
+		}
 
-            properties.setProperty(key, value);
-        }
-
-        return properties;
-    }
+		return properties;
+	}
 
 }

@@ -95,302 +95,302 @@
 <script type='text/javascript' src='/dwr/interface/DashboardAjax.js'></script>
 <script type="text/javascript">
 
-    var orderByHost = '';
-    var orderByHostDir = '';
-    var maxCount = 20;
-    var globalPageNumber = 1;
-    dojo.require('dotcms.dojo.data.HostReadStore');
-    dojo.require('dijit.ProgressBar');
+	var orderByHost = '';
+	var orderByHostDir = '';
+	var maxCount = 20;
+	var globalPageNumber = 1;
+	dojo.require('dotcms.dojo.data.HostReadStore');
+	dojo.require('dijit.ProgressBar');
 
-    function getFormData(formId,nameValueSeparator){ // Returns form data as name value pairs with nameValueSeparator.
+	function getFormData(formId,nameValueSeparator){ // Returns form data as name value pairs with nameValueSeparator.
 
-        var formData = new Array();
+		var formData = new Array();
 
-        //Taking the text from all the textareas
-        var k = 0;
+		//Taking the text from all the textareas
+		var k = 0;
 
-        dojo.query('textarea', dojo.byId(formId)).forEach(
-            function(textareaObj){
-                if ((textareaObj.id != "") && (aceEditor != null)) {
-                    try {
-                        document.getElementById(textareaObj.id).value= aceEditor.getValue();
-                    } catch (e) {}
-                }
-            }
-        );
-
-
-        var formElements = document.getElementById(formId).elements;
-
-        var formDataIndex = 0; // To collect name/values from multi-select,text-areas.
-
-        for(var formElementsIndex = 0; formElementsIndex < formElements.length; formElementsIndex++,formDataIndex++){
+		dojo.query('textarea', dojo.byId(formId)).forEach(
+			function(textareaObj){
+				if ((textareaObj.id != "") && (aceEditor != null)) {
+					try {
+						document.getElementById(textareaObj.id).value= aceEditor.getValue();
+					} catch (e) {}
+				}
+			}
+		);
 
 
-            // Collecting only checked radio and checkboxes
-            if((formElements[formElementsIndex].type == "radio") && (formElements[formElementsIndex].checked == false)){
-                continue;
-            }
+		var formElements = document.getElementById(formId).elements;
 
-            if((formElements[formElementsIndex].type == "checkbox") && (formElements[formElementsIndex].checked == false)){
-                continue;
-            }
+		var formDataIndex = 0; // To collect name/values from multi-select,text-areas.
 
-            // Collecting selected values from multi select
-            if(formElements[formElementsIndex].type == "select-multiple") {
-                for(var multiSelectIndex = 0; multiSelectIndex < formElements[formElementsIndex].length; multiSelectIndex++){
-
-                    if(formElements[formElementsIndex].options[multiSelectIndex].selected == true){
-                        formData[formDataIndex] = formElements[formElementsIndex].name+nameValueSeparator+formElements[formElementsIndex].options[multiSelectIndex].value;
-                        formDataIndex++;
-                    }
-                }
-                continue;
-            }
-
-            // Getting values from text areas
-            if(formElements[formElementsIndex].type == "textarea" && formElements[formElementsIndex].id != '') {
-                if(tinyMCE.get(formElements[formElementsIndex].id) != null){
-                    textAreaData = tinyMCE.get(formElements[formElementsIndex].id).getContent();
-                    formData[formDataIndex] = formElements[formElementsIndex].name+nameValueSeparator+textAreaData;
-                    continue;
-                }
-                if(tinyMCE.get(formElements[formElementsIndex].id) == null){
-                    textAreaData = document.getElementById(formElements[formElementsIndex].id).value;
-                    formData[formDataIndex] = formElements[formElementsIndex].name+nameValueSeparator+textAreaData;
-                    continue;
-                }
-            }
-
-            formData[formDataIndex] = formElements[formElementsIndex].name+nameValueSeparator+formElements[formElementsIndex].value;
-        }
-        return formData;
-    }
+		for(var formElementsIndex = 0; formElementsIndex < formElements.length; formElementsIndex++,formDataIndex++){
 
 
+			// Collecting only checked radio and checkboxes
+			if((formElements[formElementsIndex].type == "radio") && (formElements[formElementsIndex].checked == false)){
+				continue;
+			}
+
+			if((formElements[formElementsIndex].type == "checkbox") && (formElements[formElementsIndex].checked == false)){
+				continue;
+			}
+
+			// Collecting selected values from multi select
+			if(formElements[formElementsIndex].type == "select-multiple") {
+				for(var multiSelectIndex = 0; multiSelectIndex < formElements[formElementsIndex].length; multiSelectIndex++){
+
+					if(formElements[formElementsIndex].options[multiSelectIndex].selected == true){
+						formData[formDataIndex] = formElements[formElementsIndex].name+nameValueSeparator+formElements[formElementsIndex].options[multiSelectIndex].value;
+						formDataIndex++;
+					}
+				}
+				continue;
+			}
+
+			// Getting values from text areas
+			if(formElements[formElementsIndex].type == "textarea" && formElements[formElementsIndex].id != '') {
+				if(tinyMCE.get(formElements[formElementsIndex].id) != null){
+					textAreaData = tinyMCE.get(formElements[formElementsIndex].id).getContent();
+					formData[formDataIndex] = formElements[formElementsIndex].name+nameValueSeparator+textAreaData;
+					continue;
+				}
+				if(tinyMCE.get(formElements[formElementsIndex].id) == null){
+					textAreaData = document.getElementById(formElements[formElementsIndex].id).value;
+					formData[formDataIndex] = formElements[formElementsIndex].name+nameValueSeparator+textAreaData;
+					continue;
+				}
+			}
+
+			formData[formDataIndex] = formElements[formElementsIndex].name+nameValueSeparator+formElements[formElementsIndex].value;
+		}
+		return formData;
+	}
 
 
 
-    function submitfm() {
-        form = document.getElementById('fm');
-        form.pageNumber.value = 1;
-        form.action = '<portlet:renderURL><portlet:param name="struts_action" value="/ext/dashboard/view_dashboard" /></portlet:renderURL>';
-        //submitForm(form);
-        DashboardAjax.getHosts(getFormData("fm","<%= com.dotmarketing.util.WebKeys.CONTENTLET_FORM_NAME_VALUE_SEPARATOR %>"),10,1,'',dojo.hitch(this, fillHostsTable));
-    }
 
-    function updateDateField(varName, timeField) {
-        var field = $(varName);
-        var dateValue = "01/01/1900 ";
-        if(!timeField){
-            dateValue = document.getElementById(varName+'Date').value + " ";
-        }
-        if(timeField || (dateValue!=null && dateValue!=' ')){
-            if (document.getElementById(varName + 'Hour').value != null && document.getElementById(varName + 'Hour').value != '') {
-                var hour = document.getElementById(varName + 'Hour').value;
 
-                if(hour < 10) hour = "0" + hour;
-                var min = document.getElementById(varName + 'Minute').value;
-                if(min!=''){
-                    dateValue += hour + ":" + min;
-                }else{
-                    dateValue += hour + ":00" ;
-                }
-            } else {
-                dateValue += "00:00";
-            }
-            field.value = dateValue;
-        }else{
-            field.value = '';
-            if (document.getElementById(varName + 'Hour').value != null && document.getElementById(varName + 'Hour').value != '') {
-                dijit.byId(varName + 'Hour').reset();
-                dijit.byId(varName + 'Minute').reset();
-            }
+	function submitfm() {
+		form = document.getElementById('fm');
+		form.pageNumber.value = 1;
+		form.action = '<portlet:renderURL><portlet:param name="struts_action" value="/ext/dashboard/view_dashboard" /></portlet:renderURL>';
+		//submitForm(form);
+		DashboardAjax.getHosts(getFormData("fm","<%= com.dotmarketing.util.WebKeys.CONTENTLET_FORM_NAME_VALUE_SEPARATOR %>"),10,1,'',dojo.hitch(this, fillHostsTable));
+	}
 
-        }
-    }
+	function updateDateField(varName, timeField) {
+		var field = $(varName);
+		var dateValue = "01/01/1900 ";
+		if(!timeField){
+			dateValue = document.getElementById(varName+'Date').value + " ";
+		}
+		if(timeField || (dateValue!=null && dateValue!=' ')){
+			if (document.getElementById(varName + 'Hour').value != null && document.getElementById(varName + 'Hour').value != '') {
+				var hour = document.getElementById(varName + 'Hour').value;
 
-    function viewHostReport(id){
-        var URL = '<portlet:actionURL windowState="<%= WindowState.MAXIMIZED.toString() %>">\
+				if(hour < 10) hour = "0" + hour;
+				var min = document.getElementById(varName + 'Minute').value;
+				if(min!=''){
+					dateValue += hour + ":" + min;
+				}else{
+					dateValue += hour + ":00" ;
+				}
+			} else {
+				dateValue += "00:00";
+			}
+			field.value = dateValue;
+		}else{
+			field.value = '';
+			if (document.getElementById(varName + 'Hour').value != null && document.getElementById(varName + 'Hour').value != '') {
+				dijit.byId(varName + 'Hour').reset();
+				dijit.byId(varName + 'Minute').reset();
+			}
+
+		}
+	}
+
+	function viewHostReport(id){
+		var URL = '<portlet:actionURL windowState="<%= WindowState.MAXIMIZED.toString() %>">\
 		<portlet:param name="struts_action" value="/ext/dashboard/view_dashboard" />\
 		<portlet:param name="cmd" value="<%=Constants.VIEW_HOST_REPORT %>" />\
 		<portlet:param name="lang" value="<%= Long.toString(lang.getId()) %>" />\
 		<portlet:param name="referer" value="<%=referer%>" />\
-        </portlet:actionURL>&hostId={hostIdentifier}&r='+ Date.now();
-        var href = dojo.replace(URL, { hostIdentifier: id})
-        window.location=href;
-    }
+		</portlet:actionURL>&hostId={hostIdentifier}&r='+ Date.now();
+		var href = dojo.replace(URL, { hostIdentifier: id})
+		window.location=href;
+	}
 
 
-    function viewWorkStream(id){
-        var URL = '<portlet:actionURL windowState="<%= WindowState.MAXIMIZED.toString() %>">\
+	function viewWorkStream(id){
+		var URL = '<portlet:actionURL windowState="<%= WindowState.MAXIMIZED.toString() %>">\
 		<portlet:param name="struts_action" value="/ext/dashboard/view_dashboard" />\
 		<portlet:param name="cmd" value="<%=Constants.VIEW_ACTIVITY_STREAM %>" />\
 		<portlet:param name="lang" value="<%= Long.toString(lang.getId()) %>" />\
 		<portlet:param name="referer" value="<%=referer%>" />\
 		</portlet:actionURL>&hostId={hostIdentifier}';
-        var href = dojo.replace(URL, { hostIdentifier: id})
-        window.location=href;
-    }
+		var href = dojo.replace(URL, { hostIdentifier: id})
+		window.location=href;
+	}
 
-    function viewBrowser(id){
-        var URL = '<%=browserURL%>&hostId={hostIdentifier}';
-        var href = dojo.replace(URL, { hostIdentifier: id})
-        window.location=href;
-    }
+	function viewBrowser(id){
+		var URL = '<%=browserURL%>&hostId={hostIdentifier}';
+		var href = dojo.replace(URL, { hostIdentifier: id})
+		window.location=href;
+	}
 
-    function viewWorkStreams(pageNumber, orderBy){
-        var hostId = dijit.byId("dahboardHostSelectorWorkStream").value;
-        var userId = dijit.byId("dashboardUserSelector").value;
-        var fromDateStr = document.getElementById("workStreamFromDate").value;
-        var toDateStr = document.getElementById("workStreamToDate").value;
-        DashboardAjax.getWorkStreams(hostId,userId,fromDateStr,toDateStr,5,1,orderBy,dojo.hitch(this, fillWorkStreamTable));
-    }
+	function viewWorkStreams(pageNumber, orderBy){
+		var hostId = dijit.byId("dahboardHostSelectorWorkStream").value;
+		var userId = dijit.byId("dashboardUserSelector").value;
+		var fromDateStr = document.getElementById("workStreamFromDate").value;
+		var toDateStr = document.getElementById("workStreamToDate").value;
+		DashboardAjax.getWorkStreams(hostId,userId,fromDateStr,toDateStr,5,1,orderBy,dojo.hitch(this, fillWorkStreamTable));
+	}
 
-    var noRecordsTemplate = '<tr id="rowNoResults"><td colspan="5"><div class="noResultsMessage"><%= LanguageUtil.get(pageContext, "No-Records-Found") %></div></td></tr>';
-
-
-    function viewHosts(pageNumber, orderBy){
-        globalPageNumber = pageNumber;
-        DashboardAjax.getHosts(getFormData("fm","<%= com.dotmarketing.util.WebKeys.CONTENTLET_FORM_NAME_VALUE_SEPARATOR %>"),15,pageNumber,orderBy,dojo.hitch(this, fillHostsTable));
-    }
-
-    function orderHosts(orderBy, dir){
-        if(orderByHost==''){
-            orderByHost = orderBy;
-            orderByHostDir = dir;
-        }else{
-            if(orderByHost == orderBy){
-                if(orderByHostDir == 'desc'){
-                    dir = 'asc';
-                }else{
-                    dir = 'desc';
-                }
-            }
-            orderByHost = orderBy;
-            orderByHostDir = dir;
-        }
-        viewHosts(globalPageNumber,orderBy + ' ' + dir);
-    }
-
-    function clearHostSearch(){
-        document.getElementById('fm').reset();
-        dijit.byId("dahboardHostSelector").displayedValue = "";
-        dijit.byId("dahboardHostSelector").value = "";
-        dojo.query("input[type='hidden']",'fm').forEach(function(node, index, arr){
-            node.value="";
-        });
-        dojo.query(".dijitCheckBoxInput",'fm').forEach(function(node, index, arr){
-            dijit.byId(node.id).reset();
-        });
-
-        DashboardAjax.getHosts(getFormData("fm","<%= com.dotmarketing.util.WebKeys.CONTENTLET_FORM_NAME_VALUE_SEPARATOR %>"),15,1,'',dojo.hitch(this, fillHostsTable));
-    }
-
-    function clearValue(select){
-        if(dijit.byId(select).displayedValue == ''){
-            console.log(dijit.byId(select).displayedValue);
-            dijit.byId(select).displayedValue = "";
-            dijit.byId(select).value = "";
-            dijit.byId(select).selectedItem = null;
-        }
-    }
-
-    var noRecordsHostTemplate = '<tr class="alternate_1" id="rowNoResults"><td colspan="${fields}"><div class="noResultsMessage"><%= LanguageUtil.get(pageContext, "No-Records-Found") %></div></td></tr>';
-    var hostTemplate1 = '<tr id="${inode}" onmouseover="changeBgOver(\'${inode}\');" style="cursor:pointer" onclick="viewHostReport(\'${hostId}\');" onmouseout="changeBgOut(\'${inode}\');"><td><a href="javascript:viewHostReport(\'${hostId}\');">${name}</a></td><td>${status}</td>';
-    var hostTemplate2 = '<td>${pageViews}</td></tr>';
-    var hostTemplate3 = '<td>${vfield}</td>';
-    var contextMenuTemplate='<div dojoType="dijit.Menu" class="dotContextMenu" contextMenuForWindow="false" style="display: none;" targetNodeIds="${hostInode}">\
-                               ${menuesHTML}\
-                             </div>';
-
-    var contextMenuTemplate2 =  '<div dojoType="dijit.MenuItem" iconClass="appMonitorIcon" onClick="javascript:viewHostReport(\'${hostId}\');">\<%= LanguageUtil.get(pageContext, "Host-Report") %>\</div>';
-    var contextMenuTemplate3 =  '<div dojoType="dijit.MenuItem" iconClass="bowserIcon" onClick="javascript:viewBrowser(\'${hostId}\');">\<%= LanguageUtil.get(pageContext, "View-Host-Browser") %>\</div>';
-    var contextMenuTemplate4 =  '<div dojoType="dijit.MenuItem" iconClass="workStreamIcon" onClick="javascript:viewWorkStream(\'${hostId}\');">\<%= LanguageUtil.get(pageContext, "View-Activity-Stream") %>\</div>';
+	var noRecordsTemplate = '<tr id="rowNoResults"><td colspan="5"><div class="noResultsMessage"><%= LanguageUtil.get(pageContext, "No-Records-Found") %></div></td></tr>';
 
 
-    function fillHostsTable(data){
-        DWRUtil.removeAllRows(dojo.byId('hosts'));
-        var pageNumber = data.pageNumber;
-        var orderBy = "'" + data.orderBy + "'";
-        var minIndex = (pageNumber - 1) * maxCount;
-        var totalCount = data.hostCount;
-        var maxIndex = maxCount * pageNumber;
-        if((minIndex + maxCount) >= totalCount){
-            maxIndex = totalCount;
-        }
-        var leftPageStr = '';
-        if (minIndex != 0) {
-            leftPageStr += '<a href="javascript:viewHosts('+(pageNumber-1)+','+orderBy+')"> << </a>';
-        }
-        var rightPageStr = '';
-        if (maxIndex < totalCount) {
-            rightPageStr += '<a href="javascript:viewHosts('+(pageNumber + 1)+','+orderBy+')"> >> </a>';
-        }
-        var index = 0;
-        if(totalCount>0){
-            index = (minIndex+1);
-        }
-        var str = '';
-        if(leftPageStr!=''){
-            str += leftPageStr + ' ';
-        }
-        str += '<%= LanguageUtil.get(pageContext, "Viewing") %>';
-        str += ' ' + index + ' - ';
-        if (maxIndex > (minIndex + totalCount)) {
-            str +=' ' + (minIndex + totalCount);
-        }else{
-            str += ' ' + (maxIndex);
-        }
-        str += ' ' + '<%= LanguageUtil.get(pageContext, "of1") %>'+ ' '  + totalCount;
-        if(rightPageStr!=''){
-            str +=  ' ' + rightPageStr;
-        }
-        dojo.byId('footer').innerHTML = str;
-        var hosts = data.hosts;
-        if(hosts.length == 0) {
-            dojo.place(dojo.string.substitute(noRecordsHostTemplate, { fields:<%=span%>}), 'hosts', 'only');
-        } else {
-            var tableHTML = "";
-            for(var i = 0; i < hosts.length; i++) {
-                var host = hosts[i];
-                var fields = host.fields;
-                var trClassName = (i%2==0)?'alternate_1':'alternate_2';
-                var html = dojo.string.substitute(hostTemplate1, { inode:host.inode, csn:trClassName, hostId: host.identifier, name:host.hostName, status:host.status });
-                for(var j = 0; j<fields.length;j++){
-                    var field = fields[j];
-                    html+= dojo.string.substitute(hostTemplate3, { vfield:field});
-                }
-                html+= dojo.string.substitute(hostTemplate2, { pageViews:host.pageViews});
-                tableHTML += html;
+	function viewHosts(pageNumber, orderBy){
+		globalPageNumber = pageNumber;
+		DashboardAjax.getHosts(getFormData("fm","<%= com.dotmarketing.util.WebKeys.CONTENTLET_FORM_NAME_VALUE_SEPARATOR %>"),15,pageNumber,orderBy,dojo.hitch(this, fillHostsTable));
+	}
+
+	function orderHosts(orderBy, dir){
+		if(orderByHost==''){
+			orderByHost = orderBy;
+			orderByHostDir = dir;
+		}else{
+			if(orderByHost == orderBy){
+				if(orderByHostDir == 'desc'){
+					dir = 'asc';
+				}else{
+					dir = 'desc';
+				}
+			}
+			orderByHost = orderBy;
+			orderByHostDir = dir;
+		}
+		viewHosts(globalPageNumber,orderBy + ' ' + dir);
+	}
+
+	function clearHostSearch(){
+		document.getElementById('fm').reset();
+		dijit.byId("dahboardHostSelector").displayedValue = "";
+		dijit.byId("dahboardHostSelector").value = "";
+		dojo.query("input[type='hidden']",'fm').forEach(function(node, index, arr){
+			node.value="";
+		});
+		dojo.query(".dijitCheckBoxInput",'fm').forEach(function(node, index, arr){
+			dijit.byId(node.id).reset();
+		});
+
+		DashboardAjax.getHosts(getFormData("fm","<%= com.dotmarketing.util.WebKeys.CONTENTLET_FORM_NAME_VALUE_SEPARATOR %>"),15,1,'',dojo.hitch(this, fillHostsTable));
+	}
+
+	function clearValue(select){
+		if(dijit.byId(select).displayedValue == ''){
+			console.log(dijit.byId(select).displayedValue);
+			dijit.byId(select).displayedValue = "";
+			dijit.byId(select).value = "";
+			dijit.byId(select).selectedItem = null;
+		}
+	}
+
+	var noRecordsHostTemplate = '<tr class="alternate_1" id="rowNoResults"><td colspan="${fields}"><div class="noResultsMessage"><%= LanguageUtil.get(pageContext, "No-Records-Found") %></div></td></tr>';
+	var hostTemplate1 = '<tr id="${inode}" onmouseover="changeBgOver(\'${inode}\');" style="cursor:pointer" onclick="viewHostReport(\'${hostId}\');" onmouseout="changeBgOut(\'${inode}\');"><td><a href="javascript:viewHostReport(\'${hostId}\');">${name}</a></td><td>${status}</td>';
+	var hostTemplate2 = '<td>${pageViews}</td></tr>';
+	var hostTemplate3 = '<td>${vfield}</td>';
+	var contextMenuTemplate='<div dojoType="dijit.Menu" class="dotContextMenu" contextMenuForWindow="false" style="display: none;" targetNodeIds="${hostInode}">\
+							   ${menuesHTML}\
+							 </div>';
+
+	var contextMenuTemplate2 =  '<div dojoType="dijit.MenuItem" iconClass="appMonitorIcon" onClick="javascript:viewHostReport(\'${hostId}\');">\<%= LanguageUtil.get(pageContext, "Host-Report") %>\</div>';
+	var contextMenuTemplate3 =  '<div dojoType="dijit.MenuItem" iconClass="bowserIcon" onClick="javascript:viewBrowser(\'${hostId}\');">\<%= LanguageUtil.get(pageContext, "View-Host-Browser") %>\</div>';
+	var contextMenuTemplate4 =  '<div dojoType="dijit.MenuItem" iconClass="workStreamIcon" onClick="javascript:viewWorkStream(\'${hostId}\');">\<%= LanguageUtil.get(pageContext, "View-Activity-Stream") %>\</div>';
 
 
-                var contextMenuHTML = dojo.string.substitute(contextMenuTemplate2, { hostId:host.identifier });
-                contextMenuHTML +=dojo.string.substitute(contextMenuTemplate3, { hostId:host.identifier  });
-                contextMenuHTML += dojo.string.substitute(contextMenuTemplate4, { hostId:host.identifier  });
+	function fillHostsTable(data){
+		DWRUtil.removeAllRows(dojo.byId('hosts'));
+		var pageNumber = data.pageNumber;
+		var orderBy = "'" + data.orderBy + "'";
+		var minIndex = (pageNumber - 1) * maxCount;
+		var totalCount = data.hostCount;
+		var maxIndex = maxCount * pageNumber;
+		if((minIndex + maxCount) >= totalCount){
+			maxIndex = totalCount;
+		}
+		var leftPageStr = '';
+		if (minIndex != 0) {
+			leftPageStr += '<a href="javascript:viewHosts('+(pageNumber-1)+','+orderBy+')"> << </a>';
+		}
+		var rightPageStr = '';
+		if (maxIndex < totalCount) {
+			rightPageStr += '<a href="javascript:viewHosts('+(pageNumber + 1)+','+orderBy+')"> >> </a>';
+		}
+		var index = 0;
+		if(totalCount>0){
+			index = (minIndex+1);
+		}
+		var str = '';
+		if(leftPageStr!=''){
+			str += leftPageStr + ' ';
+		}
+		str += '<%= LanguageUtil.get(pageContext, "Viewing") %>';
+		str += ' ' + index + ' - ';
+		if (maxIndex > (minIndex + totalCount)) {
+			str +=' ' + (minIndex + totalCount);
+		}else{
+			str += ' ' + (maxIndex);
+		}
+		str += ' ' + '<%= LanguageUtil.get(pageContext, "of1") %>'+ ' '  + totalCount;
+		if(rightPageStr!=''){
+			str +=  ' ' + rightPageStr;
+		}
+		dojo.byId('footer').innerHTML = str;
+		var hosts = data.hosts;
+		if(hosts.length == 0) {
+			dojo.place(dojo.string.substitute(noRecordsHostTemplate, { fields:<%=span%>}), 'hosts', 'only');
+		} else {
+			var tableHTML = "";
+			for(var i = 0; i < hosts.length; i++) {
+				var host = hosts[i];
+				var fields = host.fields;
+				var trClassName = (i%2==0)?'alternate_1':'alternate_2';
+				var html = dojo.string.substitute(hostTemplate1, { inode:host.inode, csn:trClassName, hostId: host.identifier, name:host.hostName, status:host.status });
+				for(var j = 0; j<fields.length;j++){
+					var field = fields[j];
+					html+= dojo.string.substitute(hostTemplate3, { vfield:field});
+				}
+				html+= dojo.string.substitute(hostTemplate2, { pageViews:host.pageViews});
+				tableHTML += html;
 
-                var contextHtml = dojo.string.substitute(contextMenuTemplate, {menuesHTML: contextMenuHTML,hostInode:host.inode });
-                dojo.place(contextHtml, 'hostContextMenues', 'last');
-            }
-            dojo.place(tableHTML, 'hosts', 'only');
-            dojo.parser.parse('hostContextMenues');
 
-        }
-    }
+				var contextMenuHTML = dojo.string.substitute(contextMenuTemplate2, { hostId:host.identifier });
+				contextMenuHTML +=dojo.string.substitute(contextMenuTemplate3, { hostId:host.identifier  });
+				contextMenuHTML += dojo.string.substitute(contextMenuTemplate4, { hostId:host.identifier  });
 
-    function changeBgOver(inode){
-        dojo.style(inode, "background", "#CDEAFD");
-    }
-    function changeBgOut(inode){
-        dojo.style(inode, "background", "#ffffff");
-    }
+				var contextHtml = dojo.string.substitute(contextMenuTemplate, {menuesHTML: contextMenuHTML,hostInode:host.inode });
+				dojo.place(contextHtml, 'hostContextMenues', 'last');
+			}
+			dojo.place(tableHTML, 'hosts', 'only');
+			dojo.parser.parse('hostContextMenues');
 
-    <% if(LicenseUtil.getLevel() >= LicenseLevel.STANDARD.level){ %>
-    dojo.addOnLoad(function(){
-        dojo.place('<br/><br/><br/><br/><img src="/html/images/icons/round-progress-bar.gif" /><br/>&nbsp;&nbsp;&nbsp;<b><%= LanguageUtil.get(pageContext, "Loading") %>...</b>', 'hosts', 'only');
-        DashboardAjax.getHosts(getFormData("fm","<%= com.dotmarketing.util.WebKeys.CONTENTLET_FORM_NAME_VALUE_SEPARATOR %>"),20,1,'',dojo.hitch(this, fillHostsTable));
-    });
-    <%}%>
+		}
+	}
+
+	function changeBgOver(inode){
+		dojo.style(inode, "background", "#CDEAFD");
+	}
+	function changeBgOut(inode){
+		dojo.style(inode, "background", "#ffffff");
+	}
+
+	<% if(LicenseUtil.getLevel() >= LicenseLevel.STANDARD.level){ %>
+	dojo.addOnLoad(function(){
+		dojo.place('<br/><br/><br/><br/><img src="/html/images/icons/round-progress-bar.gif" /><br/>&nbsp;&nbsp;&nbsp;<b><%= LanguageUtil.get(pageContext, "Loading") %>...</b>', 'hosts', 'only');
+		DashboardAjax.getHosts(getFormData("fm","<%= com.dotmarketing.util.WebKeys.CONTENTLET_FORM_NAME_VALUE_SEPARATOR %>"),20,1,'',dojo.hitch(this, fillHostsTable));
+	});
+	<%}%>
 
 
 
@@ -442,18 +442,18 @@
 					</td>
 
 					<script language="Javascript">
-                        /**
-                         focus on search box
-                         **/
-                        require([ "dijit/focus", "dojo/dom", "dojo/domReady!" ], function(focusUtil, dom){
-                            dojo.require('dojox.timing');
-                            t = new dojox.timing.Timer(500);
-                            t.onTick = function(){
-                                focusUtil.focus(dom.byId("dahboardHostSelector"));
-                                t.stop();
-                            }
-                            t.start();
-                        });
+						/**
+						 focus on search box
+						 **/
+						require([ "dijit/focus", "dojo/dom", "dojo/domReady!" ], function(focusUtil, dom){
+							dojo.require('dojox.timing');
+							t = new dojox.timing.Timer(500);
+							t.onTick = function(){
+								focusUtil.focus(dom.byId("dahboardHostSelector"));
+								t.stop();
+							}
+							t.start();
+						});
 					</script>
 
 					<% int count = 2;
@@ -581,17 +581,17 @@
 
 						<input type="hidden" name="<%=f.getFieldContentlet()%>" id="<%=f.getVelocityVarName()%>" value=" "/>
 						<script type="text/javascript">
-                            function update<%=f.getVelocityVarName()%>MultiSelect() {
-                                var valuesList = "";
-                                var multiselect = $('<%=f.getVelocityVarName()%>MultiSelect');
-                                for(var i = 0; i < multiselect.options.length; i++) {
-                                    if(multiselect.options[i].selected) {
-                                        valuesList += multiselect.options[i].value + ",";
-                                    }
-                                }
-                                $('<%=f.getVelocityVarName()%>').value = valuesList;
-                            }
-                            update<%=f.getVelocityVarName()%>MultiSelect();
+							function update<%=f.getVelocityVarName()%>MultiSelect() {
+								var valuesList = "";
+								var multiselect = $('<%=f.getVelocityVarName()%>MultiSelect');
+								for(var i = 0; i < multiselect.options.length; i++) {
+									if(multiselect.options[i].selected) {
+										valuesList += multiselect.options[i].value + ",";
+									}
+								}
+								$('<%=f.getVelocityVarName()%>').value = valuesList;
+							}
+							update<%=f.getVelocityVarName()%>MultiSelect();
 						</script>
 
 
@@ -631,18 +631,18 @@
 						<input type="hidden" name="<%=fieldName%>" id="<%=f.getVelocityVarName()%>" value="<%=value%>">
 
 						<script type="text/javascript">
-                            function update<%=f.getVelocityVarName()%>Checkbox() {
-                                var valuesList = "";
-                                var checkbox = null;
-                                <% for (int j = 0; j < pairs.length; j++) { %>
-                                checkbox = $('<%=fieldName + j%>Checkbox');
-                                if(checkbox.checked) {
-                                    valuesList += checkbox.value + ",";
-                                }
-                                <%}%>
-                                $('<%=f.getVelocityVarName()%>').value = valuesList;
-                            }
-                            update<%=f.getVelocityVarName()%>Checkbox();
+							function update<%=f.getVelocityVarName()%>Checkbox() {
+								var valuesList = "";
+								var checkbox = null;
+								<% for (int j = 0; j < pairs.length; j++) { %>
+								checkbox = $('<%=fieldName + j%>Checkbox');
+								if(checkbox.checked) {
+									valuesList += checkbox.value + ",";
+								}
+								<%}%>
+								$('<%=f.getVelocityVarName()%>').value = valuesList;
+							}
+							update<%=f.getVelocityVarName()%>Checkbox();
 						</script>
 
 						<%}else if (f.getFieldType().equals(Field.FieldType.TAG.toString())) { %>

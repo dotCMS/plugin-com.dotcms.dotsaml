@@ -9,89 +9,98 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Encapsulates the configuration per site.
+ * 
  * @author jsanca
  */
-public class SiteConfigurationService implements Serializable {
+public class SiteConfigurationService implements Serializable
+{
+	private static final long serialVersionUID = 5559633819873359522L;
+	private final Map<String, Configuration> configurationBySiteMap;
+	private final Map<String, Configuration> disableConfigurationBySiteMap;
 
-    private final Map<String, Configuration> configurationBySiteMap;
-    private final Map<String, Configuration> disableConfigurationBySiteMap;
+	public SiteConfigurationService()
+	{
+		this( new ConcurrentHashMap<>() );
+	}
 
-    public SiteConfigurationService() {
+	public SiteConfigurationService( final Map<String, Configuration> configurationBySiteMap )
+	{
+		this.configurationBySiteMap = new ConcurrentHashMap<>( configurationBySiteMap );
+		this.disableConfigurationBySiteMap = new ConcurrentHashMap<>();
+	}
 
-        this(new ConcurrentHashMap<>());
-    } // SiteConfigurationService.
+	/**
+	 * Updates a set of configurations.
+	 * 
+	 * @param configurationBySiteMap
+	 *            Map
+	 */
+	public void updateConfigurations( final Map<String, Configuration> configurationBySiteMap )
+	{
+		this.configurationBySiteMap.putAll( configurationBySiteMap );
+	}
 
-    public SiteConfigurationService(final Map<String, Configuration> configurationBySiteMap) {
+	/**
+	 * Updates a set of disable configurations. These configuration are only
+	 * used as a fallback to figure out the metadata when the configuration is
+	 * disable.
+	 * 
+	 * @param configurationBySiteMap
+	 *            Map
+	 */
+	public void updateDisableConfiguration( final Map<String, Configuration> configurationBySiteMap )
+	{
+		this.disableConfigurationBySiteMap.putAll( configurationBySiteMap );
+	}
 
-        this.configurationBySiteMap        = new ConcurrentHashMap<>(configurationBySiteMap);
-        this.disableConfigurationBySiteMap = new ConcurrentHashMap<>();
+	/**
+	 * Get the site names
+	 * 
+	 * @return Set
+	 */
+	public Set<String> getSiteNames()
+	{
+		return this.configurationBySiteMap.keySet();
+	}
 
-    } // SiteConfigurationService.
+	/**
+	 * Get Configuration by site
+	 * 
+	 * @param site
+	 *            {@link String}
+	 * @return Configuration
+	 */
+	public Configuration getConfigurationBySite( final String site )
+	{
+		Logger.debug( this, ( ( this.configurationBySiteMap.containsKey( site ) ) ? "Found a configuration for the site: " + site : "Could not find a configuration for the site: " + site ) );
 
-    /**
-     * Updates a set of configurations.
-     * @param configurationBySiteMap Map
-     */
-    public void updateConfigurations (final Map<String, Configuration> configurationBySiteMap) {
-        this.configurationBySiteMap.putAll(configurationBySiteMap);
-    }
+		return this.configurationBySiteMap.get( site );
+	}
 
-    /**
-     * Updates a set of disable configurations.
-     * These configuration are only used as a fallback to figure out the metadata when the configuration is disable.
-     * @param configurationBySiteMap Map
-     */
-    public void updateDisableConfiguration(final Map<String, Configuration> configurationBySiteMap) {
-        this.disableConfigurationBySiteMap.putAll(configurationBySiteMap);
-    }
+	/**
+	 * Get Configuration by disable site This should be use just as a fallback
+	 * for things such as the metadata, not for doing authentication or anything
+	 * else
+	 * 
+	 * @param site
+	 *            {@link String}
+	 * @return Configuration
+	 */
+	public Configuration getConfigurationByDisabledSite( final String site )
+	{
+		Logger.debug( this, ( ( this.disableConfigurationBySiteMap.containsKey( site ) ) ? "Found a configuration for the disable site: " + site : "Could not find a configuration for the disable site: " + site ) );
 
-    /**
-     * Get the site names
-     * @return Set
-     */
-    public Set<String>  getSiteNames () {
+		return this.disableConfigurationBySiteMap.get( site );
+	}
 
-        return this.configurationBySiteMap.keySet();
-    } // getSiteNames.
+	public void setConfigurationBySite( final String site, final Configuration conf )
+	{
+		this.configurationBySiteMap.remove( site );
 
-    /**
-     * Get Configuration by site
-     * @param site {@link String}
-     * @return Configuration
-     */
-    public Configuration getConfigurationBySite (final String site) {
+		if ( conf != null )
+		{
+			this.configurationBySiteMap.put( site, conf );
+		}
 
-        Logger.debug(this, ((this.configurationBySiteMap.containsKey(site))?
-                        "Found a configuration for the site: " + site:
-                        "Could not find a configuration for the site: " + site
-                    ));
-
-        return this.configurationBySiteMap.get(site);
-    } // getConfigurationBySite.
-
-    /**
-     * Get Configuration by disable site
-     * This should be use just as a fallback for things such as the metadata, not for doing authentication or anything else
-     * @param site {@link String}
-     * @return Configuration
-     */
-    public Configuration getConfigurationByDisabledSite (final String site) {
-
-        Logger.debug(this, ((this.disableConfigurationBySiteMap.containsKey(site))?
-                "Found a configuration for the disable site: " + site:
-                "Could not find a configuration for the disable site: " + site
-        ));
-
-        return this.disableConfigurationBySiteMap.get(site);
-
-    } // getConfigurationBySite.
-
-    public void setConfigurationBySite (final String site, final Configuration conf){
-        this.configurationBySiteMap.remove(site);
-
-        if (conf != null) {
-            this.configurationBySiteMap.put(site, conf);
-        }
-    } // setConfigurationBySite.
-
-} // E:O:F:SiteConfigurationService.
+	}
+}
