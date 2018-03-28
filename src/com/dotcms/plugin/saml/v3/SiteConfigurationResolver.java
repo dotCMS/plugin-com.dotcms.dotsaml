@@ -16,6 +16,13 @@ import javax.servlet.http.HttpServletRequest;
  * 
  * @author jsanca
  */
+
+/**
+ * Identified as part of Version 3 SAML configuration.  Will possibly be removed or replaced.
+ *
+ * @deprecated 
+ */
+@Deprecated
 public class SiteConfigurationResolver implements Serializable
 {
 	private static final long serialVersionUID = -968358357606794446L;

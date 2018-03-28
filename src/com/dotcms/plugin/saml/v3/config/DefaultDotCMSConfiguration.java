@@ -23,6 +23,13 @@ import org.opensaml.security.credential.Credential;
  * 
  * @author jsanca
  */
+
+/**
+ * Identified as part of Version 3 SAML configuration.  Will most likely be removed.
+ *
+ * @deprecated 
+ */
+@Deprecated
 public class DefaultDotCMSConfiguration implements Configuration
 {
 	private static final long serialVersionUID = -7623641748773392712L;

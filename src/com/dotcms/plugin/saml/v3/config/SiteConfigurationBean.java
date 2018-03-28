@@ -14,6 +14,13 @@ import java.util.Map;
  *
  * @author jsanca
  */
+
+/**
+ * Identified as part of Version 3 SAML configuration.  Will most likely be removed.
+ *
+ * @deprecated 
+ */
+@Deprecated
 public class SiteConfigurationBean implements Serializable
 {
 	private static final long serialVersionUID = 2886740290860876502L;

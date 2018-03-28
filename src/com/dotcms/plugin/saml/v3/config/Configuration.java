@@ -19,6 +19,13 @@ import org.opensaml.security.credential.Credential;
  * 
  * @author jsanca
  */
+
+/**
+ * Identified as part of Version 3 SAML configuration.  Replace with IdpConfig.
+ *
+ * @deprecated 
+ */
+@Deprecated
 public interface Configuration extends Serializable
 {
 	public static final String HTTP_SCHEMA = "http://";

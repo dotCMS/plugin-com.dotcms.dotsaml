@@ -12,6 +12,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * @author jsanca
  */
+
+/**
+ * Identified as part of Version 3 SAML configuration.  Will most likely be removed.
+ *
+ * @deprecated 
+ */
+@Deprecated
 public class SiteConfigurationService implements Serializable
 {
 	private static final long serialVersionUID = 5559633819873359522L;

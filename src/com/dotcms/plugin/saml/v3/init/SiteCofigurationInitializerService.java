@@ -24,6 +24,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 
  * @author jsanca
  */
+
+/**
+ * Identified as part of Version 3 SAML configuration.  Will most likely be removed or replaced.
+ *
+ * @deprecated 
+ */
+@Deprecated
 public class SiteCofigurationInitializerService implements Initializer
 {
 	private static final long serialVersionUID = 1763769161434377458L;
