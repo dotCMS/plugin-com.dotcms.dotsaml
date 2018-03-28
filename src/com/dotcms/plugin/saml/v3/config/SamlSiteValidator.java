@@ -181,7 +181,7 @@ public class SamlSiteValidator
 			errorHtml.append( "</ul>" );
 
 			errorDebug.append( "\nMissing Fields: \n" );
-			errorDebug.append( org.apache.commons.lang.StringUtils.join( missingFields, ',' ) );
+			errorDebug.append( org.apache.commons.lang3.StringUtils.join( missingFields, ',' ) );
 		}
 
 		if ( !missingFiles.isEmpty() )
@@ -192,7 +192,7 @@ public class SamlSiteValidator
 			errorHtml.append( "</ul>" );
 
 			errorDebug.append( "\nCan NOT open Files: \n" );
-			errorDebug.append( org.apache.commons.lang.StringUtils.join( missingFiles, ',' ) );
+			errorDebug.append( org.apache.commons.lang3.StringUtils.join( missingFiles, ',' ) );
 		}
 
 		if ( !keyStoreErrors.isEmpty() )
@@ -203,7 +203,7 @@ public class SamlSiteValidator
 			errorHtml.append( "</ul>" );
 
 			errorDebug.append( "\nKey Store Errors: \n" );
-			errorDebug.append( org.apache.commons.lang.StringUtils.join( keyStoreErrors, ',' ) );
+			errorDebug.append( org.apache.commons.lang3.StringUtils.join( keyStoreErrors, ',' ) );
 		}
 
 		// DOTCMS_SAML_BUILD_ROLES
