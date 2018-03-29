@@ -24,6 +24,13 @@ import static com.dotcms.plugin.saml.v3.DotSamlConstants.DOTCMS_SAML_DEFAULT_CON
  *
  * @author jsanca
  */
+
+/**
+ * Identified as part of Version 3 SAML configuration.  Will most likely be removed.
+ *
+ * @deprecated 
+ */
+@Deprecated
 public class SiteConfigurationParser implements Serializable
 {
 	private static final long serialVersionUID = 7942650058538815060L;

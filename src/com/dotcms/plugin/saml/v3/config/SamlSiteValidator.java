@@ -22,6 +22,13 @@ import java.util.Set;
  * 
  * @author jsanca
  */
+
+/**
+ * Identified as part of Version 3 SAML configuration.  Will most likely be removed.
+ *
+ * @deprecated 
+ */
+@Deprecated
 public class SamlSiteValidator
 {
 	private final Set<String> fieldsToValidate = new HashSet<>(); // todo: on 4.x immutable

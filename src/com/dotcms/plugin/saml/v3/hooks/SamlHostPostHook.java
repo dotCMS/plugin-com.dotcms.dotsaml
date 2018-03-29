@@ -21,6 +21,13 @@ import java.util.List;
  * configuration fields validation, not affecting the saml configuration.
  * Created by nollymar on 3/17/17.
  */
+
+/**
+ * Identified as part of Version 3 SAML configuration.  Will most likely be removed or replaced.
+ *
+ * @deprecated 
+ */
+@Deprecated
 public class SamlHostPostHook extends ContentletAPIPostHookAbstractImp
 {
 	private final SiteConfigurationParser siteConfigurationParser = new SiteConfigurationParser();
