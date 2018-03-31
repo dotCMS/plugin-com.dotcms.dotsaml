@@ -1,7 +1,8 @@
-package com.dotcms.plugin.saml.v3.cache;
+package com.dotcms.plugin.saml.v4.cache;
 
 import com.dotcms.plugin.saml.v4.config.IdpConfig;
 import com.dotcms.plugin.saml.v4.config.IdpConfigWriterReader;
+
 import com.dotcms.repackage.com.google.common.base.Strings;
 
 import com.dotmarketing.business.CacheLocator;
@@ -18,6 +19,7 @@ import static com.dotcms.repackage.com.google.common.base.Preconditions.checkNot
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -64,9 +66,46 @@ public class SamlCacheImpl extends SamlCache
 	}
 
 	@Override
+	protected void addDisabledSiteId( String site)
+	{
+		String tag = "addDisabledSiteId( String ) ";
+
+		site = checkNotNull( site, tag + "site is required." );
+
+		this.cache.put( site, site, DISABLED_SITES_INDEX_GROUP );
+	}
+
+	@Override
+	public void addDisabledSitesMap( Map<String, String> sites )
+	{
+		String tag = "addDisabledSitesMap( Map<String, String> ) ";
+
+		try
+		{
+			sites = checkNotNull( sites, tag + "sites is required." );
+
+			cache.flushGroup( DISABLED_SITES_GROUP );
+			cache.flushGroup( DISABLED_SITES_INDEX_GROUP );
+
+			this.cache.put( DISABLED_SITES, sites, DISABLED_SITES_GROUP );
+
+			sites.forEach( ( identifier, hostname )->{
+				this.addDisabledSiteId( identifier);
+				this.addDisabledSiteId( hostname);
+			});
+
+		}
+		catch ( Exception exception )
+		{
+			Logger.info( this, tag + "Error adding disabled sites." );
+		}
+
+	}
+
+	@Override
 	public void addIdpConfig( IdpConfig idpConfig )
 	{
-		String tag = "getIdpConfig( String ) ";
+		String tag = "addIdpConfig( IdpConfig ) ";
 
 		idpConfig = checkNotNull( idpConfig, tag + "idpConfig is required." );
 
@@ -123,6 +162,8 @@ public class SamlCacheImpl extends SamlCache
 	{
 		String tag = "addIdpConfigs( List<IdpConfig> ) ";
 
+		this.clearCache();
+
 		idpConfigs.forEach( idpConfig ->{
 			try
 			{
@@ -144,7 +185,6 @@ public class SamlCacheImpl extends SamlCache
 	}
 
 	@Override
-	@Deprecated
 	public void addSiteIdpConfig( String site, IdpConfig idpConfig )
 	{
 		String tag = "addSiteIdpConfig( String, IdpConfig ) ";
@@ -191,7 +231,7 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, tag + "" );
+			Logger.info( this, tag + "Error adding sites." );
 		}
 
 	}
@@ -208,7 +248,7 @@ public class SamlCacheImpl extends SamlCache
 	@Override
 	public IdpConfig getDefaultIdpConfig()
 	{
-		String tag = "getIdpConfig( String ) ";
+		String tag = "getDefaultIdpConfig() ";
 		IdpConfig idpConfig = null;
 
 		try
@@ -222,6 +262,43 @@ public class SamlCacheImpl extends SamlCache
 		}
 
 		return idpConfig;
+	}
+
+	@Override
+	public String getDefaultIdpConfigId()
+	{
+		String tag = "getDefaultIdpConfigId() ";
+		String idpConfigId = null;
+
+		try
+		{
+			idpConfigId = (String) this.cache.get( DEFAULT, DEFAULT_IDP_CONFIG_GROUP );
+		}
+		catch ( DotCacheException dotCacheException )
+		{
+			Logger.error( this, tag + "SamlCache entry not found in [" + DEFAULT_IDP_CONFIG_GROUP + "] cache group.", dotCacheException );
+		}
+
+		return idpConfigId;
+	}
+
+	@SuppressWarnings( "unchecked" )
+	@Override
+	public Map<String, String> getDisabledSitesMap()
+	{
+		String tag = "getDisabledSites() ";
+		Map<String, String> disabledSitesMap = new HashMap<String, String>();
+
+		try
+		{
+			disabledSitesMap = (Map<String, String>) this.cache.get( DISABLED_SITES, DISABLED_SITES_INDEX_GROUP );
+		}
+		catch ( DotCacheException dotCacheException )
+		{
+			Logger.error( this, tag + "SamlCache read error.", dotCacheException );
+		}
+
+		return disabledSitesMap;
 	}
 
 	@Override
@@ -248,7 +325,7 @@ public class SamlCacheImpl extends SamlCache
 	@Override
 	public List<IdpConfig> getIdpConfigs()
 	{
-		String tag = "getIdpConfig( String ) ";
+		String tag = "getIdpConfigs() ";
 		List<IdpConfig> idpConfigs = new ArrayList<IdpConfig>();
 
 		try
@@ -326,6 +403,13 @@ public class SamlCacheImpl extends SamlCache
 	{
 		IdpConfig idpConfig = this.getDefaultIdpConfig();
 
+		Map<String, String> sites = idpConfig.getSites();
+
+		if ( sites != null && sites.size() > 0 )
+		{
+			this.removeSitesIdpConfigId( sites, idpConfig.getId() );
+		}
+
 		this.removeIdpConfig( idpConfig.getId() );
 		this.cache.remove( DEFAULT, IDP_CONFIG_GROUP );
 	}
@@ -342,11 +426,18 @@ public class SamlCacheImpl extends SamlCache
 			throw new IllegalArgumentException( tag + "idpConfig must have an id." );
 		}
 
+		Map<String, String> sites = idpConfig.getSites();
+
+		if ( sites != null && sites.size() > 0 )
+		{
+			this.removeSitesIdpConfigId( sites, idpConfig.getId() );
+		}
+
 		this.removeIdpConfig( idpConfig.getId() );
 	}
 
 	@Override
-	public void removeIdpConfig( String idpConfigId )
+	protected void removeIdpConfig( String idpConfigId )
 	{
 		String tag = "removeIdpConfig( String ) ";
 
@@ -392,5 +483,29 @@ public class SamlCacheImpl extends SamlCache
 		site = checkNotNull( site, tag + "site is required." );
 
 		this.cache.remove( site, SITES_TO_IDP_GROUP );
+	}
+
+	@Override
+	protected void removeSitesIdpConfigId( Map<String, String> sites, String idpConfigId )
+	{
+		String tag = "removeSitesIdpConfigId( Map<String, String>, String ) ";
+
+		// It's ok for sites to be null,
+		// but we need to check before processing
+		try
+		{
+			sites = checkNotNull( sites, tag + "sites is required." );
+
+			sites.forEach( ( identifier, hostname )->{
+				this.removeSiteIdpConfigId( identifier );
+				this.removeSiteIdpConfigId( hostname );
+			});
+
+		}
+		catch ( Exception exception )
+		{
+			Logger.info( this, tag + "Error removing sites." );
+		}
+
 	}
 }

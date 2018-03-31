@@ -1,10 +1,11 @@
-package com.dotcms.plugin.saml.v3.cache;
+package com.dotcms.plugin.saml.v4.cache;
+
+import com.dotcms.plugin.saml.v4.config.IdpConfig;
+
+import com.dotmarketing.business.Cachable;
 
 import java.util.List;
 import java.util.Map;
-
-import com.dotcms.plugin.saml.v4.config.IdpConfig;
-import com.dotmarketing.business.Cachable;
 
 /**
  * Provides a caching mechanism to improve response times regarding the access
@@ -16,13 +17,16 @@ import com.dotmarketing.business.Cachable;
  */
 public abstract class SamlCache implements Cachable
 {
-	public static final String DEFAULT = "default";
+	protected static final String DEFAULT = "default";
+	protected static final String INDEX = "index";
+	protected static final String DISABLED_SITES = "disabled-sites";
 
 	protected static final String DEFAULT_IDP_CONFIG_GROUP = "Default-Ipd-Config";
 	protected static final String IDP_CONFIG_GROUP = "Ipd-Config";
 	protected static final String SITES_TO_IDP_GROUP = "Sites-To-Idp";
+	protected static final String DISABLED_SITES_GROUP = "Disabled-Sites";
 	protected static final String IDP_INDEX_GROUP = "Idp-Index";
-	protected static final String INDEX = "index";
+	protected static final String DISABLED_SITES_INDEX_GROUP = "Disabled-Sites-Index";
 
 	/**
 	 * Adds a {@link IdpConfig} to the caching structure. Null objects or with empty
@@ -32,6 +36,24 @@ public abstract class SamlCache implements Cachable
 	 * @param idpConfig - The {@link IdpConfig} object to cache.
 	 */
 	public abstract void addDefaultIdpConfig( IdpConfig idpConfig );
+
+	/**
+	 * Adds a site to the caching structure. Null objects or with empty
+	 * values will not be added to the cache. In case the site already exists,
+	 * the entry will be updated with the new value.
+	 * 
+	 * @param site - The disabled site id to cache.
+	 */
+	protected abstract void addDisabledSiteId( String site );
+
+	/**
+	 * Adds sites to the caching structure. Null objects or with empty
+	 * values will not be added to the cache. In case the site already exists,
+	 * the entry will be updated with the new value.
+	 * 
+	 * @param sites - The disabled site ids to cache.
+	 */
+	public abstract void addDisabledSitesMap( Map<String, String> sites );
 
 	/**
 	 * Adds a {@link IdpConfig} to the caching structure. Null objects or with empty
@@ -83,7 +105,7 @@ public abstract class SamlCache implements Cachable
 	 * values will not be added to the cache. In case the site already exists,
 	 * the entry will be updated with the new value.
 	 * 
-	 * @param site - The associated site to cache.
+	 * @param sites - The associated sites to cache.
 	 * @param idpConfigId - The ID of the {@link IdpConfig} object to cache.
 	 */
 	protected abstract void addSitesIdpConfigId( Map<String, String> sites, String idpConfigId );
@@ -93,10 +115,22 @@ public abstract class SamlCache implements Cachable
 	 */
 	public abstract IdpConfig getDefaultIdpConfig();
 
+	/**
+	 * Returns the default {@link IdpConfig} object id associated to the DEFAULT key.
+	 */
+	public abstract String getDefaultIdpConfigId();
+
+	/**
+	 * Returns all disabled sites.
+	 * 
+	 * @return All the disabled sites.
+	 */
+	public abstract Map<String, String> getDisabledSitesMap();
+
 	@Override
 	public String[] getGroups()
 	{
-		return new String[] { DEFAULT_IDP_CONFIG_GROUP, IDP_CONFIG_GROUP, SITES_TO_IDP_GROUP };
+		return new String[] { DEFAULT_IDP_CONFIG_GROUP, IDP_CONFIG_GROUP, SITES_TO_IDP_GROUP, DISABLED_SITES_GROUP, IDP_INDEX_GROUP, DISABLED_SITES_INDEX_GROUP };
 	}
 
 	/**
@@ -150,7 +184,7 @@ public abstract class SamlCache implements Cachable
 	 * 
 	 * @param idpConfigId - The ID of the {@link IdpConfig} object that will be removed.
 	 */
-	public abstract void removeIdpConfig( String idpConfigId );
+	protected abstract void removeIdpConfig( String idpConfigId );
 
 	/**
 	 * Removes the idpConfigId from the index.
@@ -165,4 +199,12 @@ public abstract class SamlCache implements Cachable
 	 * @param site - The site that will be removed.
 	 */
 	protected abstract void removeSiteIdpConfigId( String site );
+
+	/**
+	 * Removes sites from the caching structure.
+	 * 
+	 * @param sites - The associated sites to remove from the caching structure.
+	 * @param idpConfigId - The ID of the {@link IdpConfig} object to cache.
+	 */
+	protected abstract void removeSitesIdpConfigId( Map<String, String> sites, String idpConfigId );
 }
