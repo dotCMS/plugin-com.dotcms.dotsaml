@@ -187,7 +187,7 @@
 				}
 
 				addEditIdPForm.elements["sPIssuerURL"].value = idp.sPIssuerURL;
-				addEditIdPForm.elements["sPEndponintHostname"].value = idp.sPEndponintHostname;
+				addEditIdPForm.elements["sPEndpointHostname"].value = idp.sPEndpointHostname;
 
 				dijit.byId("signatureValidationType").set("value", idp.signatureValidationType);
 

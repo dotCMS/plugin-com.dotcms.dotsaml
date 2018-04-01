@@ -87,8 +87,8 @@
 				</dl>
 
 				<dl>
-					<dt><label for="sPEndponintHostname" class="required"><%=LanguageUtil.get(pageContext, "sp-endpoint-hostname-label")%></label></dt>
-					<dd><input type="text" name="sPEndponintHostname" id="sPEndponintHostname" required="true" onkeydown="" dojoType="dijit.form.TextBox" value="" /></dd>
+					<dt><label for="sPEndpointHostname" class="required"><%=LanguageUtil.get(pageContext, "sp-endpoint-hostname-label")%></label></dt>
+					<dd><input type="text" name="sPEndpointHostname" id="sPEndpointHostname" required="true" onkeydown="" dojoType="dijit.form.TextBox" value="" /></dd>
 				</dl>
 
 				<dl>

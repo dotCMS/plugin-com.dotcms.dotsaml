@@ -5,12 +5,7 @@ import com.dotcms.plugin.saml.v3.config.Configuration;
 import com.dotcms.plugin.saml.v3.config.DefaultDotCMSConfiguration;
 import com.dotcms.plugin.saml.v3.config.SiteConfigurationParser;
 import com.dotcms.plugin.saml.v3.content.HostService;
-import com.dotcms.plugin.saml.v3.content.SamlContentTypeUtil;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
-import com.dotcms.plugin.saml.v3.hooks.SamlHostPostHook;
-import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
-import com.dotmarketing.business.APILocator;
-import com.dotmarketing.business.Interceptor;
 import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
 
@@ -45,25 +40,16 @@ public class DefaultInitializer implements Initializer
 {
 	private static final long serialVersionUID = -1037117138378277885L;
 	private final AtomicBoolean initDone = new AtomicBoolean( false );
-	private final SamlContentTypeUtil samlContentTypeUtil;
 
 	public DefaultInitializer()
 	{
-		this( new SamlContentTypeUtil() );
-	}
-
-	@VisibleForTesting
-	public DefaultInitializer( final SamlContentTypeUtil samlContentTypeUtil )
-	{
-		this.samlContentTypeUtil = samlContentTypeUtil;
+		
 	}
 
 	@Override
 	public void init( final Map<String, Object> context )
 	{
 		Logger.info( this, "About to create SAML field under Host Content Type" );
-		this.createSAMLFields();
-		this.addPostHook();
 
 		Logger.info( this, "Init java crypto" );
 		this.initJavaCrypto();
@@ -88,24 +74,6 @@ public class DefaultInitializer implements Initializer
 		this.initDone.set( true );
 	}
 
-	private void addPostHook()
-	{
-		final SamlHostPostHook postHook = new SamlHostPostHook();
-		final Interceptor interceptor = (Interceptor) APILocator.getContentletAPIntercepter();
-
-		Logger.info( this, "Adding Saml Host Hook" );
-		interceptor.delPostHookByClassName( postHook.getClass().getName() );
-
-		try
-		{
-			interceptor.addPostHook( postHook );
-		}
-		catch ( InstantiationException | IllegalAccessException | ClassNotFoundException e )
-		{
-			Logger.error( this, "Error adding SamlHostPostHook", e );
-		}
-	}
-
 	/**
 	 * Init the task that readIdpConfigs the hosts and update the saml
 	 * configuration if they changed.
@@ -124,16 +92,6 @@ public class DefaultInitializer implements Initializer
 	private ScheduledThreadPoolExecutor getScheduledThreadPoolExecutor()
 	{
 		return new ScheduledThreadPoolExecutor( 10 );
-	}
-
-	/**
-	 * 1. Get the Host Structure. 2. Create a SAML field if the Structure
-	 * doesn't have one. We need a SAML field(textarea) under the Host structure
-	 * in order to have a place to configure SAML for each Site.
-	 */
-	private void createSAMLFields()
-	{
-		this.samlContentTypeUtil.checkORCreateSAMLField();
 	}
 
 	/**

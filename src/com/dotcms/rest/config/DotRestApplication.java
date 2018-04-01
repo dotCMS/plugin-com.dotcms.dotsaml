@@ -1,8 +1,10 @@
 package com.dotcms.rest.config;
 
+import com.dotcms.plugin.saml.v4.rest.api.v1.DotSamlResource;
+
 import com.dotcms.contenttype.model.field.FieldTypeResource;
-import com.dotcms.plugin.saml.v3.rest.api.v1.DotSamlResource;
 import com.dotcms.repackage.org.glassfish.jersey.media.multipart.MultiPartFeature;
+
 import com.dotcms.rest.RulesEnginePortlet;
 import com.dotcms.rest.TagResource;
 import com.dotcms.rest.api.v1.authentication.AuthenticationResource;

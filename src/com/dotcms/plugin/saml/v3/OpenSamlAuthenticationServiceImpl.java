@@ -6,8 +6,8 @@ import com.dotcms.plugin.saml.v3.exception.AttributesNotFoundException;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.exception.NotNullEmailAllowedException;
 import com.dotcms.plugin.saml.v3.exception.SamlUnauthorizedException;
-import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandler;
-import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandlerFactory;
+import com.dotcms.plugin.saml.v4.handler.AssertionResolverHandler;
+import com.dotcms.plugin.saml.v4.handler.AssertionResolverHandlerFactory;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
 import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
 

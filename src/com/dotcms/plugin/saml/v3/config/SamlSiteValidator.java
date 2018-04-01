@@ -2,7 +2,6 @@ package com.dotcms.plugin.saml.v3.config;
 
 import com.dotcms.plugin.saml.v3.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.SamlUtils;
-import com.dotcms.plugin.saml.v3.content.SamlContentTypeUtil;
 
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
