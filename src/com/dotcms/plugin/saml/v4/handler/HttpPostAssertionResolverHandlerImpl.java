@@ -4,9 +4,17 @@ import com.dotcms.plugin.saml.v4.DotSamlConstants;
 import com.dotcms.plugin.saml.v4.config.IdpConfig;
 import com.dotcms.plugin.saml.v4.config.IdpConfigHelper;
 import com.dotcms.plugin.saml.v4.exception.DotSamlException;
+
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.json.JSONException;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 
@@ -20,13 +28,6 @@ import org.opensaml.saml.common.binding.security.impl.MessageLifetimeSecurityHan
 import org.opensaml.saml.common.messaging.context.SAMLMessageInfoContext;
 import org.opensaml.saml.saml2.binding.decoding.impl.HTTPPostDecoder;
 import org.opensaml.saml.saml2.core.*;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.dotcms.plugin.saml.v4.SamlUtils.*;
 import static com.dotmarketing.util.UtilMethods.isSet;

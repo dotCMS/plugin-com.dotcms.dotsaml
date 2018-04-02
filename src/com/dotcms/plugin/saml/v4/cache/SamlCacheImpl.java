@@ -19,6 +19,7 @@ import static com.dotcms.repackage.com.google.common.base.Preconditions.checkNot
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -374,6 +375,42 @@ public class SamlCacheImpl extends SamlCache
 		}
 
 		return idpConfig;
+	}
+
+	@SuppressWarnings( "unchecked" )
+	@Override
+	public List<String> getSites()
+	{
+		String tag = "getSites() ";
+		List<String> sites = new ArrayList<String>();
+
+		try
+		{
+			List<String> idpConfigIds = (List<String>) this.cache.get( INDEX, IDP_INDEX_GROUP );
+
+			if ( idpConfigIds != null && !idpConfigIds.isEmpty() )
+			{
+				idpConfigIds.forEach( idpConfigId -> {
+
+					IdpConfig idpConfig = this.getIdpConfig( idpConfigId );
+
+					if ( idpConfig != null )
+					{
+						Map<String, String> configSiteMap = idpConfig.getSites();
+						Collection<String> configSites = configSiteMap.values();
+						sites.addAll( configSites );
+					}
+
+				});
+			}
+
+		}
+		catch ( DotCacheException dotCacheException )
+		{
+			Logger.error( this, tag + "SamlCache read error.", dotCacheException );
+		}
+
+		return sites;
 	}
 
 	@Override

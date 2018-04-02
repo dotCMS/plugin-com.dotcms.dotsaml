@@ -163,6 +163,13 @@ public abstract class SamlCache implements Cachable
 	public abstract IdpConfig getSiteIdpConfig( String site );
 
 	/**
+	 * Returns all sites in the config cache.
+	 * 
+	 * @return All sites in the config cache.
+	 */
+	public abstract List<String> getSites();
+
+	/**
 	 * Clears and rebuilds the cache
 	 */
 	public abstract void refresh();

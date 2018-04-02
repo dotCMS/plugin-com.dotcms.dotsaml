@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -375,6 +376,72 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 
 		return idpConfigs;
+	}
+
+	public String getSiteNames() throws IOException, JSONException
+	{
+		List<String> sites = this.getIdpSites();
+
+		return String.join( ", ", sites );
+	}
+
+	public List<String> getIdpSites() throws IOException, JSONException
+	{
+		// Try cache
+		List<String> sites = this.getIdpSitesCache();
+
+		if ( sites.size() == 0 )
+		{
+			// Try file system
+			sites = this.getIdpSitesFileSystem();
+		}
+
+		return sites;
+	}
+
+	private List<String> getIdpSitesCache() throws IOException, JSONException
+	{
+		List<String> sites = new ArrayList<String>();
+
+		try
+		{
+			sites = samlCache.getSites();
+		}
+		catch ( Exception exception )
+		{
+			Logger.info( this, "Error reading SamlCache" );
+		}
+
+		return sites;
+	}
+
+	private List<String> getIdpSitesFileSystem() throws IOException, JSONException
+	{
+		List<IdpConfig> idpConfigs = IdpConfigWriterReader.readIdpConfigs( new File( IDP_FILE_PATH ) );
+		List<String> sites = new ArrayList<String>();
+
+		idpConfigs.forEach( idpConfig -> {
+
+			if ( idpConfig != null )
+			{
+				Map<String, String> configSiteMap = idpConfig.getSites();
+				Collection<String> configSites = configSiteMap.values();
+				sites.addAll( configSites );
+			}
+
+		});
+
+		// Update cache
+		try
+		{
+			samlCache.addIdpConfigs( idpConfigs );
+		}
+		catch ( Exception exception )
+		{
+			Logger.info( this, "Error writing to SamlCache" );
+		}
+
+		return sites;
 	}
 
 	private IdpConfig renameIdpConfigFiles( IdpConfig idpConfig ) throws IOException
