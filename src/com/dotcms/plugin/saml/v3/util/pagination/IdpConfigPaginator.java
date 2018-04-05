@@ -44,15 +44,11 @@ public class IdpConfigPaginator implements Paginator<IdpConfig> {
                                           final Map<String, Object> extraParams) {
 
         try {
-            final String trimFilter = filter.trim();
-
             List<IdpConfig> idpConfigs = IdpConfigWriterReader.readIdpConfigs(new File(idpfilePath));
 
-            if (UtilMethods.isSet(trimFilter)){
+            if (UtilMethods.isSet(filter)){
                 idpConfigs = idpConfigs.stream()
-                        .filter(x -> x.getIdpName()
-                                .toLowerCase()
-                                .contains(trimFilter.toLowerCase()))
+                        .filter(x -> x.contains(filter))
                         .collect(Collectors.toList());
             }
 

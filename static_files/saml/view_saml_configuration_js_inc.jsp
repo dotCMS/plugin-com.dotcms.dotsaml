@@ -291,6 +291,7 @@
                 this.currentPage = 1;
                 this.RESULTS_PER_PAGE = 10;
                 this.total = 0;
+                this.filter = "";
             },
 
             tableResultSummaryTemplate: '<%= LanguageUtil.get(pageContext, "Viewing-Results") %> {startRecord} <%= LanguageUtil.get(pageContext, "to") %> \
@@ -367,6 +368,15 @@
                 this.currentPage--;
                 this.renderIdpConfigs();
             },
+            searchIdpByName: function(){
+                this.filter = document.getElementById("filter").value;
+                this.renderIdpConfigs();
+            },
+            resetSearch: function(){
+                document.getElementById("filter").value = "";
+                this.filter = "";
+                this.renderIdpConfigs();
+            },
             renderIdpConfigs : function() {
                 //Node List
                 var idpList;
@@ -376,6 +386,7 @@
                     url: "/api/v1/dotsaml/idps",
                     content: {
                         page: this.currentPage,
+                        filter: this.filter,
                     },
                     handleAs: "json",
                     load: function (data) {
