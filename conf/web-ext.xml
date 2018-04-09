@@ -1,6 +1,7 @@
     <filter>
         <filter-name>SamlAccessFilter</filter-name>
         <filter-class>com.dotcms.plugin.saml.v3.filter.SamlAccessFilter</filter-class>
+        <async-supported>true</async-supported>
     </filter>
 
     <filter-mapping>
