@@ -329,7 +329,7 @@ This is url for the logout page on the SAML Server, by default it gets url from 
 edit this property and include the SLO url. (Note, if you set this property and set the idp-metadata, the idp-metada will be get by default)
 
 
-**verify.assertion.signature, verify.signature.profile and verify.signature.credentials**
+**  verify.assertion.signature, verify.signature.profile and verify.signature.credentials**
 
 
 For signature verification purpose. Default value: true.
