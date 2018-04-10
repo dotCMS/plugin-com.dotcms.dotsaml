@@ -7,25 +7,25 @@ import java.util.Map;
 import org.opensaml.security.credential.Credential;
 
 /**
- * Encapsulates the metadata bean stored in the idp-metadata.xml
+ * Encapsulates the metadata bean stored in the idp metadata xml file
  */
 public class MetadataBean implements Serializable
 {
 	private static final long serialVersionUID = -2988699344160818527L;
 
-	// the entity id on the xml
+	// The entity id on the xml
 	private final String entityId;
 
-	// the error url
+	// The error url
 	private final String errorURL;
 
-	// list of single sign on location indexed by binding name
+	// List of single sign on location indexed by binding name
 	private final Map<String, String> singleSignOnBindingLocationMap;
 
-	// list of single logout on location indexed by binding name
+	// List of single logout on location indexed by binding name
 	private final Map<String, String> singleLogoutBindingLocationMap;
 
-	// credential signing list
+	// Credential signing list
 	private final List<Credential> credentialSigningList;
 
 	public MetadataBean( final String entityId, final String errorURL, final Map<String, String> singleSignOnBindingLocationMap, final Map<String, String> singleLogoutBindingLocationMap, final List<Credential> credentialSigningList )

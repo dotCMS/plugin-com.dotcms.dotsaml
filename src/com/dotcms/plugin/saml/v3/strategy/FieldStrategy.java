@@ -1,6 +1,6 @@
 package com.dotcms.plugin.saml.v3.strategy;
 
-import com.dotcms.plugin.saml.v3.AttributesBean;
+import com.dotcms.plugin.saml.v3.beans.AttributesBean;
 
 import java.io.Serializable;
 

@@ -1,13 +1,18 @@
 package com.dotcms.plugin.saml.v3.filter;
 
 import com.dotcms.cms.login.LoginServiceAPI;
-import com.dotcms.plugin.saml.v3.*;
-import com.dotcms.plugin.saml.v3.config.Configuration;
+
+import com.dotcms.plugin.saml.v3.config.IdpConfig;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.exception.NotNullEmailAllowedException;
 import com.dotcms.plugin.saml.v3.exception.SamlUnauthorizedException;
-import com.dotcms.plugin.saml.v3.init.DefaultInitializer;
-import com.dotcms.plugin.saml.v3.init.Initializer;
+import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
+import com.dotcms.plugin.saml.v3.service.*;
+import com.dotcms.plugin.saml.v3.util.InstanceUtil;
+import com.dotcms.plugin.saml.v3.util.MetaDataXMLPrinter;
+import com.dotcms.plugin.saml.v3.util.SamlUtils;
+import com.dotcms.plugin.saml.v3.util.SiteIdpConfigResolver;
+
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
@@ -21,19 +26,20 @@ import com.dotmarketing.business.web.LanguageWebAPI;
 import com.dotmarketing.business.web.UserWebAPI;
 import com.dotmarketing.business.web.WebAPILocator;
 import com.dotmarketing.cms.factories.PublicEncryptionFactory;
+import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.portlets.contentlet.business.ContentletAPI;
 import com.dotmarketing.util.*;
+import com.dotmarketing.util.json.JSONException;
 
 import com.liferay.portal.PortalException;
 import com.liferay.portal.SystemException;
 import com.liferay.portal.auth.PrincipalThreadLocal;
 import com.liferay.portal.model.User;
 import com.liferay.portal.servlet.PortletSessionPool;
-import com.liferay.util.InstancePool;
 
-import org.opensaml.core.xml.io.MarshallingException;
-import org.opensaml.saml.saml2.core.NameID;
-import org.opensaml.saml.saml2.metadata.EntityDescriptor;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.*;
 
 import javax.servlet.*;
 import javax.servlet.http.Cookie;
@@ -42,9 +48,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.*;
+
+import org.opensaml.core.xml.io.MarshallingException;
+import org.opensaml.saml.saml2.core.NameID;
+import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 
 /**
  * Access filter for SAML plugin, it does the autologin and also redirect to the
@@ -61,7 +68,6 @@ public class SamlAccessFilter implements Filter
 	public static final String REFERRER_PARAMETER_KEY = "referrer";
 	public static final String ORIGINAL_REQUEST = "original_request";
 	private final SamlAuthenticationService samlAuthenticationService;
-	private final Initializer initializer;
 	private final MetaDataXMLPrinter metaDataXMLPrinter;
 	private final HostWebAPI hostWebAPI;
 	private final LanguageWebAPI languageWebAPI;
@@ -73,20 +79,19 @@ public class SamlAccessFilter implements Filter
 
 	public SamlAccessFilter()
 	{
-		this( InstanceUtil.newInstance( Config.getStringProperty( DotSamlConstants.DOT_SAML_AUTHENTICATION_SERVICE_CLASS_NAME, null ), OpenSamlAuthenticationServiceImpl.class ), InstanceUtil.newInstance( Config.getStringProperty( DotSamlConstants.DOT_SAML_INITIALIZER_CLASS_NAME, null ), DefaultInitializer.class ) );
+		this( InstanceUtil.newInstance( Config.getStringProperty( DotSamlConstants.DOT_SAML_AUTHENTICATION_SERVICE_CLASS_NAME, null ), OpenSamlAuthenticationServiceImpl.class ) );
 	}
 
 	@VisibleForTesting
-	public SamlAccessFilter( final SamlAuthenticationService samlAuthenticationService, final Initializer initializer )
+	public SamlAccessFilter( final SamlAuthenticationService samlAuthenticationService )
 	{
-		this( samlAuthenticationService, ( null == initializer ) ? new DefaultInitializer() : initializer, new MetaDataXMLPrinter(), WebAPILocator.getHostWebAPI(), WebAPILocator.getLanguageWebAPI(), APILocator.getPermissionAPI(), APILocator.getIdentifierAPI(), APILocator.getContentletAPI(), WebAPILocator.getUserWebAPI(), APILocator.getLoginServiceAPI() );
+		this( samlAuthenticationService, new MetaDataXMLPrinter(), WebAPILocator.getHostWebAPI(), WebAPILocator.getLanguageWebAPI(), APILocator.getPermissionAPI(), APILocator.getIdentifierAPI(), APILocator.getContentletAPI(), WebAPILocator.getUserWebAPI(), APILocator.getLoginServiceAPI() );
 	}
 
 	@VisibleForTesting
-	public SamlAccessFilter( final SamlAuthenticationService samlAuthenticationService, final Initializer initializer, final MetaDataXMLPrinter metaDataXMLPrinter, final HostWebAPI hostWebAPI, final LanguageWebAPI languageWebAPI, final PermissionAPI permissionAPI, final IdentifierAPI identifierAPI, final ContentletAPI contentletAPI, final UserWebAPI userWebAPI, final LoginServiceAPI loginService )
+	public SamlAccessFilter( final SamlAuthenticationService samlAuthenticationService, final MetaDataXMLPrinter metaDataXMLPrinter, final HostWebAPI hostWebAPI, final LanguageWebAPI languageWebAPI, final PermissionAPI permissionAPI, final IdentifierAPI identifierAPI, final ContentletAPI contentletAPI, final UserWebAPI userWebAPI, final LoginServiceAPI loginService )
 	{
 		this.samlAuthenticationService = samlAuthenticationService;
-		this.initializer = initializer;
 		this.metaDataXMLPrinter = metaDataXMLPrinter;
 		this.hostWebAPI = hostWebAPI;
 		this.languageWebAPI = languageWebAPI;
@@ -100,23 +105,7 @@ public class SamlAccessFilter implements Filter
 	@Override
 	public void init( final FilterConfig filterConfig ) throws ServletException
 	{
-		Logger.debug( this, "Going to call the Initializer: " + this.initializer );
-
-		if ( !this.initializer.isInitializationDone() )
-		{
-			try
-			{
-				this.initializer.init( Collections.emptyMap() );
-			}
-			catch ( Throwable e )
-			{
-				Logger.error( this, "SAML ERROR: " + e.getMessage(), e );
-			}
-		}
-		else
-		{
-			Logger.debug( this, "The initializer was already init: " + this.initializer );
-		}
+		// Do nothing
 	}
 
 	/**
@@ -214,12 +203,9 @@ public class SamlAccessFilter implements Filter
 	@Override
 	public void doFilter( final ServletRequest req, final ServletResponse res, final FilterChain chain ) throws IOException, ServletException
 	{
-
 		final HttpServletResponse response = (HttpServletResponse) res;
 		final HttpServletRequest request = (HttpServletRequest) req;
 		HttpSession session = request.getSession();
-		final SiteConfigurationResolver resolver = (SiteConfigurationResolver) InstancePool.get( SiteConfigurationResolver.class.getName() );
-		final Configuration configuration = resolver.resolveConfiguration( request );
 		String redirectAfterLogin = null;
 		boolean isLogoutNeed = false;
 
@@ -230,110 +216,121 @@ public class SamlAccessFilter implements Filter
 			return;
 		}
 
-		// If configuration is not, means this site does not need SAML processing
-		if ( null != configuration )
+		try
 		{
-			isLogoutNeed = configuration.getBooleanProperty( DotSamlConstants.DOTCMS_SAML_IS_LOGOUT_NEED, true );
-			ThreadLocalConfiguration.setCurrentSiteConfiguration( configuration );
+			final IdpConfig idpConfig = SiteIdpConfigResolver.getInstance().resolveIdpConfig( request );
 
-			// First, check if the current request is the SP metadata xml.
-			if ( request.getRequestURI().contains( configuration.getServiceProviderCustomMetadataPath() ) )
+			// If idpConfig is null, means this site does not need SAML processing
+			if ( idpConfig != null && idpConfig.isEnabled() )
 			{
-				// if its, so print it out in the response and return.
-				this.printMetaData( request, response, configuration );
-				return;
-			}
+				isLogoutNeed = idpConfig.getOptionBoolean( DotSamlConstants.DOTCMS_SAML_IS_LOGOUT_NEED, true );
 
-			// check if there is any exception filter path, to avoid to canApply all the logic.
-			if ( !this.checkAccessFilters( request.getRequestURI(), configuration.getAccessFilterArray() ) && this.checkIncludePath( request.getRequestURI(), configuration.getIncludePathArray(), request ) )
-			{
-				// if it is an url to canApply the Saml access logic, determine if the autoLogin is possible
-				// the autologin will works if the SAMLArt (Saml artifact id) is in the request query string
-				// for artifact resolution or SAMLResponse for post resolution.
-				final AutoLoginResult autoLoginResult = this.doAutoLogin( request, response, session, configuration );
-
-				if ( !autoLoginResult.isAutoLogin() )
+				// First, check if the current request is the SP metadata xml.
+				if ( request.getRequestURI().contains( idpConfig.getServiceProviderCustomMetadataPath() ) )
 				{
-					return; // no continue. Usually no continue when there is a sendRedirect or sendError done.
-				}
-
-				// we have to assign again the session, since the doAutoLogin might be renewed.
-				session = autoLoginResult.getSession();
-
-				// if the auto login couldn't logged the user, then send it to the IdP login page (if it is not already logged in).
-				if ( null == session || this.isNotLogged( request, session ) )
-				{
-					Logger.debug( this, "User is not logged, processing saml request" );
-					this.doRequestLoginSecurityLog( request, configuration );
-
-					final String originalRequest = request.getRequestURI() + ( ( null != request.getQueryString() ) ? "?" + request.getQueryString() : StringUtils.EMPTY );
-
-					redirectAfterLogin = ( UtilMethods.isSet( request.getParameter( REFERRER_PARAMETER_KEY ) ) ) ? request.getParameter( REFERRER_PARAMETER_KEY ) :
-					// this is safe, just to make a redirection when the user get's logged.
-					originalRequest;
-
-					Logger.debug( this.getClass(), "Doing Saml Login Redirection when request: " + redirectAfterLogin );
-
-					// if we don't have a redirect yet
-					if ( null != session )
-					{
-						session.setAttribute( WebKeys.REDIRECT_AFTER_LOGIN, redirectAfterLogin );
-						session.setAttribute( ORIGINAL_REQUEST, originalRequest );
-					}
-
-					try
-					{
-						// this will redirect the user to the IdP Login Page.
-						this.samlAuthenticationService.authentication( request, response, configuration.getSiteName() );
-					}
-					catch ( DotSamlException e )
-					{
-						Logger.error( this, "Error on authentication: " + e.getMessage(), e );
-						Logger.debug( this, "Error on authentication, settings 500 response status." );
-						response.sendError( HttpServletResponse.SC_INTERNAL_SERVER_ERROR );
-					}
-
+					// if its, so print it out in the response and return.
+					this.printMetaData( request, response, idpConfig );
 					return;
 				}
-			}
-		}
-		else
-		{
-			Logger.debug( this, "Not configuration for the site: " + request.getServerName() + ". No any saml filtering for this request: " + request.getRequestURI() );
 
-			// if the configuration for this host does not exists
-			// we check if the url is a default metadata url.
-			if ( request.getRequestURI().contains( DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH_DEFAULT_VALUE ) )
-			{
-				// if its, so print it out in the response and return.
-				final Configuration disableConfiguration = resolver.findConfigurationForDisableHost( request );
-				if ( null != disableConfiguration && this.printMetaData( request, response, disableConfiguration ) )
+				// check if there is any exception filter path, to avoid to canApply all the logic.
+				if ( !this.checkAccessFilters( request.getRequestURI(), idpConfig.getAccessFilterArray() ) && this.checkIncludePath( request.getRequestURI(), idpConfig.getIncludePathArray(), request ) )
 				{
-					Logger.debug( this, "Metadata printed" );
-					return; // if the
+					// if it is an url to canApply the Saml access logic, determine if the autoLogin is possible
+					// the autologin will works if the SAMLArt (Saml artifact id) is in the request query string
+					// for artifact resolution or SAMLResponse for post resolution.
+					final AutoLoginResult autoLoginResult = this.doAutoLogin( request, response, session, idpConfig );
+
+					if ( !autoLoginResult.isAutoLogin() )
+					{
+						return; // no continue. Usually no continue when there is a sendRedirect or sendError done.
+					}
+
+					// we have to assign again the session, since the doAutoLogin might be renewed.
+					session = autoLoginResult.getSession();
+
+					// if the auto login couldn't logged the user, then send it to the IdP login page (if it is not already logged in).
+					if ( null == session || this.isNotLogged( request, session ) )
+					{
+						Logger.debug( this, "User is not logged, processing saml request" );
+						this.doRequestLoginSecurityLog( request, idpConfig );
+
+						final String originalRequest = request.getRequestURI() + ( ( null != request.getQueryString() ) ? "?" + request.getQueryString() : StringUtils.EMPTY );
+
+						redirectAfterLogin = ( UtilMethods.isSet( request.getParameter( REFERRER_PARAMETER_KEY ) ) ) ? request.getParameter( REFERRER_PARAMETER_KEY ) :
+						// this is safe, just to make a redirection when the user get's logged.
+						originalRequest;
+
+						Logger.debug( this.getClass(), "Doing Saml Login Redirection when request: " + redirectAfterLogin );
+
+						// if we don't have a redirect yet
+						if ( null != session )
+						{
+							session.setAttribute( WebKeys.REDIRECT_AFTER_LOGIN, redirectAfterLogin );
+							session.setAttribute( ORIGINAL_REQUEST, originalRequest );
+						}
+
+						try
+						{
+							// this will redirect the user to the IdP Login Page.
+							this.samlAuthenticationService.authentication( request, response, idpConfig.getId() );
+						}
+						catch ( DotSamlException | DotDataException exception )
+						{
+							Logger.error( this, "Error on authentication: " + exception.getMessage(), exception );
+							Logger.debug( this, "Error on authentication, settings 500 response status." );
+							response.sendError( HttpServletResponse.SC_INTERNAL_SERVER_ERROR );
+						}
+
+						return;
+					}
 				}
+
+				// Starting the logout
+				// if it is logout
+				if ( isLogoutNeed && session != null && this.isLogoutRequest( request.getRequestURI(), idpConfig.getLogoutPathArray() ) )
+				{
+					if ( this.doLogout( response, request, session, idpConfig ) )
+					{
+						return;
+					}
+				}
+
+			}
+			else if ( idpConfig != null && !idpConfig.isEnabled() )
+			{
+				// if the idpConfig for this host is not enabled
+				// we check if the url is a default metadata url.
+				if ( request.getRequestURI().contains( DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH_DEFAULT_VALUE ) )
+				{
+					// if its, so print it out in the response and return.
+					if ( this.printMetaData( request, response, idpConfig ) )
+					{
+						Logger.debug( this, "Metadata printed" );
+						return;
+					}
+				}
+
+			}
+			else
+			{
+				Logger.debug( this, "No idpConfig for the site: " + request.getServerName() + ". Not any SAML filtering for this request: " + request.getRequestURI() );
 			}
 
 		}
-
-		// Starting the logout
-		// if it is logout
-		if ( isLogoutNeed && null != session && this.isLogoutRequest( request.getRequestURI(), configuration.getLogoutPathArray() ) )
+		catch ( JSONException | DotDataException exception )
 		{
-			if ( this.doLogout( response, request, session, configuration ) )
-			{
-				return;
-			}
+			Logger.error( this, "Error reading idpConfig for the site: " + request.getServerName(), exception );
 		}
 
 		chain.doFilter( request, response );
 
 	}
 
-	private boolean doLogout( final HttpServletResponse response, final HttpServletRequest request, final HttpSession session, final Configuration configuration ) throws IOException, ServletException
+	private boolean doLogout( final HttpServletResponse response, final HttpServletRequest request, final HttpSession session, final IdpConfig idpConfig ) throws IOException, ServletException
 	{
-		final NameID nameID = (NameID) session.getAttribute( configuration.getSiteName() + SamlUtils.SAML_NAME_ID );
-		final String samlSessionIndex = (String) session.getAttribute( configuration.getSiteName() + SamlUtils.SAML_SESSION_INDEX );
+		final NameID nameID = (NameID) session.getAttribute( idpConfig.getId() + SamlUtils.SAML_NAME_ID );
+		final String samlSessionIndex = (String) session.getAttribute( idpConfig.getId() + SamlUtils.SAML_SESSION_INDEX );
 		boolean doLogoutDone = false;
 
 		try
@@ -345,7 +342,7 @@ public class SamlAccessFilter implements Filter
 
 				doLogout( response, request );
 				Logger.debug( this, "Doing SAML redirect logout" );
-				this.samlAuthenticationService.logout( request, response, nameID, samlSessionIndex, configuration.getSiteName() );
+				this.samlAuthenticationService.logout( request, response, nameID, samlSessionIndex, idpConfig.getId() );
 				Logger.info( this, "User " + nameID + " has logged out" );
 
 				doLogoutDone = true;
@@ -373,7 +370,7 @@ public class SamlAccessFilter implements Filter
 	{
 		final Cookie[] cookies = request.getCookies();
 
-		if ( null != cookies )
+		if ( cookies != null )
 		{
 			for ( Cookie cookie : cookies )
 			{
@@ -385,21 +382,23 @@ public class SamlAccessFilter implements Filter
 
 		HttpSession session = request.getSession( false );
 
-		if ( null != session )
+		if ( session != null )
 		{
 			final Map sessions = PortletSessionPool.remove( session.getId() );
 
-			if ( null != sessions )
+			if ( sessions != null )
 			{
 				final Iterator itr = sessions.values().iterator();
 
 				while ( itr.hasNext() )
 				{
 					final HttpSession portletSession = (HttpSession) itr.next();
-					if ( null != portletSession )
+
+					if ( portletSession != null )
 					{
 						portletSession.invalidate();
 					}
+
 				}
 			}
 
@@ -425,13 +424,13 @@ public class SamlAccessFilter implements Filter
 		return isLogoutRequest;
 	}
 
-	private void doRequestLoginSecurityLog( final HttpServletRequest request, final Configuration configuration )
+	private void doRequestLoginSecurityLog( final HttpServletRequest request, final IdpConfig idpConfig )
 	{
 		try
 		{
 			final Host host = this.hostWebAPI.getCurrentHost( request );
 			final String env = this.isFrontEndLoginPage( request.getRequestURI() ) ? "frontend" : "backend";
-			final String log = new Date() + ": SAML login request for host: (" + host.getHostname() + ") site: " + configuration.getSiteName() + " (" + env + ") from " + request.getRemoteAddr();
+			final String log = new Date() + ": SAML login request for host: (" + host.getHostname() + ") site: " + idpConfig.getId() + " (" + env + ") from " + request.getRemoteAddr();
 
 			// “$TIMEDATE: SAML login request for $host (frontend|backend)from $REQUEST_ADDR”
 			SecurityLogger.logInfo( SecurityLogger.class, SamlAccessFilter.class + " - " + log );
@@ -443,13 +442,13 @@ public class SamlAccessFilter implements Filter
 		}
 	}
 
-	private void doAuthenticationLoginSecurityLog( final HttpServletRequest request, final Configuration configuration, final User user )
+	private void doAuthenticationLoginSecurityLog( final HttpServletRequest request, final IdpConfig idpConfig, final User user )
 	{
 		try
 		{
 			final Host host = this.hostWebAPI.getCurrentHost( request );
 			final String env = this.isFrontEndLoginPage( request.getRequestURI() ) ? "frontend" : "backend";
-			final String log = new Date() + ": SAML login success for host: (" + host.getHostname() + ") site: " + configuration.getSiteName() + " (" + env + ") from " + request.getRemoteAddr() + " for an user: " + user.getEmailAddress();
+			final String log = new Date() + ": SAML login success for host: (" + host.getHostname() + ") site: " + idpConfig.getId() + " (" + env + ") from " + request.getRemoteAddr() + " for an user: " + user.getEmailAddress();
 
 			//“$TIMEDATE: SAML login success for $host (frontend|backend)from $REQUEST_ADDR for user $username”
 			SecurityLogger.logInfo( SecurityLogger.class, SamlAccessFilter.class + " - " + log );
@@ -489,10 +488,10 @@ public class SamlAccessFilter implements Filter
 		return isNotLogged;
 	}
 
-	private boolean printMetaData( final HttpServletRequest request, final HttpServletResponse response, final Configuration configuration ) throws ServletException
+	private boolean printMetaData( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig ) throws ServletException
 	{
 		// First, get the Entity descriptor.
-		final EntityDescriptor descriptor = configuration.getMetaDescriptorService().getServiceProviderEntityDescriptor( configuration );
+		final EntityDescriptor descriptor = idpConfig.getMetaDescriptorService().getServiceProviderEntityDescriptor( idpConfig );
 		Writer writer = null;
 		boolean isOK = false;
 
@@ -520,13 +519,13 @@ public class SamlAccessFilter implements Filter
 		return isOK;
 	}
 
-	private AutoLoginResult doAutoLogin( final HttpServletRequest request, final HttpServletResponse response, final HttpSession session, final Configuration configuration ) throws IOException
+	private AutoLoginResult doAutoLogin( final HttpServletRequest request, final HttpServletResponse response, final HttpSession session, final IdpConfig idpConfig ) throws  DotDataException, IOException,JSONException
 	{
 		AutoLoginResult autoLogin = new AutoLoginResult( session, false );
 
 		try
 		{
-			autoLogin = this.autoLogin( request, response, session, configuration );
+			autoLogin = this.autoLogin( request, response, session, idpConfig );
 		}
 		catch ( SamlUnauthorizedException e )
 		{
@@ -565,10 +564,10 @@ public class SamlAccessFilter implements Filter
 		return autoLogin;
 	}
 
-	private AutoLoginResult autoLogin( final HttpServletRequest request, final HttpServletResponse response, final HttpSession session, final Configuration configuration ) throws IOException
+	private AutoLoginResult autoLogin( final HttpServletRequest request, final HttpServletResponse response, final HttpSession session, final IdpConfig idpConfig ) throws DotDataException, IOException, JSONException
 	{
 
-		final User user = this.samlAuthenticationService.getUser( request, response, session, configuration.getSiteName() );
+		final User user = this.samlAuthenticationService.getUser( request, response, session, idpConfig.getId() );
 		boolean continueFilter = true; // by default continue with the filter
 		HttpSession renewSession = session;
 
@@ -610,14 +609,14 @@ public class SamlAccessFilter implements Filter
 					// depending if it is a redirection or not, continue.
 					continueFilter = this.checkRedirection( request, response, renewSession );
 
-					this.doAuthenticationLoginSecurityLog( request, configuration, user );
+					this.doAuthenticationLoginSecurityLog( request, idpConfig, user );
 				}
 			}
 		}
 		else
 		{
 			// if it was a saml request and could not get the user, throw an error
-			if ( this.samlAuthenticationService.isValidSamlRequest( request, response, configuration.getSiteName() ) )
+			if ( this.samlAuthenticationService.isValidSamlRequest( request, response, idpConfig.getId() ) )
 			{
 				Logger.error( this, "This request is a saml request, but couldn't resolve the user so throwing an internal error" );
 				response.sendError( HttpServletResponse.SC_INTERNAL_SERVER_ERROR );
