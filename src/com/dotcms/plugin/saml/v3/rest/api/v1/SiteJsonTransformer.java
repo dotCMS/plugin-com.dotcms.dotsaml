@@ -11,24 +11,24 @@ import java.util.Map;
 public class SiteJsonTransformer {
 
     public static JSONObject getJsonObjecFromtMap(Map<String, String> map) throws JSONException {
-        JSONObject jo = new JSONObject();
+        JSONObject jsonObject = new JSONObject();
 
         if (UtilMethods.isSet(map)) {
             for (Map.Entry<String, String> entry : map.entrySet()) {
-                jo.put(entry.getKey(), entry.getValue());
+                jsonObject.put(entry.getKey(), entry.getValue());
             }
         }
 
-        return jo;
+        return jsonObject;
     }
 
-    public static Map<String, String> getMapFromJsonObject(JSONObject jo) throws JSONException {
+    public static Map<String, String> getMapFromJsonObject(JSONObject jsonObject) throws JSONException {
         Map<String, String> map = new HashMap<>();
-        Iterator<?> keys = jo.keys();
+        Iterator<?> keys = jsonObject.keys();
 
         while (keys.hasNext()) {
             String key = (String) keys.next();
-            String value = jo.getString(key);
+            String value = jsonObject.getString(key);
 
             map.put(key, value);
         }

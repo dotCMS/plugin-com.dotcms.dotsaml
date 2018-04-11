@@ -87,7 +87,7 @@
                 alert("An unexpected error occurred: " + error);
             }
         };
-        deferred = dojo.xhrPost(xhrArgs);
+        deferred = dojo.xhrPut(xhrArgs);
     }
 
     function getDefaultIdpConfig(){

@@ -19,106 +19,142 @@ public class IdpConfig {
     private Properties optionalProperties;
     private Map<String, String> sites;
 
-    public IdpConfig() {
-        this.idpName = "";
-        this.enabled = false;
-        this.sPIssuerURL = "";
-        this.sPEndponintHostname = "";
-        this.privateKey = null;
-        this.publicCert = null;
-        this.idPMetadataFile = null;
-        this.optionalProperties = new Properties();
+    private IdpConfig() {
+    }
+
+    public static class Builder {
+        private IdpConfig idpConfigToBuild;
+
+        Builder() {
+            idpConfigToBuild = new IdpConfig();
+        }
+
+        IdpConfig build() {
+            IdpConfig builtIdpConfig = idpConfigToBuild;
+            idpConfigToBuild = new IdpConfig();
+
+            return builtIdpConfig;
+        }
+
+        public Builder id(String id) {
+            this.idpConfigToBuild.id = id;
+            return this;
+        }
+
+        public Builder idpName(String idpName) {
+            this.idpConfigToBuild.idpName = idpName;
+            return this;
+        }
+
+        public Builder enabled(boolean enabled) {
+            this.idpConfigToBuild.enabled = enabled;
+            return this;
+        }
+
+        public Builder sPIssuerURL(String sPIssuerURL) {
+            this.idpConfigToBuild.sPIssuerURL = sPIssuerURL;
+            return this;
+        }
+
+        public Builder sPEndponintHostname(String sPEndponintHostname) {
+            this.idpConfigToBuild.sPEndponintHostname = sPEndponintHostname;
+            return this;
+        }
+
+        public Builder privateKey(File privateKey) {
+            this.idpConfigToBuild.privateKey = privateKey;
+            return this;
+        }
+
+        public Builder publicCert(File publicCert) {
+            this.idpConfigToBuild.publicCert = publicCert;
+            return this;
+        }
+
+        public Builder idPMetadataFile(File idPMetadataFile) {
+            this.idpConfigToBuild.idPMetadataFile = idPMetadataFile;
+            return this;
+        }
+
+        public Builder signatureValidationType(String signatureValidationType) {
+            this.idpConfigToBuild.signatureValidationType = signatureValidationType;
+            return this;
+        }
+
+        public Builder optionalProperties(Properties optionalProperties) {
+            this.idpConfigToBuild.optionalProperties = optionalProperties;
+            return this;
+        }
+
+        public Builder sites(Map<String, String> sites) {
+            this.idpConfigToBuild.sites = sites;
+            return this;
+        }
+    }
+
+    public static IdpConfig.Builder convertIdpConfigToBuilder(IdpConfig idpConfig){
+        IdpConfig.Builder builder = new IdpConfig.Builder();
+
+        builder.id(idpConfig.getId())
+                .idpName(idpConfig.getIdpName())
+                .enabled(idpConfig.isEnabled())
+                .sPIssuerURL(idpConfig.getsPIssuerURL())
+                .sPEndponintHostname(idpConfig.getsPEndponintHostname())
+                .privateKey(idpConfig.getPrivateKey())
+                .publicCert(idpConfig.getPublicCert())
+                .idPMetadataFile(idpConfig.getIdPMetadataFile())
+                .signatureValidationType(idpConfig.getSignatureValidationType())
+                .optionalProperties(idpConfig.getOptionalProperties())
+                .sites(idpConfig.getSites());
+
+        return builder;
     }
 
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public String getIdpName() {
         return idpName;
-    }
-
-    public void setIdpName(String idpName) {
-        this.idpName = idpName;
     }
 
     public boolean isEnabled() {
         return enabled;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
     public String getsPIssuerURL() {
         return sPIssuerURL;
-    }
-
-    public void setsPIssuerURL(String sPIssuerURL) {
-        this.sPIssuerURL = sPIssuerURL;
     }
 
     public String getsPEndponintHostname() {
         return sPEndponintHostname;
     }
 
-    public void setsPEndponintHostname(String sPEndponintHostname) {
-        this.sPEndponintHostname = sPEndponintHostname;
-    }
-
     public File getPrivateKey() {
         return privateKey;
-    }
-
-    public void setPrivateKey(File privateKey) {
-        this.privateKey = privateKey;
     }
 
     public File getPublicCert() {
         return publicCert;
     }
 
-    public void setPublicCert(File publicCert) {
-        this.publicCert = publicCert;
-    }
-
     public File getIdPMetadataFile() {
         return idPMetadataFile;
-    }
-
-    public void setIdPMetadataFile(File idPMetadataFile) {
-        this.idPMetadataFile = idPMetadataFile;
     }
 
     public String getSignatureValidationType() {
         return signatureValidationType;
     }
 
-    public void setSignatureValidationType(String signatureValidationType) {
-        this.signatureValidationType = signatureValidationType;
-    }
-
     public Properties getOptionalProperties() {
         return optionalProperties;
-    }
-
-    public void setOptionalProperties(Properties optionalProperties) {
-        this.optionalProperties = optionalProperties;
     }
 
     public Map<String, String> getSites() {
         return sites;
     }
 
-    public void setSites(Map<String, String> sites) {
-        this.sites = sites;
-    }
-
-    private String getSearchable(){
+    private String getSearchable() {
         StringBuilder sb = new StringBuilder();
 
         //config name.
@@ -131,7 +167,7 @@ public class IdpConfig {
         sb.append(this.sPEndponintHostname);
         sb.append(" ");
         //sites related to the IdP.
-        for (Map.Entry<String,String> entry : this.sites.entrySet()) {
+        for (Map.Entry<String, String> entry : this.sites.entrySet()) {
             sb.append(entry.getKey());
             sb.append(" ");
             sb.append(entry.getValue());
@@ -143,7 +179,7 @@ public class IdpConfig {
         return sb.toString();
     }
 
-    public boolean contains(String string){
+    public boolean contains(String string) {
         return getSearchable().toLowerCase().contains(string.trim().toLowerCase());
     }
 

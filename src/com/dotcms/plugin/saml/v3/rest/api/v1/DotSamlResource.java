@@ -126,49 +126,50 @@ public class DotSamlResource implements Serializable {
         Response response;
 
         try {
-            IdpConfig idpConfig;
+            IdpConfig.Builder idpBuilder;
 
             if (UtilMethods.isSet(id)){
-                idpConfig = idpConfigHelper.findIdpConfig(id);
+                idpBuilder = IdpConfig.convertIdpConfigToBuilder(idpConfigHelper.findIdpConfig(id));
             } else {
-                idpConfig = new IdpConfig();
+                idpBuilder = new IdpConfig.Builder();
             }
 
-            idpConfig.setIdpName(idpName);
-            idpConfig.setEnabled(enabled);
-            idpConfig.setsPIssuerURL(sPIssuerURL);
-            idpConfig.setsPEndponintHostname(sPEndponintHostname);
+            idpBuilder.idpName(idpName);
+            idpBuilder.enabled(enabled);
+            idpBuilder.sPIssuerURL(sPIssuerURL);
+            idpBuilder.sPEndponintHostname(sPEndponintHostname);
 
             if (UtilMethods.isSet(privateKeyFileDetail) && UtilMethods.isSet(privateKeyFileDetail.getFileName())){
                 File privateKey = File.createTempFile("privateKey", "key");
                 Files.copy(privateKeyStream, privateKey.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 IOUtils.closeQuietly(privateKeyStream);
-                idpConfig.setPrivateKey(privateKey);
+                idpBuilder.privateKey(privateKey);
             }
             if (UtilMethods.isSet(publicCertFileDetail) && UtilMethods.isSet(publicCertFileDetail.getFileName())){
                 File publicCert = File.createTempFile("publicCert", "crt");
                 Files.copy(publicCertStream, publicCert.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 IOUtils.closeQuietly(publicCertStream);
-                idpConfig.setPublicCert(publicCert);
+                idpBuilder.publicCert(publicCert);
             }
             if (UtilMethods.isSet(idPMetadataFileDetail) && UtilMethods.isSet(idPMetadataFileDetail.getFileName())){
                 File idPMetadataFile = File.createTempFile("idPMetadataFile", "xml");
                 Files.copy(idPMetadataFileStream, idPMetadataFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 IOUtils.closeQuietly(idPMetadataFileStream);
-                idpConfig.setIdPMetadataFile(idPMetadataFile);
+                idpBuilder.idPMetadataFile(idPMetadataFile);
             }
 
-            idpConfig.setSignatureValidationType(signatureValidationType);
+            idpBuilder.signatureValidationType(signatureValidationType);
 
             if (UtilMethods.isSet(optionalProperties)){
                 final Properties parsedProperties = new Properties();
                 parsedProperties.load(new StringReader(optionalProperties));
-                idpConfig.setOptionalProperties(parsedProperties);
+                idpBuilder.optionalProperties(parsedProperties);
             }
 
             HashMap<String, String> sitesMap = new ObjectMapper().readValue(sites, HashMap.class);
-            idpConfig.setSites(sitesMap);
+            idpBuilder.sites(sitesMap);
 
+            IdpConfig idpConfig = idpBuilder.build();
             idpConfig = idpConfigHelper.saveIdpConfig(idpConfig);
 
             response = Response.ok(new ResponseEntityView(idpConfig)).build();
@@ -197,8 +198,7 @@ public class DotSamlResource implements Serializable {
         Response response;
 
         try {
-            IdpConfig idpConfig = new IdpConfig();
-            idpConfig.setId(id);
+            IdpConfig idpConfig = new IdpConfig.Builder().id(id).build();
 
             idpConfigHelper.deleteIdpConfig(idpConfig);
 
@@ -217,7 +217,7 @@ public class DotSamlResource implements Serializable {
         return response;
     } // deleteIdpConfig.
 
-    @POST
+    @PUT
     @Path("/default/{id}")
     @JSONP
     @NoCache

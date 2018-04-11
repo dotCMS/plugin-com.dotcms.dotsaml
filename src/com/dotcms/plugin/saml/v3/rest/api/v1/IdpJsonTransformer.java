@@ -31,21 +31,21 @@ public class IdpJsonTransformer {
     }
 
     public static IdpConfig jsonToIdp(JSONObject jsonObject) throws JSONException {
-        IdpConfig idpConfig = new IdpConfig();
+        IdpConfig.Builder builder = new IdpConfig.Builder();
 
-        idpConfig.setId(jsonObject.getString("id"));
-        idpConfig.setIdpName(jsonObject.getString("idpName"));
-        idpConfig.setEnabled(jsonObject.getBoolean("enabled"));
-        idpConfig.setsPIssuerURL(jsonObject.getString("sPIssuerURL"));
-        idpConfig.setsPEndponintHostname(jsonObject.getString("sPEndponintHostname"));
-        idpConfig.setPrivateKey(getFileFromCanonicalPath(jsonObject.getString("privateKey")));
-        idpConfig.setPublicCert(getFileFromCanonicalPath(jsonObject.getString("publicCert")));
-        idpConfig.setIdPMetadataFile(getFileFromCanonicalPath(jsonObject.getString("idPMetadataFile")));
-        idpConfig.setSignatureValidationType(jsonObject.getString("signatureValidationType"));
-        idpConfig.setOptionalProperties(getPropertiesFromJsonObject(jsonObject.getJSONObject("optionalProperties")));
-        idpConfig.setSites(SiteJsonTransformer. getMapFromJsonObject(jsonObject.getJSONObject("sites")));
+        builder.id(jsonObject.getString("id"));
+        builder.idpName(jsonObject.getString("idpName"));
+        builder.enabled(jsonObject.getBoolean("enabled"));
+        builder.sPIssuerURL(jsonObject.getString("sPIssuerURL"));
+        builder.sPEndponintHostname(jsonObject.getString("sPEndponintHostname"));
+        builder.privateKey(getFileFromCanonicalPath(jsonObject.getString("privateKey")));
+        builder.publicCert(getFileFromCanonicalPath(jsonObject.getString("publicCert")));
+        builder.idPMetadataFile(getFileFromCanonicalPath(jsonObject.getString("idPMetadataFile")));
+        builder.signatureValidationType(jsonObject.getString("signatureValidationType"));
+        builder.optionalProperties(getPropertiesFromJsonObject(jsonObject.getJSONObject("optionalProperties")));
+        builder.sites(SiteJsonTransformer. getMapFromJsonObject(jsonObject.getJSONObject("sites")));
 
-        return idpConfig;
+        return builder.build();
     }
 
     private static String getCanonicalPathIfExists(File file) throws IOException{
