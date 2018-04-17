@@ -214,9 +214,39 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 	 */
 	@SuppressWarnings( { "rawtypes", "unchecked" } )
 	@Override
-	public void authentication( final HttpServletRequest request, final HttpServletResponse response, final String siteName ) throws DotDataException, IOException, JSONException
+	public void authentication( final HttpServletRequest request, final HttpServletResponse response ) throws DotDataException, IOException, JSONException
 	{
 		final IdpConfig idpConfig = SiteIdpConfigResolver.getInstance().resolveIdpConfig( request );
+		final MessageContext context = new MessageContext(); // main context
+		final AuthnRequest authnRequest = buildAuthnRequest( request, idpConfig );
+
+		context.setMessage( authnRequest );
+
+		// peer entity (Idp to SP and viceversa)
+		final SAMLPeerEntityContext peerEntityContext = context.getSubcontext( SAMLPeerEntityContext.class, true );
+		// info about the endpoint of the peer entity
+		final SAMLEndpointContext endpointContext = peerEntityContext.getSubcontext( SAMLEndpointContext.class, true );
+
+		endpointContext.setEndpoint( getIdentityProviderDestinationEndpoint( idpConfig ) );
+
+		this.setSignatureSigningParams( context, idpConfig );
+		this.doRedirect( context, response, authnRequest );
+	}
+
+	/**
+	 * Authentication with Open SAML 3 is basically a redirect to the IDP to
+	 * show the login page to the user.
+	 * 
+	 * @param request {@link HttpServletRequest}
+	 * @param response {@link HttpServletResponse}
+	 * @throws IOException 
+	 * @throws JSONException 
+	 * @throws DotDataException 
+	 */
+	@SuppressWarnings( { "rawtypes", "unchecked" } )
+	@Override
+	public void authentication( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig ) throws DotDataException, IOException
+	{
 		final MessageContext context = new MessageContext(); // main context
 		final AuthnRequest authnRequest = buildAuthnRequest( request, idpConfig );
 

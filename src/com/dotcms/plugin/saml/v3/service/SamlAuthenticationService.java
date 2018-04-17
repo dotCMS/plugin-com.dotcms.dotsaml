@@ -1,5 +1,7 @@
 package com.dotcms.plugin.saml.v3.service;
 
+import com.dotcms.plugin.saml.v3.config.IdpConfig;
+
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.util.json.JSONException;
 
@@ -44,7 +46,8 @@ public interface SamlAuthenticationService extends Serializable
 	 * @throws IOException 
 	 * @throws DotDataException 
 	 */
-	void authentication( final HttpServletRequest request, final HttpServletResponse response, final String siteName ) throws DotDataException, IOException, JSONException;
+	void authentication( final HttpServletRequest request, final HttpServletResponse response ) throws DotDataException, IOException, JSONException;
+	void authentication( final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final IdpConfig idpConfig ) throws DotDataException, IOException;
 
 	/**
 	 * Do the logout call for SAML
@@ -102,4 +105,5 @@ public interface SamlAuthenticationService extends Serializable
 	 * @throws DotDataException 
 	 */
 	User getUser( final HttpServletRequest request, final HttpServletResponse response, final HttpSession loginHttpSession, final String siteName ) throws DotDataException, JSONException, IOException;
+
 }
