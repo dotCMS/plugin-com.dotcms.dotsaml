@@ -4,7 +4,6 @@ import com.dotcms.cms.login.LoginServiceAPI;
 
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
 import com.dotcms.plugin.saml.v3.config.IdpConfigHelper;
-import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.service.*;
 import com.dotcms.plugin.saml.v3.util.InstanceUtil;
@@ -30,21 +29,22 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class SamlLoginFilter extends SamlFilter implements Filter
+
+public class SamlMetadataFilter extends SamlFilter implements Filter
 {
-	public SamlLoginFilter()
+	public SamlMetadataFilter()
 	{
 		super( InstanceUtil.newInstance( Config.getStringProperty( DotSamlConstants.DOT_SAML_AUTHENTICATION_SERVICE_CLASS_NAME, null ), OpenSamlAuthenticationServiceImpl.class ) );
 	}
 
 	@VisibleForTesting
-	public SamlLoginFilter( final SamlAuthenticationService samlAuthenticationService )
+	public SamlMetadataFilter( final SamlAuthenticationService samlAuthenticationService )
 	{
 		super( samlAuthenticationService, new MetaDataXMLPrinter(), WebAPILocator.getHostWebAPI(), WebAPILocator.getLanguageWebAPI(), APILocator.getPermissionAPI(), APILocator.getIdentifierAPI(), APILocator.getContentletAPI(), WebAPILocator.getUserWebAPI(), APILocator.getLoginServiceAPI() );
 	}
 
 	@VisibleForTesting
-	public SamlLoginFilter( final SamlAuthenticationService samlAuthenticationService, final MetaDataXMLPrinter metaDataXMLPrinter, final HostWebAPI hostWebAPI, final LanguageWebAPI languageWebAPI, final PermissionAPI permissionAPI, final IdentifierAPI identifierAPI, final ContentletAPI contentletAPI, final UserWebAPI userWebAPI, final LoginServiceAPI loginService )
+	public SamlMetadataFilter( final SamlAuthenticationService samlAuthenticationService, final MetaDataXMLPrinter metaDataXMLPrinter, final HostWebAPI hostWebAPI, final LanguageWebAPI languageWebAPI, final PermissionAPI permissionAPI, final IdentifierAPI identifierAPI, final ContentletAPI contentletAPI, final UserWebAPI userWebAPI, final LoginServiceAPI loginService )
 	{
 		super( samlAuthenticationService, metaDataXMLPrinter, hostWebAPI, languageWebAPI, permissionAPI, identifierAPI, contentletAPI, userWebAPI, loginService );
 	}
@@ -68,25 +68,11 @@ public class SamlLoginFilter extends SamlFilter implements Filter
 			final IdpConfig idpConfig = IdpConfigHelper.getInstance().findIdpConfig( idpConfigId );
 
 			// If idpConfig is null, means this site does not need SAML processing
-			if ( idpConfig != null && idpConfig.isEnabled() )
+			if ( idpConfig != null )
 			{
-				Logger.debug( this, "Processing saml login request for idpConfig id: " + idpConfigId );
-				super.doRequestLoginSecurityLog( httpServletRequest, idpConfig );
-
-				try
-				{
-					// This will redirect the user to the IdP Login Page.
-					super.samlAuthenticationService.authentication( httpServletRequest, httpServletResponse, idpConfig );
-				}
-				catch ( DotSamlException | DotDataException exception )
-				{
-					Logger.error( this, "Error on authentication: " + exception.getMessage(), exception );
-					Logger.debug( this, "Error on authentication, setting 500 response status." );
-					httpServletResponse.sendError( HttpServletResponse.SC_INTERNAL_SERVER_ERROR );
-				}
-
+				Logger.debug( this, "Processing saml metadata request for idpConfig id: " + idpConfigId );
+				super.printMetaData( httpServletRequest, httpServletResponse, idpConfig );
 				return;
-
 			}
 			else
 			{

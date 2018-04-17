@@ -20,3 +20,14 @@
 	<filter-name>SamlLoginFilter</filter-name>
 	<url-pattern>/dotsaml/login/*</url-pattern>
 </filter-mapping>
+
+<filter>
+	<filter-name>SamlMetadataFilter</filter-name>
+	<filter-class>com.dotcms.plugin.saml.v3.filter.SamlMetadataFilter</filter-class>
+	<async-supported>true</async-supported>
+</filter>
+
+<filter-mapping>
+	<filter-name>SamlMetadataFilter</filter-name>
+	<url-pattern>/dotsaml/metadata/*</url-pattern>
+</filter-mapping>
