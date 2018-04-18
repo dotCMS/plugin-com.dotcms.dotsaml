@@ -31,17 +31,17 @@ public interface SamlAuthenticationService extends Serializable
 	 * 
 	 * @param request {@link HttpServletRequest}
 	 * @param response {@link HttpServletResponse}
-	 * @param siteName {@link String}
+	 * @param idpConfig {@link IdpConfig}
 	 * @return boolean
 	 */
-	public boolean isValidSamlRequest( final HttpServletRequest request, final HttpServletResponse response, final String siteName );
+	public boolean isValidSamlRequest( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig );
 
 	/**
 	 * Authentication with SAML
 	 * 
 	 * @param request {@link HttpServletRequest}
 	 * @param response {@link HttpServletResponse}
-	 * @param siteName {@link String}
+	 * @param idpConfig {@link IdpConfig}
 	 * @throws JSONException 
 	 * @throws IOException 
 	 * @throws DotDataException 
@@ -54,12 +54,12 @@ public interface SamlAuthenticationService extends Serializable
 	 * 
 	 * @param request {@link HttpServletRequest}
 	 * @param response {@link HttpServletResponse}
-	 * @param siteName {@link String}
+	 * @param idpConfig {@link IdpConfig}
 	 * @throws JSONException 
 	 * @throws IOException 
 	 * @throws DotDataException 
 	 */
-	void logout( final HttpServletRequest request, final HttpServletResponse response, final NameID nameID, final String sessionIndexValue, final String siteName ) throws DotDataException, IOException, JSONException;
+	void logout( final HttpServletRequest request, final HttpServletResponse response, final NameID nameID, final String sessionIndexValue, final IdpConfig idpConfig ) throws DotDataException, IOException, JSONException;
 
 	/**
 	 * Pre: the request parameter SAML_ART_PARAM_KEY must exists 
@@ -67,13 +67,13 @@ public interface SamlAuthenticationService extends Serializable
 	 * 
 	 * @param request {@link HttpServletRequest}
 	 * @param response {@link HttpServletResponse}
-	 * @param siteName {@link String}
+	 * @param idpConfig {@link IdpConfig}
 	 * @return Assertion
 	 * @throws JSONException 
 	 * @throws IOException 
 	 * @throws DotDataException 
 	 */
-	Assertion resolveAssertion( final HttpServletRequest request, final HttpServletResponse response, final String siteName ) throws DotDataException, IOException, JSONException;
+	Assertion resolveAssertion( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig ) throws DotDataException, IOException, JSONException;
 
 	/**
 	 * Perform the logic to get or create the user from the SAML and DotCMS If
@@ -82,13 +82,13 @@ public interface SamlAuthenticationService extends Serializable
 	 * 
 	 * @param request {@link HttpServletRequest}
 	 * @param response {@link HttpServletResponse}
-	 * @param siteName {@link String}
+	 * @param idpConfig {@link IdpConfig}
 	 * @return User
 	 * @throws IOException 
 	 * @throws JSONException 
 	 * @throws DotDataException 
 	 */
-	User getUser( final HttpServletRequest request, final HttpServletResponse response, final String siteName ) throws DotDataException, JSONException, IOException;
+	User getUser( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig ) throws DotDataException, JSONException, IOException;
 
 	/**
 	 * Perform the logic to get or create the user from the SAML and DotCMS If
@@ -98,12 +98,12 @@ public interface SamlAuthenticationService extends Serializable
 	 * @param request {@link HttpServletRequest}
 	 * @param response {@link HttpServletResponse}
 	 * @param loginHttpSession {@link HttpSession} session to store the
-	 * @param siteName {@link String}
+	 * @param idpConfig {@link IdpConfig}
 	 * @return User
 	 * @throws IOException 
 	 * @throws JSONException 
 	 * @throws DotDataException 
 	 */
-	User getUser( final HttpServletRequest request, final HttpServletResponse response, final HttpSession loginHttpSession, final String siteName ) throws DotDataException, JSONException, IOException;
+	User getUser( final HttpServletRequest request, final HttpServletResponse response, final HttpSession loginHttpSession, final IdpConfig idpConfig ) throws DotDataException, JSONException, IOException;
 
 }

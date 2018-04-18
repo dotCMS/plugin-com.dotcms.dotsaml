@@ -210,7 +210,7 @@ public class SamlFilter implements Filter
 
 				doLogout( response, request );
 				Logger.debug( this, "Doing SAML redirect logout" );
-				this.samlAuthenticationService.logout( request, response, nameID, samlSessionIndex, idpConfig.getId() );
+				this.samlAuthenticationService.logout( request, response, nameID, samlSessionIndex, idpConfig );
 				Logger.info( this, "User " + nameID + " has logged out" );
 
 				doLogoutDone = true;
@@ -434,8 +434,7 @@ public class SamlFilter implements Filter
 
 	protected AutoLoginResult autoLogin( final HttpServletRequest request, final HttpServletResponse response, final HttpSession session, final IdpConfig idpConfig ) throws DotDataException, IOException, JSONException
 	{
-
-		final User user = this.samlAuthenticationService.getUser( request, response, session, idpConfig.getId() );
+		final User user = this.samlAuthenticationService.getUser( request, response, session, idpConfig );
 		boolean continueFilter = true; // by default continue with the filter
 		HttpSession renewSession = session;
 
@@ -484,7 +483,7 @@ public class SamlFilter implements Filter
 		else
 		{
 			// if it was a saml request and could not get the user, throw an error
-			if ( this.samlAuthenticationService.isValidSamlRequest( request, response, idpConfig.getId() ) )
+			if ( this.samlAuthenticationService.isValidSamlRequest( request, response, idpConfig ) )
 			{
 				Logger.error( this, "This request is a saml request, but couldn't resolve the user so throwing an internal error" );
 				response.sendError( HttpServletResponse.SC_INTERNAL_SERVER_ERROR );

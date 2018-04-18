@@ -45,15 +45,14 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 	private static final String SAML_RESPONSE_KEY = "SAMLResponse";
 
 	@Override
-	public boolean isValidSamlRequest( final HttpServletRequest request, final HttpServletResponse response, final String siteName )
+	public boolean isValidSamlRequest( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig )
 	{
 		return isSet( request.getParameter( SAML_RESPONSE_KEY ) );
 	}
 
 	@Override
-	public Assertion resolveAssertion( final HttpServletRequest request, final HttpServletResponse response, final String siteName ) throws DotDataException, IOException, JSONException
+	public Assertion resolveAssertion( final HttpServletRequest request, final HttpServletResponse response, IdpConfig idpConfig ) throws DotDataException, IOException, JSONException
 	{
-		IdpConfig idpConfig = IdpConfigHelper.getInstance().findSiteIdpConfig( siteName );
 		Assertion assertion = null;
 		HTTPPostDecoder decoder = new HTTPPostDecoder();
 		MessageContext<SAMLObject> messageContext = null;

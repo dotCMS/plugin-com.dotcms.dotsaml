@@ -23,26 +23,25 @@ public class AssertionResolverHandlerFactory implements Serializable
 	/**
 	 * Get the resolver assertion depending on the site.
 	 * 
-	 * @param siteName
+	 * @param idpConfig {@link IdpConfig}
 	 * @return
 	 */
-	public AssertionResolverHandler getAssertionResolverForSite( final String siteName )
+	public AssertionResolverHandler getAssertionResolverForSite( final IdpConfig idpConfig )
 	{
 		String className = null;
 
 		try
 		{
-			IdpConfig idpConfig = IdpConfigHelper.getInstance().findSiteIdpConfig( siteName );
 			className = (String) idpConfig.getOptionString( DotSamlConstants.DOTCMS_SAML_ASSERTION_RESOLVER_HANDLER_CLASS_NAME );
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Optional property not set: " + DotSamlConstants.DOTCMS_SAML_ASSERTION_RESOLVER_HANDLER_CLASS_NAME + " for site: " + siteName + " Using default." );
+			Logger.info( this, "Optional property not set: " + DotSamlConstants.DOTCMS_SAML_ASSERTION_RESOLVER_HANDLER_CLASS_NAME + " for idpConfig: " + idpConfig.getId() + " Using default." );
 		}
 
 		final AssertionResolverHandler assertionResolverHandler = ( !UtilMethods.isSet( className ) ) ? this.getDefaultAssertionResolverHandler() : this.getAssertionResolverHandler( className );
 
-		Logger.debug( this, "Getting the assertion resolver for the site: " + siteName + ", with the class: " + assertionResolverHandler );
+		Logger.debug( this, "Getting the assertion resolver for the idpConfig: " + idpConfig.getId() + ", with the class: " + assertionResolverHandler );
 
 		return assertionResolverHandler;
 	}

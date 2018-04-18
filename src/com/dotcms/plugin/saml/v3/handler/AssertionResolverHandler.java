@@ -1,5 +1,7 @@
 package com.dotcms.plugin.saml.v3.handler;
 
+import com.dotcms.plugin.saml.v3.config.IdpConfig;
+
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.util.json.JSONException;
 
@@ -24,29 +26,23 @@ public interface AssertionResolverHandler extends Serializable
 	/**
 	 * Returns true if it is a valid saml request.
 	 *
-	 * @param request
-	 *            {@link HttpServletRequest}
-	 * @param response
-	 *            {@link HttpServletResponse}
-	 * @param siteName
-	 *            {@link String}
+	 * @param request {@link HttpServletRequest}
+	 * @param response {@link HttpServletResponse}
+	 * @param idpConfig {@link IdpConfig}
 	 * @return boolean
 	 */
-	boolean isValidSamlRequest( final HttpServletRequest request, final HttpServletResponse response, final String siteName );
+	boolean isValidSamlRequest( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig );
 
 	/**
 	 * Resolve the user based on a SAML callback, depending on the
 	 * implementation the criteria to check if it is a saml request and how to
 	 * handle might be different.
 	 *
-	 * @param request
-	 *            {@link HttpServletRequest}
-	 * @param response
-	 *            {@link HttpServletResponse}
-	 * @param siteName
-	 *            {@link String}
+	 * @param request  {@link HttpServletRequest}
+	 * @param response {@link HttpServletResponse}
+	 * @param idpConfig {@link IdpConfig}
 	 * @return User
 	 */
-	Assertion resolveAssertion( final HttpServletRequest request, final HttpServletResponse response, final String siteName ) throws DotDataException, IOException, JSONException;
+	Assertion resolveAssertion( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig ) throws DotDataException, IOException, JSONException;
 
 }

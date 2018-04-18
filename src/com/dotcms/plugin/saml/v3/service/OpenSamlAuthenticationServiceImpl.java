@@ -460,15 +460,14 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 	 * @throws DotDataException 
 	 */
 	@Override
-	public User getUser( final HttpServletRequest request, final HttpServletResponse response, final HttpSession loginHttpSession, final String siteName ) throws DotDataException, JSONException, IOException
+	public User getUser( final HttpServletRequest request, final HttpServletResponse response, final HttpSession loginHttpSession, final IdpConfig idpConfig ) throws DotDataException, JSONException, IOException
 	{
 		User user = null;
 		final Assertion assertion;
-		final IdpConfig idpConfig = SiteIdpConfigResolver.getInstance().resolveIdpConfig( request );
 
-		if ( this.isValidSamlRequest( request, response, siteName ) )
+		if ( this.isValidSamlRequest( request, response, idpConfig ) )
 		{
-			assertion = this.resolveAssertion( request, response, siteName );
+			assertion = this.resolveAssertion( request, response, idpConfig );
 
 			Logger.debug( this, "Resolved assertion: " + assertion );
 
@@ -514,15 +513,14 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 	 * @throws DotDataException 
 	 */
 	@Override
-	public User getUser( final HttpServletRequest request, final HttpServletResponse response, final String siteName ) throws DotDataException, JSONException, IOException
+	public User getUser( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig ) throws DotDataException, JSONException, IOException
 	{
 		User user = null;
 		final Assertion assertion;
-		final IdpConfig idpConfig = SiteIdpConfigResolver.getInstance().resolveIdpConfig( request );
 
-		if ( this.isValidSamlRequest( request, response, siteName ) )
+		if ( this.isValidSamlRequest( request, response, idpConfig ) )
 		{
-			assertion = this.resolveAssertion( request, response, siteName );
+			assertion = this.resolveAssertion( request, response, idpConfig );
 
 			Logger.debug( this, "Resolved assertion: " + assertion );
 
@@ -582,17 +580,16 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
 	// if the SAML_ART_PARAM_KEY parameter is in the request, it is a valid SAML request
 	@Override
-	public boolean isValidSamlRequest( final HttpServletRequest request, final HttpServletResponse response, final String siteName )
+	public boolean isValidSamlRequest( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig )
 	{
-		final AssertionResolverHandler assertionResolverHandler = this.assertionResolverHandlerFactory.getAssertionResolverForSite( siteName );
+		final AssertionResolverHandler assertionResolverHandler = this.assertionResolverHandlerFactory.getAssertionResolverForSite( idpConfig );
 
-		return assertionResolverHandler.isValidSamlRequest( request, response, siteName );
+		return assertionResolverHandler.isValidSamlRequest( request, response, idpConfig );
 	}
 
 	@SuppressWarnings( { "rawtypes", "unchecked" } )
-	public void logout( final HttpServletRequest request, final HttpServletResponse response, final NameID nameID, final String sessionIndexValue, final String siteName ) throws DotDataException, IOException, JSONException
+	public void logout( final HttpServletRequest request, final HttpServletResponse response, final NameID nameID, final String sessionIndexValue, final IdpConfig idpConfig ) throws DotDataException, IOException, JSONException
 	{
-		final IdpConfig idpConfig = SiteIdpConfigResolver.getInstance().resolveIdpConfig( request );
 		final MessageContext context = new MessageContext(); // main context
 		final LogoutRequest logoutRequest = buildLogoutRequest( idpConfig, nameID, sessionIndexValue );
 
@@ -626,11 +623,11 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 	}
 
 	@Override
-	public Assertion resolveAssertion( final HttpServletRequest request, final HttpServletResponse response, final String siteName ) throws DotDataException, IOException, JSONException
+	public Assertion resolveAssertion( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig ) throws DotDataException, IOException, JSONException
 	{
-		final AssertionResolverHandler assertionResolverHandler = this.assertionResolverHandlerFactory.getAssertionResolverForSite( siteName );
+		final AssertionResolverHandler assertionResolverHandler = this.assertionResolverHandlerFactory.getAssertionResolverForSite( idpConfig );
 
-		return assertionResolverHandler.resolveAssertion( request, response, siteName );
+		return assertionResolverHandler.resolveAssertion( request, response, idpConfig );
 	}
 
 	// resolve the attributes from the assertion resolved from the OpenSaml artifact resolver via
