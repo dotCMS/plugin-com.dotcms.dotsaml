@@ -92,7 +92,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 
 		Logger.debug( this, "Decrypted Assertion: " + toXMLObjectString( assertion ) );
 
-		if ( idpConfig.getOptionBoolean( DotSamlConstants.DOTCMS_SAML_WANT_ASSERTIONS_SIGNED ) )
+		if ( idpConfig.isVerifyAssertionSignatureNeeded() )
 		{
 			Logger.debug( this, "Doing the verification assertion signature." );
 

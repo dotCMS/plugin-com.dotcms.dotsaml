@@ -433,6 +433,24 @@ public class IdpConfig implements OptionalPropertiesHelper, MetaDataHelper, Endp
 	}
 
 	/**
+	 * If the user wants to do a verifyResponseSignature, by default true.
+	 * There are some testing or diagnostic scenarios where you want to avoid
+	 * the validation to identified issues, but in general on production this
+	 * must be true.
+	 *
+	 * @return boolean
+	 */
+	public boolean isVerifyResponseSignatureNeeded()
+	{
+		if ( this.signatureValidationType.equals( DotSamlConstants.RESPONSE_AND_ASSERTION ) || this.signatureValidationType.equals( DotSamlConstants.RESPONSE ) )
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * If the user wants to do a verifySignatureCredentials, by default true
 	 * There are some testing or diagnostic scenarios where you want to avoid
 	 * the validation to identified issues, but in general on production this

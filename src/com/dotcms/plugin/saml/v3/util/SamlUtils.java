@@ -173,8 +173,7 @@ public class SamlUtils
 	 * Return the value of the /AuthnStatement@SessionIndex element in an
 	 * assertion
 	 *
-	 * @return The value. <code>null</code>, if the assertion does not contain
-	 *         the element.
+	 * @return The value. <code>null</code>, if the assertion does not contain the element.
 	 */
 	public static String getSessionIndex( final Assertion assertion )
 	{
@@ -324,8 +323,7 @@ public class SamlUtils
 	}
 
 	/**
-	 * Return the policy for the Name ID (which is the IdP identifier for the
-	 * user)
+	 * Return the policy for the Name ID (which is the IdP identifier for the user)
 	 * 
 	 * @return NameIDPolicy
 	 */
@@ -442,8 +440,7 @@ public class SamlUtils
 	/**
 	 * Get the Assertion decrypted
 	 * 
-	 * @param artifactResponse
-	 *            {@link ArtifactResponse}
+	 * @param artifactResponse {@link ArtifactResponse}
 	 * @return Assertion
 	 */
 	public static Assertion getAssertion( final ArtifactResponse artifactResponse, final IdpConfig idpConfig )
@@ -457,8 +454,7 @@ public class SamlUtils
 	/**
 	 * Get the Assertion decrypted
 	 * 
-	 * @param response
-	 *            {@link Response}
+	 * @param response {@link Response}
 	 * @return Assertion
 	 */
 	public static Assertion getAssertion( final Response response, final IdpConfig idpConfig )
@@ -482,8 +478,7 @@ public class SamlUtils
 	/**
 	 * Just get the Encrypted assertion from the {@link ArtifactResponse}
 	 * 
-	 * @param artifactResponse
-	 *            {@link ArtifactResponse}
+	 * @param artifactResponse {@link ArtifactResponse}
 	 * @return EncryptedAssertion
 	 */
 	public static EncryptedAssertion getEncryptedAssertion( final ArtifactResponse artifactResponse )
@@ -495,8 +490,7 @@ public class SamlUtils
 	/**
 	 * Decrypt an {@link EncryptedAssertion}
 	 * 
-	 * @param encryptedAssertion
-	 *            {@link EncryptedAssertion}
+	 * @param encryptedAssertion {@link EncryptedAssertion}
 	 * @return Assertion
 	 */
 	public static Assertion decryptAssertion( final EncryptedAssertion encryptedAssertion, final IdpConfig idpConfig )
@@ -540,16 +534,15 @@ public class SamlUtils
 	}
 
 	/**
-	 * Does the verification of the assertiong
+	 * Does the verification of the assertion
 	 * 
-	 * @param assertion
-	 *            {@link Assertion}
+	 * @param assertion {@link Assertion}
 	 */
 	public static void verifyAssertionSignature( final Assertion assertion, final IdpConfig idpConfig )
 	{
 		final SAMLSignatureProfileValidator profileValidator;
 
-		if ( idpConfig.getOptionBoolean( DOTCMS_SAML_CHECKIF_ASSERTION_SIGNED, true ) && !assertion.isSigned() )
+		if ( idpConfig.isVerifyResponseSignatureNeeded() && !assertion.isSigned() )
 		{
 			Logger.error( SamlUtils.class, "The assertion is not signed..." );
 			throw new DotSamlException( "The SAML Assertion was not signed" );
@@ -759,8 +752,7 @@ public class SamlUtils
 	/**
 	 * Convert to String an {@link XMLObject}
 	 * 
-	 * @param object
-	 *            {@link XMLObject}
+	 * @param object {@link XMLObject}
 	 * @return String
 	 */
 	public static String toXMLObjectString( final XMLObject object )
@@ -773,8 +765,7 @@ public class SamlUtils
 	/**
 	 * Convert to String an {@link Element}
 	 * 
-	 * @param element
-	 *            {@link Element}
+	 * @param element {@link Element}
 	 * @return String
 	 */
 	public static String toElementString( final Element element )
@@ -821,10 +812,8 @@ public class SamlUtils
 	/**
 	 * Invoke a message handler chain
 	 * 
-	 * @param handlerChain
-	 *            {@link BasicMessageHandlerChain}
-	 * @param context
-	 *            MessageContext
+	 * @param handlerChain {@link BasicMessageHandlerChain}
+	 * @param context MessageContext
 	 */
 	public static <T> void invokeMessageHandlerChain( final BasicMessageHandlerChain<T> handlerChain, final MessageContext<T> context )
 	{
@@ -844,8 +833,7 @@ public class SamlUtils
 	 * Check if we can readIdpConfigs the KeyStore from file using the SAML
 	 * properties.
 	 *
-	 * @param samlProperties
-	 *            {@link Properties} with the values needed.
+	 * @param samlProperties {@link Properties} with the values needed.
 	 * @return
 	 */
 	//TODO Tom, adapt to new FilesystemCredentialResolver. Public/private key.
@@ -915,10 +903,8 @@ public class SamlUtils
 	/**
 	 * Check if the File Path exists, can access and readIdpConfigs.
 	 *
-	 * @param properties
-	 *            {@link Properties} (Key, Value) = (PropertyName, FilePath).
-	 * @param filePathPropertyKeys
-	 *            keys name that have File path in the value.
+	 * @param properties {@link Properties} (Key, Value) = (PropertyName, FilePath).
+	 * @param filePathPropertyKeys keys name that have File path in the value.
 	 * @return
 	 */
 	public static Set<String> validateFiles( Properties properties, Set<String> filePathPropertyKeys )

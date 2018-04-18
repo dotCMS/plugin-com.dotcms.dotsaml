@@ -113,7 +113,7 @@ public class DotSamlConstants
 	/**
 	 * By default the plugin checks if the assertion is signed, if for some
 	 * reason you IdP sends an unsigned messages, you can set this property as
-	 * false. However keep in mind that signed responses are a desire practice.
+	 * false. However keep in mind that signed responses are a desired practice.
 	 */
 	public static final String DOTCMS_SAML_CHECKIF_ASSERTION_SIGNED = "checkif.assertionsigned";
 
