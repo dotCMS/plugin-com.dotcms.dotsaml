@@ -357,8 +357,9 @@
 				dijit.byId('disableSamlSiteDialog').show();
 				getDisabledSites();
 			},
-			downloadSPMedatadata : function() {
-				window.alert("This functionality will be available in the next sprint");
+			downloadSPMedatadata : function( id ) {
+				var metadataUrl = "/dotsaml/metadata/" + id;
+				window.open( metadataUrl );
 			},
 			gotoNextPage: function(){
 				this.currentPage++;
@@ -432,7 +433,7 @@
 								defaultButtonHTML +
 								"			</td>" +
 								"			<td>" +
-								"				<button dojoType='dijit.form.Button' onclick='idpAdmin.downloadSPMedatadata();' class='dijitButtonFlat'>" +
+								"				<button dojoType='dijit.form.Button' onclick='idpAdmin.downloadSPMedatadata(\"" + item.id + "\");' class='dijitButtonFlat'>" +
 								"					<%=LanguageUtil.get(pageContext, "download-sp-metadata")%>" +
 								"				</button>" +
 								"			</td>" +
