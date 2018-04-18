@@ -50,16 +50,10 @@ public class SamlMetadataFilter extends SamlFilter implements Filter
 	}
 
 	@Override
-	public void init( final FilterConfig filterConfig ) throws ServletException
-	{
-		// Do nothing
-	}
-
-	@Override
 	public void doFilter( final ServletRequest servletRequest, final ServletResponse servletResponse, final FilterChain chain ) throws IOException, ServletException
 	{
-		final HttpServletResponse httpServletResponse = (HttpServletResponse) servletRequest;
-		final HttpServletRequest httpServletRequest = (HttpServletRequest) servletResponse;
+		final HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
+		final HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
 
 		try
 		{

@@ -5,6 +5,8 @@ import com.dotcms.cms.login.LoginServiceAPI;
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
 import com.dotcms.plugin.saml.v3.exception.NotNullEmailAllowedException;
 import com.dotcms.plugin.saml.v3.exception.SamlUnauthorizedException;
+import com.dotcms.plugin.saml.v3.init.Initializer;
+import com.dotcms.plugin.saml.v3.init.SamlInitializer;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.service.*;
 import com.dotcms.plugin.saml.v3.util.InstanceUtil;
@@ -67,6 +69,7 @@ public class SamlFilter implements Filter
 	protected final ContentletAPI contentletAPI;
 	protected final UserWebAPI userWebAPI;
 	protected final LoginServiceAPI loginService;
+	protected final Initializer initializer = new SamlInitializer();
 
 	public SamlFilter()
 	{
@@ -94,9 +97,22 @@ public class SamlFilter implements Filter
 	}
 
 	@Override
-	public void init( final FilterConfig filterConfig ) throws ServletException
-	{
-		// Do nothing
+	public void init(final FilterConfig filterConfig) throws ServletException {
+		
+		Logger.debug(this, "Going to call the Initializer: " + this.initializer);
+
+		if (!this.initializer.isInitializationDone()) {
+
+			try {
+				this.initializer.init(Collections.emptyMap());
+			} catch (Throwable e) {
+
+				Logger.error(this, "SAML ERROR: " + e.getMessage(), e);
+			}
+		} else {
+
+			Logger.debug(this, "The initializer was already init: " + this.initializer);
+		}
 	}
 
 	/**
@@ -189,8 +205,8 @@ public class SamlFilter implements Filter
 	@Override
 	public void doFilter( final ServletRequest servletRequest, final ServletResponse servletResponse, final FilterChain filterChain ) throws IOException, ServletException
 	{
-		final HttpServletResponse httpServletResponse = (HttpServletResponse) servletRequest;
-		final HttpServletRequest httpServletRequest = (HttpServletRequest) servletResponse;
+		final HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
+		final HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
 
 		filterChain.doFilter( httpServletRequest, httpServletResponse );
 	}

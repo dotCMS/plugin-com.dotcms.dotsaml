@@ -1,24 +1,31 @@
 package com.dotcms.plugin.saml.v3.util;
 
-import com.dotcms.plugin.saml.v3.config.CredentialProvider;
-import com.dotcms.plugin.saml.v3.config.IdpConfig;
-import com.dotcms.plugin.saml.v3.exception.DotSamlException;
-
-import com.dotcms.repackage.org.apache.commons.io.IOUtils;
-
-import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.UtilMethods;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_AUTHN_COMPARISON_TYPE;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_AUTHN_CONTEXT_CLASS_REF;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_FORCE_AUTHN;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SLO_URL;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_NAME_ID_POLICY_FORMAT;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_POLICY_ALLOW_CREATE;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_PROTOCOL_BINDING;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.HTTPS_SCHEMA;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.HTTP_SCHEMA;
+import static com.dotmarketing.util.UtilMethods.isSet;
 
 import java.io.File;
-import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyPair;
-import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,14 +37,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
-import net.shibboleth.utilities.java.support.resolver.Criterion;
-import net.shibboleth.utilities.java.support.resolver.ResolverException;
-import net.shibboleth.utilities.java.support.security.RandomIdentifierGenerationStrategy;
-
 import org.joda.time.DateTime;
-
 import org.opensaml.core.criterion.EntityIdCriterion;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
@@ -51,7 +51,22 @@ import org.opensaml.messaging.handler.impl.BasicMessageHandlerChain;
 import org.opensaml.saml.common.SAMLVersion;
 import org.opensaml.saml.common.SignableSAMLObject;
 import org.opensaml.saml.common.xml.SAMLConstants;
-import org.opensaml.saml.saml2.core.*;
+import org.opensaml.saml.saml2.core.ArtifactResponse;
+import org.opensaml.saml.saml2.core.Assertion;
+import org.opensaml.saml.saml2.core.AuthnContext;
+import org.opensaml.saml.saml2.core.AuthnContextClassRef;
+import org.opensaml.saml.saml2.core.AuthnContextComparisonTypeEnumeration;
+import org.opensaml.saml.saml2.core.AuthnRequest;
+import org.opensaml.saml.saml2.core.AuthnStatement;
+import org.opensaml.saml.saml2.core.EncryptedAssertion;
+import org.opensaml.saml.saml2.core.Issuer;
+import org.opensaml.saml.saml2.core.LogoutRequest;
+import org.opensaml.saml.saml2.core.NameID;
+import org.opensaml.saml.saml2.core.NameIDPolicy;
+import org.opensaml.saml.saml2.core.NameIDType;
+import org.opensaml.saml.saml2.core.RequestedAuthnContext;
+import org.opensaml.saml.saml2.core.Response;
+import org.opensaml.saml.saml2.core.SessionIndex;
 import org.opensaml.saml.saml2.encryption.Decrypter;
 import org.opensaml.saml.saml2.metadata.Endpoint;
 import org.opensaml.saml.saml2.metadata.SingleLogoutService;
@@ -59,18 +74,25 @@ import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.CredentialSupport;
-import org.opensaml.security.credential.impl.KeyStoreCredentialResolver;
 import org.opensaml.security.crypto.KeySupport;
 import org.opensaml.xmlsec.encryption.support.DecryptionException;
 import org.opensaml.xmlsec.encryption.support.InlineEncryptedKeyResolver;
 import org.opensaml.xmlsec.keyinfo.impl.StaticKeyInfoCredentialResolver;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.SignatureValidator;
-
 import org.w3c.dom.Element;
 
-import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.*;
-import static com.dotmarketing.util.UtilMethods.isSet;
+import com.dotcms.plugin.saml.v3.config.CredentialProvider;
+import com.dotcms.plugin.saml.v3.config.IdpConfig;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
+import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.UtilMethods;
+
+import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
+import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
+import net.shibboleth.utilities.java.support.resolver.Criterion;
+import net.shibboleth.utilities.java.support.resolver.ResolverException;
+import net.shibboleth.utilities.java.support.security.RandomIdentifierGenerationStrategy;
 
 /**
  * Provides utils method for the Saml
@@ -462,15 +484,17 @@ public class SamlUtils
 		final EncryptedAssertion encryptedAssertion;
 		Assertion assertion = null;
 
-		if ( idpConfig.getOptionBoolean( DOTCMS_SAML_IS_ASSERTION_ENCRYPTED, true ) )
-		{
-			encryptedAssertion = response.getEncryptedAssertions().get( 0 );
-			assertion = decryptAssertion( encryptedAssertion, idpConfig ); /// this is the user message itself
-		}
-		else
-		{
-			assertion = response.getAssertions().get( 0 );
-		}
+		//TODO This is a work around to get a function login and then correct.
+		assertion = response.getAssertions().get( 0 );
+//		if ( idpConfig.getOptionBoolean( DOTCMS_SAML_IS_ASSERTION_ENCRYPTED, true ) )
+//		{
+//			encryptedAssertion = response.getEncryptedAssertions().get( 0 );
+//			assertion = decryptAssertion( encryptedAssertion, idpConfig ); /// this is the user message itself
+//		}
+//		else
+//		{
+//			assertion = response.getAssertions().get( 0 );
+//		}
 
 		return assertion;
 	}
@@ -593,48 +617,11 @@ public class SamlUtils
 		}
 	}
 
-	/**
-	 * Read from the key store using a given password
-	 * 
-	 * @param pathToKeyStore {@link String}
-	 * @param keyStorePassword {@link String}
-	 * @return KeyStore
-	 */
-	public static KeyStore readKeyStoreFromFile( final String pathToKeyStore, final String keyStorePassword, final String keyStoreType )
-	{
-		final KeyStore keystore;
-		InputStream inputStream = null;
-
-		try
-		{
-			keystore = KeyStore.getInstance( keyStoreType );
-			inputStream = InputStreamUtils.getInputStream( pathToKeyStore );
-			keystore.load( inputStream, keyStorePassword.toCharArray() );
-		}
-		catch ( Exception e )
-		{
-			Logger.error( SamlUtils.class, e.getMessage(), e );
-			throw new DotSamlException( "Something went wrong reading keystore", e );
-		}
-		finally
-		{
-			IOUtils.closeQuietly( inputStream );
-		}
-
-		return keystore;
-	}
-
-	//TODO Tom, adapt to new FilesystemCredentialResolver. Public/private key.
+		
 	public static Credential createCredential( final IdpConfig idpConfig )
 	{
-		final Map<String, String> passwordMap = new HashMap<String, String>();
-		final KeyStoreCredentialResolver resolver;
-		final KeyStore keystore;
+		IdpConfigCredentialResolver resolver ;
 		final Criterion criterion;
-		final String password;
-		final String keyStorePath;
-		final String keyEntryId;
-		final String keyStoreEntryPassword;
 		final CriteriaSet criteriaSet;
 		final CredentialProvider customCredentialProvider = idpConfig.getServiceProviderCustomCredentialProvider();
 		Credential credential = null;
@@ -647,21 +634,11 @@ public class SamlUtils
 			}
 			else
 			{
-				keyStorePath = idpConfig.getOptionString( DOTCMS_SAML_KEY_STORE_PATH, "" );
-				password = idpConfig.getOptionString( DOTCMS_SAML_KEY_STORE_PASSWORD, "" );
-				keyEntryId = idpConfig.getOptionString( DOTCMS_SAML_KEY_ENTRY_ID, DOTCMS_SAML_KEY_ENTRY_ID_DEFAULT_VALUE );
-				keyStoreEntryPassword = idpConfig.getOptionString( DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD, password );
+				Logger.debug( SamlUtils.class, "Creating the credentials, using id: " + idpConfig.getId() );
 
-				Logger.debug( SamlUtils.class, "Creating the credentials, using: " + password + ", key store path: " + keyStorePath + ", keyEntryId: " + keyEntryId + ", keyStoreEntryPassword: " + keyStoreEntryPassword );
+				resolver = new IdpConfigCredentialResolver();
 
-				final String keyStoreType = idpConfig.getOptionString( DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType() );
-
-				keystore = readKeyStoreFromFile( keyStorePath, password, keyStoreType );
-
-				passwordMap.put( keyEntryId, keyStoreEntryPassword );
-				resolver = new KeyStoreCredentialResolver( keystore, passwordMap );
-
-				criterion = new EntityIdCriterion( keyEntryId );
+				criterion = new EntityIdCriterion( idpConfig.getId() );
 				criteriaSet = new CriteriaSet();
 				criteriaSet.add( criterion );
 				credential = resolver.resolveSingle( criteriaSet );
@@ -738,7 +715,6 @@ public class SamlUtils
 		return idpCredential;
 	}
 
-	@SuppressWarnings( "unlikely-arg-type" )
 	public static Credential getIdPCredentials( final IdpConfig idpConfig )
 	{
 		if ( !idpCredentialMap.containsKey( idpConfig ) )
@@ -829,77 +805,7 @@ public class SamlUtils
 		}
 	}
 
-	/**
-	 * Check if we can readIdpConfigs the KeyStore from file using the SAML
-	 * properties.
-	 *
-	 * @param samlProperties {@link Properties} with the values needed.
-	 * @return
-	 */
-	//TODO Tom, adapt to new FilesystemCredentialResolver. Public/private key.
-	public static Set<String> validateKeyStore( Properties samlProperties )
-	{
-		Set<String> otherErrors = new HashSet<>();
-
-		final String pathToKeyStore = samlProperties.getProperty( DOTCMS_SAML_KEY_STORE_PATH );
-		final String keyStorePassword = samlProperties.getProperty( DOTCMS_SAML_KEY_STORE_PASSWORD );
-		final String keyStoreType = samlProperties.getProperty( DOTCMS_SAML_KEY_STORE_TYPE, KeyStore.getDefaultType() );
-		final String keyEntryId = UtilMethods.isSet( samlProperties.getProperty( DOTCMS_SAML_KEY_ENTRY_ID ) ) ? samlProperties.getProperty( DOTCMS_SAML_KEY_ENTRY_ID ) : DOTCMS_SAML_KEY_ENTRY_ID_DEFAULT_VALUE;
-		final String keyStoreEntryPassword = ( UtilMethods.isSet( samlProperties.getProperty( DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD ) ) ) ? samlProperties.getProperty( DOTCMS_SAML_KEY_STORE_ENTRY_PASSWORD ) : keyStorePassword;
-		Credential credential = null;
-
-		if ( pathToKeyStore != null && keyStorePassword != null && keyStoreType != null && keyEntryId != null && keyStoreEntryPassword != null )
-		{
-			if ( InputStreamUtils.isResourceFile( pathToKeyStore ) )
-			{
-				Logger.debug( SamlUtils.class, "The " + pathToKeyStore + ", is a file, checking if exists and can readIdpConfigs" );
-
-				final File pathToKeyStoreFile = new File( InputStreamUtils.normalizeFile( pathToKeyStore ) );
-
-				if ( !pathToKeyStoreFile.exists() || !pathToKeyStoreFile.canRead() )
-				{
-					otherErrors.add( "The Key Store path: " + pathToKeyStore + ", does not exists or can not readIdpConfigs." );
-					return otherErrors;
-				}
-
-			}
-
-			try
-			{
-				final KeyStore keystore = readKeyStoreFromFile( pathToKeyStore, keyStorePassword, keyStoreType );
-
-				final Map<String, String> passwordMap = new HashMap<>();
-
-				passwordMap.put( keyEntryId, keyStoreEntryPassword );
-
-				final KeyStoreCredentialResolver resolver = new KeyStoreCredentialResolver( keystore, passwordMap );
-
-				final Criterion criterion = new EntityIdCriterion( keyEntryId );
-				final CriteriaSet criteriaSet = new CriteriaSet();
-
-				criteriaSet.add( criterion );
-				credential = resolver.resolveSingle( criteriaSet );
-
-				if ( null == credential )
-				{
-					otherErrors.add( "Error reading Key Store, please check the: " + DOTCMS_SAML_KEY_ENTRY_ID );
-				}
-
-			}
-			catch ( DotSamlException e )
-			{
-				otherErrors.add( "Error reading Key Store" );
-			}
-			catch ( ResolverException e )
-			{
-				otherErrors.add( "Error reading credentials" );
-			}
-
-		}
-
-		return otherErrors;
-	}
-
+	
 	/**
 	 * Check if the File Path exists, can access and readIdpConfigs.
 	 *
