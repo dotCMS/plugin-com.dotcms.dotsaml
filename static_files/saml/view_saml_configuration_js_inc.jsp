@@ -186,8 +186,8 @@
 					document.getElementById("enabledFalse").checked = true;
 				}
 
-				addEditIdPForm.elements["sPIssuerURL"].value = idp.sPIssuerURL;
-				addEditIdPForm.elements["sPEndpointHostname"].value = idp.sPEndpointHostname;
+				addEditIdPForm.elements["sPIssuerURL"].value = idp.spIssuerURL;
+				addEditIdPForm.elements["sPEndpointHostname"].value = idp.spEndpointHostname;
 
 				dijit.byId("signatureValidationType").set("value", idp.signatureValidationType);
 
