@@ -2,7 +2,10 @@ package com.dotcms.plugin.saml.v3.filter;
 
 import com.dotcms.cms.login.LoginServiceAPI;
 
+import com.dotcms.plugin.saml.v3.config.EndpointHelper;
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
+import com.dotcms.plugin.saml.v3.config.MetaDataHelper;
+import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.service.*;
@@ -81,10 +84,10 @@ public class SamlAccessFilter extends SamlFilter implements Filter
 			// If idpConfig is null, means this site does not need SAML processing
 			if ( idpConfig != null && idpConfig.isEnabled() )
 			{
-				isLogoutNeed = idpConfig.getOptionBoolean( DotSamlConstants.DOTCMS_SAML_IS_LOGOUT_NEED, true );
+				isLogoutNeed = OptionalPropertiesHelper.getOptionBoolean( idpConfig, DotSamlConstants.DOTCMS_SAML_IS_LOGOUT_NEED, true );
 
 				// First, check if the current request is the SP metadata xml.
-				if ( httpServletRequest.getRequestURI().contains( idpConfig.getServiceProviderCustomMetadataPath() ) )
+				if ( httpServletRequest.getRequestURI().contains( MetaDataHelper.getServiceProviderCustomMetadataPath( idpConfig ) ) )
 				{
 					// if its, so print it out in the response and return.
 					super.printMetaData( httpServletRequest, httpServletResponse, idpConfig );
@@ -92,7 +95,7 @@ public class SamlAccessFilter extends SamlFilter implements Filter
 				}
 
 				// check if there is any exception filter path, to avoid to canApply all the logic.
-				if ( !super.checkAccessFilters( httpServletRequest.getRequestURI(), idpConfig.getAccessFilterArray() ) && super.checkIncludePath( httpServletRequest.getRequestURI(), idpConfig.getIncludePathArray(), httpServletRequest ) )
+				if ( !super.checkAccessFilters( httpServletRequest.getRequestURI(), EndpointHelper.getAccessFilterArray( idpConfig ) ) && super.checkIncludePath( httpServletRequest.getRequestURI(), EndpointHelper.getIncludePathArray( idpConfig ), httpServletRequest ) )
 				{
 					// if it is an url to canApply the Saml access logic, determine if the autoLogin is possible
 					// the autologin will works if the SAMLArt (Saml artifact id) is in the request query string
@@ -146,7 +149,7 @@ public class SamlAccessFilter extends SamlFilter implements Filter
 
 				// Starting the logout
 				// if it is logout
-				if ( isLogoutNeed && session != null && super.isLogoutRequest( httpServletRequest.getRequestURI(), idpConfig.getLogoutPathArray() ) )
+				if ( isLogoutNeed && session != null && super.isLogoutRequest( httpServletRequest.getRequestURI(), EndpointHelper.getLogoutPathArray( idpConfig ) ) )
 				{
 					if ( super.doLogout( httpServletResponse, httpServletRequest, session, idpConfig ) )
 					{

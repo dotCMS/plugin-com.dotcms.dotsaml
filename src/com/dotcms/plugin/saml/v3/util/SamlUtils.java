@@ -14,6 +14,17 @@ import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.HTTPS_SCHEMA;
 import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.HTTP_SCHEMA;
 import static com.dotmarketing.util.UtilMethods.isSet;
 
+import com.dotcms.plugin.saml.v3.config.CredentialHelper;
+import com.dotcms.plugin.saml.v3.config.CredentialProvider;
+import com.dotcms.plugin.saml.v3.config.EndpointHelper;
+import com.dotcms.plugin.saml.v3.config.IdpConfig;
+import com.dotcms.plugin.saml.v3.config.MetaDataHelper;
+import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
+
+import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.UtilMethods;
+
 import java.io.File;
 import java.io.StringWriter;
 import java.net.URI;
@@ -36,6 +47,12 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
+import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
+import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
+import net.shibboleth.utilities.java.support.resolver.Criterion;
+import net.shibboleth.utilities.java.support.resolver.ResolverException;
+import net.shibboleth.utilities.java.support.security.RandomIdentifierGenerationStrategy;
 
 import org.joda.time.DateTime;
 import org.opensaml.core.criterion.EntityIdCriterion;
@@ -81,18 +98,6 @@ import org.opensaml.xmlsec.keyinfo.impl.StaticKeyInfoCredentialResolver;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.SignatureValidator;
 import org.w3c.dom.Element;
-
-import com.dotcms.plugin.saml.v3.config.CredentialProvider;
-import com.dotcms.plugin.saml.v3.config.IdpConfig;
-import com.dotcms.plugin.saml.v3.exception.DotSamlException;
-import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.UtilMethods;
-
-import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
-import net.shibboleth.utilities.java.support.resolver.Criterion;
-import net.shibboleth.utilities.java.support.resolver.ResolverException;
-import net.shibboleth.utilities.java.support.security.RandomIdentifierGenerationStrategy;
 
 /**
  * Provides utils method for the Saml
@@ -237,7 +242,7 @@ public class SamlUtils
 		authnRequest.setDestination( ipDSSODestination );
 
 		// Get the protocol from the user, or use a default one: SAMLConstants.SAML2_ARTIFACT_BINDING_URI
-		authnRequest.setProtocolBinding( idpConfig.getOptionString( DOTCMS_SAML_PROTOCOL_BINDING, SAMLConstants.SAML2_ARTIFACT_BINDING_URI ) );
+		authnRequest.setProtocolBinding( OptionalPropertiesHelper.getOptionString( idpConfig, DOTCMS_SAML_PROTOCOL_BINDING, SAMLConstants.SAML2_ARTIFACT_BINDING_URI ) );
 
 		// this is the address that receives the SAML Assertion, after a successful authentication on the IdP.
 		authnRequest.setAssertionConsumerServiceURL( getAssertionConsumerEndpoint( request, idpConfig ) );
@@ -251,7 +256,7 @@ public class SamlUtils
 		authnRequest.setNameIDPolicy( buildNameIdPolicy( idpConfig ) );
 		authnRequest.setRequestedAuthnContext( buildRequestedAuthnContext( idpConfig ) );
 		authnRequest.setVersion( SAMLVersion.VERSION_20 );
-		authnRequest.setForceAuthn( idpConfig.getOptionBoolean( DOTCMS_SAML_FORCE_AUTHN, false ) );
+		authnRequest.setForceAuthn( OptionalPropertiesHelper.getOptionBoolean( idpConfig, DOTCMS_SAML_FORCE_AUTHN, false ) );
 
 		return authnRequest;
 	}
@@ -263,10 +268,10 @@ public class SamlUtils
 	 */
 	public static String getIPDSSODestination( final IdpConfig idpConfig )
 	{
-		final String redirectIdentityProviderDestinationSSOURL = idpConfig.getIdentityProviderDestinationSSOURL();
+		final String redirectIdentityProviderDestinationSSOURL = MetaDataHelper.getIdentityProviderDestinationSSOURL( idpConfig );
 
 		// first check the meta data info., secondly the idpConfig
-		return ( null != redirectIdentityProviderDestinationSSOURL ) ? redirectIdentityProviderDestinationSSOURL : idpConfig.getOptionString( DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL, null );
+		return ( null != redirectIdentityProviderDestinationSSOURL ) ? redirectIdentityProviderDestinationSSOURL : OptionalPropertiesHelper.getOptionString( idpConfig, DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL, null );
 	}
 
 	/**
@@ -276,15 +281,15 @@ public class SamlUtils
 	 */
 	public static String getIPDSLODestination( final IdpConfig idpConfig )
 	{
-		final String redirectIdentityProviderDestinationSLOURL = idpConfig.getIdentityProviderDestinationSLOURL();
+		final String redirectIdentityProviderDestinationSLOURL = MetaDataHelper.getIdentityProviderDestinationSLOURL( idpConfig );
 
 		// first check the meta data info., secondly the idpConfig
-		return ( null != redirectIdentityProviderDestinationSLOURL ) ? redirectIdentityProviderDestinationSLOURL : idpConfig.getOptionString( DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SLO_URL, null );
+		return ( null != redirectIdentityProviderDestinationSLOURL ) ? redirectIdentityProviderDestinationSLOURL : OptionalPropertiesHelper.getOptionString( idpConfig, DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SLO_URL, null );
 	}
 
 	public static String getAssertionConsumerEndpoint( final HttpServletRequest request, final IdpConfig idpConfig )
 	{
-		final String assertionConsumerEndpoint = idpConfig.getAssertionConsumerEndpoint();
+		final String assertionConsumerEndpoint = EndpointHelper.getAssertionConsumerEndpoint( idpConfig );
 
 		// this is the same original request. Consequently where should be redirected when the authentication is done.
 		final StringBuilder builder = new StringBuilder( request.getRequestURI() );
@@ -328,7 +333,7 @@ public class SamlUtils
 	 */
 	public static String getSPIssuerValue( final IdpConfig idpConfig )
 	{
-		return idpConfig.getOptionString( DOTCMS_SAML_SERVICE_PROVIDER_ISSUER, getSiteName( idpConfig ) );
+		return OptionalPropertiesHelper.getOptionString( idpConfig, DOTCMS_SAML_SERVICE_PROVIDER_ISSUER, getSiteName( idpConfig ) );
 	}
 
 	private static String getSiteName( final IdpConfig idpConfig )
@@ -341,7 +346,7 @@ public class SamlUtils
 			return !( defaultHost.trim().startsWith( HTTP_SCHEMA ) || defaultHost.trim().startsWith( HTTPS_SCHEMA ) ) ? HTTPS_SCHEMA + defaultHost : defaultHost;
 		}
 
-		return idpConfig.getOptionString( DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, HTTPS_SCHEMA ) + "://" + SPIIssuerResolver.getDefaultServiceProviderIssuer().getHostname();
+		return OptionalPropertiesHelper.getOptionString( idpConfig, DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, HTTPS_SCHEMA ) + "://" + SPIIssuerResolver.getDefaultServiceProviderIssuer().getHostname();
 	}
 
 	/**
@@ -354,14 +359,14 @@ public class SamlUtils
 		final NameIDPolicy nameIDPolicy = buildSAMLObject( NameIDPolicy.class );
 
 		// True if you want that when the  user does not exists, allows to create
-		nameIDPolicy.setAllowCreate( idpConfig.getOptionBoolean( DOTCMS_SAML_POLICY_ALLOW_CREATE, false ) );
+		nameIDPolicy.setAllowCreate( OptionalPropertiesHelper.getOptionBoolean( idpConfig, DOTCMS_SAML_POLICY_ALLOW_CREATE, false ) );
 
 		// todo: should set the SPNameQualifier
 
 		// it supports several formats, such as Kerberos, email, Windows Domain Qualified Name, etc.
 		// “The transient identifier is a random identifier that does not have any connection to the user.
 		// A transient identifier will be different for every time the user signs in.”
-		nameIDPolicy.setFormat( idpConfig.getOptionString( DOTCMS_SAML_NAME_ID_POLICY_FORMAT, NameIDType.PERSISTENT ) );
+		nameIDPolicy.setFormat( OptionalPropertiesHelper.getOptionString( idpConfig, DOTCMS_SAML_NAME_ID_POLICY_FORMAT, NameIDType.PERSISTENT ) );
 
 		return nameIDPolicy;
 	}
@@ -391,7 +396,7 @@ public class SamlUtils
 
 		final AuthnContextClassRef passwordAuthnContextClassRef = buildSAMLObject( AuthnContextClassRef.class );
 
-		passwordAuthnContextClassRef.setAuthnContextClassRef( idpConfig.getOptionString( DOTCMS_SAML_AUTHN_CONTEXT_CLASS_REF, AuthnContext.PASSWORD_AUTHN_CTX ) );
+		passwordAuthnContextClassRef.setAuthnContextClassRef( OptionalPropertiesHelper.getOptionString( idpConfig, DOTCMS_SAML_AUTHN_CONTEXT_CLASS_REF, AuthnContext.PASSWORD_AUTHN_CTX ) );
 
 		requestedAuthnContext.getAuthnContextClassRefs().add( passwordAuthnContextClassRef );
 
@@ -407,7 +412,7 @@ public class SamlUtils
 	{
 		AuthnContextComparisonTypeEnumeration comparisonTypeEnumeration = AuthnContextComparisonTypeEnumeration.MINIMUM;
 
-		final String enumName = idpConfig.getOptionString( DOTCMS_SAML_AUTHN_COMPARISON_TYPE, null );
+		final String enumName = OptionalPropertiesHelper.getOptionString( idpConfig, DOTCMS_SAML_AUTHN_COMPARISON_TYPE, null );
 
 		if ( isSet( enumName ) )
 		{
@@ -486,7 +491,7 @@ public class SamlUtils
 
 		//TODO This is a work around to get a function login and then correct.
 		assertion = response.getAssertions().get( 0 );
-//		if ( idpConfig.getOptionBoolean( DOTCMS_SAML_IS_ASSERTION_ENCRYPTED, true ) )
+//		if ( OptionalPropertiesHelper.getOptionBoolean( idpConfig, DOTCMS_SAML_IS_ASSERTION_ENCRYPTED, true ) )
 //		{
 //			encryptedAssertion = response.getEncryptedAssertions().get( 0 );
 //			assertion = decryptAssertion( encryptedAssertion, idpConfig ); /// this is the user message itself
@@ -566,7 +571,7 @@ public class SamlUtils
 	{
 		final SAMLSignatureProfileValidator profileValidator;
 
-		if ( idpConfig.isVerifyResponseSignatureNeeded() && !assertion.isSigned() )
+		if ( CredentialHelper.isVerifyResponseSignatureNeeded( idpConfig ) && !assertion.isSigned() )
 		{
 			Logger.error( SamlUtils.class, "The assertion is not signed..." );
 			throw new DotSamlException( "The SAML Assertion was not signed" );
@@ -574,7 +579,7 @@ public class SamlUtils
 
 		try
 		{
-			if ( idpConfig.isVerifySignatureProfileNeeded() )
+			if ( CredentialHelper.isVerifySignatureProfileNeeded( idpConfig ) )
 			{
 				Logger.debug( SamlUtils.class, "Doing Profile Validation" );
 				profileValidator = new SAMLSignatureProfileValidator();
@@ -587,12 +592,12 @@ public class SamlUtils
 			}
 
 			// Ask on the config if the app wants signature validator
-			if ( idpConfig.isVerifySignatureCredentialsNeeded() )
+			if ( CredentialHelper.isVerifySignatureCredentialsNeeded( idpConfig ) )
 			{
-				if ( null != idpConfig.getSigningCredentials() )
+				if ( null != MetaDataHelper.getSigningCredentials( idpConfig ) )
 				{
-					Logger.debug( SamlUtils.class, "Validating the signatures: " + idpConfig.getSigningCredentials() );
-					validateSignature( assertion, idpConfig.getSigningCredentials() );
+					Logger.debug( SamlUtils.class, "Validating the signatures: " + MetaDataHelper.getSigningCredentials( idpConfig ) );
+					validateSignature( assertion, MetaDataHelper.getSigningCredentials( idpConfig ) );
 					Logger.debug( SamlUtils.class, "Doing signatures validation" );
 				}
 				else
@@ -623,7 +628,7 @@ public class SamlUtils
 		IdpConfigCredentialResolver resolver ;
 		final Criterion criterion;
 		final CriteriaSet criteriaSet;
-		final CredentialProvider customCredentialProvider = idpConfig.getServiceProviderCustomCredentialProvider();
+		final CredentialProvider customCredentialProvider = CredentialHelper.getServiceProviderCustomCredentialProvider( idpConfig );
 		Credential credential = null;
 
 		try
@@ -685,7 +690,7 @@ public class SamlUtils
 	private static Credential createIdpCredential( final IdpConfig idpConfig )
 	{
 		KeyPair keyPair = null;
-		final CredentialProvider customCredentialProvider = idpConfig.getIdProviderCustomCredentialProvider();
+		final CredentialProvider customCredentialProvider = CredentialHelper.getIdProviderCustomCredentialProvider( idpConfig );
 		Credential idpCredential = null;
 
 		try

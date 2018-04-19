@@ -1,7 +1,7 @@
 package com.dotcms.plugin.saml.v3.handler;
 
+import com.dotcms.plugin.saml.v3.config.CredentialHelper;
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
-import com.dotcms.plugin.saml.v3.config.IdpConfigHelper;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 
@@ -92,7 +92,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 
 		Logger.debug( this, "Decrypted Assertion: " + toXMLObjectString( assertion ) );
 
-		if ( idpConfig.isVerifyAssertionSignatureNeeded() )
+		if ( CredentialHelper.isVerifyAssertionSignatureNeeded( idpConfig ) )
 		{
 			Logger.debug( this, "Doing the verification assertion signature." );
 

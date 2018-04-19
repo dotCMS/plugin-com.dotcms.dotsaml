@@ -1,6 +1,8 @@
 package com.dotcms.plugin.saml.v3.meta;
 
+import com.dotcms.plugin.saml.v3.config.EndpointHelper;
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
+import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.util.SamlUtils;
@@ -82,7 +84,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	public MetadataBean parse( final InputStream inputStream, final IdpConfig idpConfig ) throws Exception
 	{
 		final EntityDescriptor descriptor = unmarshall( inputStream );
-		final String protocol = idpConfig.getOptionString( DotSamlConstants.DOT_SAML_IDP_METADATA_PROTOCOL, DotSamlConstants.DOT_SAML_IDP_METADATA_PROTOCOL_DEFAULT_VALUE );
+		final String protocol = OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_IDP_METADATA_PROTOCOL, DotSamlConstants.DOT_SAML_IDP_METADATA_PROTOCOL_DEFAULT_VALUE );
 		final IDPSSODescriptor idpDescriptor = descriptor.getIDPSSODescriptor( protocol );
 
 		Logger.info( this, "Parsing the Id Provider, with the entityId: " + descriptor.getEntityID() );
@@ -141,8 +143,8 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 		Logger.info( this, "Creating the MetaData for the site: " + idpConfig.getSpEndpointHostname() );
 		Logger.debug( this, "Generating the Entity Provider Descriptor for: " + descriptor.getEntityID() );
 
-		spssoDescriptor.setWantAssertionsSigned( idpConfig.getOptionBoolean( DotSamlConstants.DOTCMS_SAML_WANT_ASSERTIONS_SIGNED, true ) );
-		spssoDescriptor.setAuthnRequestsSigned( idpConfig.getOptionBoolean( DotSamlConstants.DOTCMS_SAML_AUTHN_REQUESTS_SIGNED, true ) );
+		spssoDescriptor.setWantAssertionsSigned( OptionalPropertiesHelper.getOptionBoolean( idpConfig, DotSamlConstants.DOTCMS_SAML_WANT_ASSERTIONS_SIGNED, true ) );
+		spssoDescriptor.setAuthnRequestsSigned( OptionalPropertiesHelper.getOptionBoolean( idpConfig, DotSamlConstants.DOTCMS_SAML_AUTHN_REQUESTS_SIGNED, true ) );
 		spssoDescriptor.addSupportedProtocol( SAMLConstants.SAML20_NS );
 
 		Logger.debug( this, "Setting the key descriptors for: " + descriptor.getEntityID() );
@@ -162,9 +164,9 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 		 * assertionConsumerServiceBuilder));
 		 */
 
-		spssoDescriptor.getAssertionConsumerServices().add( this.createAssertionConsumerService( 0, SAMLConstants.SAML2_POST_BINDING_URI, idpConfig.getAssertionConsumerEndpoint(), assertionConsumerServiceBuilder ) );
+		spssoDescriptor.getAssertionConsumerServices().add( this.createAssertionConsumerService( 0, SAMLConstants.SAML2_POST_BINDING_URI, EndpointHelper.getAssertionConsumerEndpoint( idpConfig ), assertionConsumerServiceBuilder ) );
 
-		spssoDescriptor.getSingleLogoutServices().add( this.createSingleLogoutService( SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI, idpConfig.getSingleLogoutEndpoint(), singleLogoutServiceBuilder ) );
+		spssoDescriptor.getSingleLogoutServices().add( this.createSingleLogoutService( SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI, EndpointHelper.getSingleLogoutEndpoint( idpConfig ), singleLogoutServiceBuilder ) );
 
 		/*
 		 * spssoDescriptor.getAssertionConsumerServices().add
@@ -243,7 +245,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	{
 		final SAMLObjectBuilder<NameIDFormat> nameIDFormatBuilder = (SAMLObjectBuilder<NameIDFormat>) this.xmlObjectBuilderFactory.getBuilder( NameIDFormat.DEFAULT_ELEMENT_NAME );
 
-		final String[] formats = idpConfig.getOptionStringArray( DotSamlConstants.DOTCMS_SAML_NAME_ID_POLICY_FORMAT, new String[] { NameIDType.PERSISTENT } );
+		final String[] formats = OptionalPropertiesHelper.getOptionStringArray( idpConfig, DotSamlConstants.DOTCMS_SAML_NAME_ID_POLICY_FORMAT, new String[] { NameIDType.PERSISTENT } );
 
 		for ( String format : formats )
 		{
@@ -278,7 +280,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	@SuppressWarnings( "unchecked" )
 	protected void setKeyDescriptors( final SPSSODescriptor spssoDescriptor, final IdpConfig idpConfig )
 	{
-		final boolean isEncryptedDescriptor = idpConfig.getOptionBoolean( DotSamlConstants.DOTCMS_SAML_USE_ENCRYPTED_DESCRIPTOR, false );
+		final boolean isEncryptedDescriptor = OptionalPropertiesHelper.getOptionBoolean( idpConfig, DotSamlConstants.DOTCMS_SAML_USE_ENCRYPTED_DESCRIPTOR, false );
 		final SAMLObjectBuilder<KeyDescriptor> keyDescriptorBuilder = (SAMLObjectBuilder<KeyDescriptor>) this.xmlObjectBuilderFactory.getBuilder( KeyDescriptor.DEFAULT_ELEMENT_NAME );
 		final KeyDescriptor signKeyDescriptor;
 		KeyDescriptor encryptedKeyDescriptor = null;

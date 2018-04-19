@@ -1,7 +1,7 @@
 package com.dotcms.plugin.saml.v3.handler;
 
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
-import com.dotcms.plugin.saml.v3.config.IdpConfigHelper;
+import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 
 import com.dotmarketing.util.Logger;
@@ -32,7 +32,7 @@ public class AssertionResolverHandlerFactory implements Serializable
 
 		try
 		{
-			className = (String) idpConfig.getOptionString( DotSamlConstants.DOTCMS_SAML_ASSERTION_RESOLVER_HANDLER_CLASS_NAME );
+			className = (String) OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOTCMS_SAML_ASSERTION_RESOLVER_HANDLER_CLASS_NAME );
 		}
 		catch ( Exception exception )
 		{

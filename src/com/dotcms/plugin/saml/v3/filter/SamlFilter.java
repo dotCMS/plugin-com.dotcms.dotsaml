@@ -3,6 +3,7 @@ package com.dotcms.plugin.saml.v3.filter;
 import com.dotcms.cms.login.LoginServiceAPI;
 
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
+import com.dotcms.plugin.saml.v3.config.MetaDataHelper;
 import com.dotcms.plugin.saml.v3.exception.NotNullEmailAllowedException;
 import com.dotcms.plugin.saml.v3.exception.SamlUnauthorizedException;
 import com.dotcms.plugin.saml.v3.init.Initializer;
@@ -375,7 +376,7 @@ public class SamlFilter implements Filter
 	protected boolean printMetaData( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig ) throws ServletException
 	{
 		// First, get the Entity descriptor.
-		final EntityDescriptor descriptor = idpConfig.getMetaDescriptorService().getServiceProviderEntityDescriptor( idpConfig );
+		final EntityDescriptor descriptor = MetaDataHelper.getMetaDescriptorService( idpConfig ).getServiceProviderEntityDescriptor( idpConfig );
 		Writer writer = null;
 		boolean isOK = false;
 

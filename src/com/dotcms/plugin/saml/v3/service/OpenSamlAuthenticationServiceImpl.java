@@ -2,6 +2,7 @@ package com.dotcms.plugin.saml.v3.service;
 
 import com.dotcms.plugin.saml.v3.beans.AttributesBean;
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
+import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
 import com.dotcms.plugin.saml.v3.config.SamlSiteValidator;
 import com.dotcms.plugin.saml.v3.exception.AttributesNotFoundException;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
@@ -162,8 +163,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
 		if ( includeIDPRoles && attributesBean.isAddRoles() && null != attributesBean.getRoles() && null != attributesBean.getRoles().getAttributeValues() && attributesBean.getRoles().getAttributeValues().size() > 0 )
 		{
-			final String removeRolePrefix = idpConfig.getOptionString( DOT_SAML_REMOVE_ROLES_PREFIX, StringUtils.EMPTY );
-			final String[] rolePatterns = idpConfig.getOptionStringArray( DOTCMS_SAML_INCLUDE_ROLES_PATTERN, null );
+			final String removeRolePrefix = OptionalPropertiesHelper.getOptionString( idpConfig, DOT_SAML_REMOVE_ROLES_PREFIX, StringUtils.EMPTY );
+			final String[] rolePatterns = OptionalPropertiesHelper.getOptionStringArray( idpConfig, DOTCMS_SAML_INCLUDE_ROLES_PATTERN, null );
 
 			Logger.debug( this, "Role Patterns: " + this.toString( rolePatterns ) + ", remove role prefix: " + removeRolePrefix );
 
@@ -427,7 +428,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
 	private String getBuildRoles( final IdpConfig idpConfig )
 	{
-		final String buildRolesStrategy = idpConfig.getOptionString( DOTCMS_SAML_BUILD_ROLES, DOTCMS_SAML_BUILD_ROLES_ALL_VALUE );
+		final String buildRolesStrategy = OptionalPropertiesHelper.getOptionString( idpConfig, DOTCMS_SAML_BUILD_ROLES, DOTCMS_SAML_BUILD_ROLES_ALL_VALUE );
 
 		return SamlSiteValidator.checkBuildRoles( buildRolesStrategy ) ? buildRolesStrategy : this.getDefaultBuildRoles( buildRolesStrategy );
 	}
@@ -537,17 +538,17 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 		this.addRolesFromIDP( user, attributesBean, idpConfig, buildRolesStrategy );
 
 		// Add SAML User role
-		addRole( user, idpConfig.getOptionString( DOTCMS_SAML_USER_ROLE, "SAML User" ), true, true );
+		addRole( user, OptionalPropertiesHelper.getOptionString( idpConfig, DOTCMS_SAML_USER_ROLE, "SAML User" ), true, true );
 		Logger.debug( this, "Default SAML User role has been assigned" );
 
 		// the only strategy that does not include the saml user role is the "idp"
 		if ( !DOTCMS_SAML_BUILD_ROLES_IDP_VALUE.equalsIgnoreCase( buildRolesStrategy ) )
 		{
 			// Add DOTCMS_SAML_OPTIONAL_USER_ROLE
-			if ( idpConfig.getOptionString( DOTCMS_SAML_OPTIONAL_USER_ROLE, null ) != null )
+			if ( OptionalPropertiesHelper.getOptionString( idpConfig, DOTCMS_SAML_OPTIONAL_USER_ROLE, null ) != null )
 			{
-				addRole( user, idpConfig.getOptionString( DOTCMS_SAML_OPTIONAL_USER_ROLE, null ), false, false );
-				Logger.debug( this, "Optional user role: " + idpConfig.getOptionString( DOTCMS_SAML_OPTIONAL_USER_ROLE, null ) + " has been assigned" );
+				addRole( user, OptionalPropertiesHelper.getOptionString( idpConfig, DOTCMS_SAML_OPTIONAL_USER_ROLE, null ), false, false );
+				Logger.debug( this, "Optional user role: " + OptionalPropertiesHelper.getOptionString( idpConfig, DOTCMS_SAML_OPTIONAL_USER_ROLE, null ) + " has been assigned" );
 			}
 		}
 		else
@@ -633,13 +634,13 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 	// resolve the attributes from the assertion resolved from the OpenSaml artifact resolver via
 	protected AttributesBean resolveAttributes( final Assertion assertion, final IdpConfig idpConfig ) throws AttributesNotFoundException
 	{
-		final String emailField = idpConfig.getOptionString( DOT_SAML_EMAIL_ATTRIBUTE, "mail" );
-		final String firstNameField = idpConfig.getOptionString( DOT_SAML_FIRSTNAME_ATTRIBUTE, "givenName" );
-		final String lastNameField = idpConfig.getOptionString( DOT_SAML_LASTNAME_ATTRIBUTE, "sn" );
-		final String rolesField = idpConfig.getOptionString( DOT_SAML_ROLES_ATTRIBUTE, "authorizations" );
-		final String firstNameForNullValue = idpConfig.getOptionString( DOT_SAML_FIRSTNAME_ATTRIBUTE_NULL_VALUE, null );
-		final String lastNameForNullValue = idpConfig.getOptionString( DOT_SAML_LASTNAME_ATTRIBUTE_NULL_VALUE, null );
-		final boolean allowNullEmail = idpConfig.getOptionBoolean( DOT_SAML_EMAIL_ATTRIBUTE_ALLOW_NULL, true );
+		final String emailField = OptionalPropertiesHelper.getOptionString( idpConfig, DOT_SAML_EMAIL_ATTRIBUTE, "mail" );
+		final String firstNameField = OptionalPropertiesHelper.getOptionString( idpConfig, DOT_SAML_FIRSTNAME_ATTRIBUTE, "givenName" );
+		final String lastNameField = OptionalPropertiesHelper.getOptionString( idpConfig, DOT_SAML_LASTNAME_ATTRIBUTE, "sn" );
+		final String rolesField = OptionalPropertiesHelper.getOptionString( idpConfig, DOT_SAML_ROLES_ATTRIBUTE, "authorizations" );
+		final String firstNameForNullValue = OptionalPropertiesHelper.getOptionString( idpConfig, DOT_SAML_FIRSTNAME_ATTRIBUTE_NULL_VALUE, null );
+		final String lastNameForNullValue = OptionalPropertiesHelper.getOptionString( idpConfig, DOT_SAML_LASTNAME_ATTRIBUTE_NULL_VALUE, null );
+		final boolean allowNullEmail = OptionalPropertiesHelper.getOptionBoolean( idpConfig, DOT_SAML_EMAIL_ATTRIBUTE_ALLOW_NULL, true );
 
 		final String customConfiguration = new StringBuilder( DOT_SAML_EMAIL_ATTRIBUTE ).append( "=" ).append( emailField ).append( "," ).append( DOT_SAML_FIRSTNAME_ATTRIBUTE ).append( "=" ).append( firstNameField ).append( "," ).append( DOT_SAML_LASTNAME_ATTRIBUTE ).append( "=" ).append( lastNameField ).append( "," ).append( DOT_SAML_ROLES_ATTRIBUTE ).append( "=" ).append( rolesField ).toString();
 
