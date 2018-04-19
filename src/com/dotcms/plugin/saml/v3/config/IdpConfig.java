@@ -50,11 +50,6 @@ public class IdpConfig implements OptionalPropertiesHelper, MetaDataHelper, Endp
 		this.optionalProperties = new Properties();
 	}
 
-	public boolean contains( String string )
-	{
-		return getSearchable().toLowerCase().contains( string.trim().toLowerCase() );
-	}
-
 	@Override
 	public boolean equals( Object object )
 	{
@@ -299,37 +294,6 @@ public class IdpConfig implements OptionalPropertiesHelper, MetaDataHelper, Endp
 	public File getPublicCert()
 	{
 		return publicCert;
-	}
-
-	private String getSearchable()
-	{
-		StringBuilder stringBuilder = new StringBuilder();
-
-		// Config name.
-		stringBuilder.append( this.idpName );
-		stringBuilder.append( " " );
-
-		// SP Issuer URL.
-		stringBuilder.append( this.sPIssuerURL );
-		stringBuilder.append( " " );
-
-		// SP Endpoint Hostname.
-		stringBuilder.append( this.sPEndpointHostname );
-		stringBuilder.append( " " );
-
-		// Sites related to the IdP.
-		for ( Map.Entry<String,String> entry : this.sites.entrySet() )
-		{
-			stringBuilder.append( entry.getKey() );
-			stringBuilder.append( " " );
-			stringBuilder.append( entry.getValue() );
-			stringBuilder.append( " " );
-		}
-
-		// Any override parameter.
-		stringBuilder.append( this.optionalProperties );
-
-		return stringBuilder.toString();
 	}
 
 	/**
