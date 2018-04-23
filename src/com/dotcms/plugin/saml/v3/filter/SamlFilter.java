@@ -61,7 +61,7 @@ public class SamlFilter implements Filter
 	protected static final String TEXT_XML = "text/xml";
 	public static final String REFERRER_PARAMETER_KEY = "referrer";
 	public static final String ORIGINAL_REQUEST = "original_request";
-	protected final SamlAuthenticationService samlAuthenticationService;
+	public final SamlAuthenticationService samlAuthenticationService;
 	protected final MetaDataXMLPrinter metaDataXMLPrinter;
 	protected final HostWebAPI hostWebAPI;
 	protected final LanguageWebAPI languageWebAPI;
@@ -98,28 +98,29 @@ public class SamlFilter implements Filter
 	}
 
 	@Override
-	public void init(final FilterConfig filterConfig) throws ServletException {
-		
-		Logger.debug(this, "Going to call the Initializer: " + this.initializer);
+	public void init( final FilterConfig filterConfig ) throws ServletException
+	{
+		Logger.debug( this, "Going to call the Initializer: " + this.initializer );
 
-		if (!this.initializer.isInitializationDone()) {
-
-			try {
-				this.initializer.init(Collections.emptyMap());
-			} catch (Throwable e) {
-
-				Logger.error(this, "SAML ERROR: " + e.getMessage(), e);
+		if ( !this.initializer.isInitializationDone() )
+		{
+			try
+			{
+				this.initializer.init( Collections.emptyMap() );
 			}
-		} else {
-
-			Logger.debug(this, "The initializer was already init: " + this.initializer);
+			catch ( Throwable e )
+			{
+				Logger.error( this, "SAML ERROR: " + e.getMessage(), e );
+			}
+		}
+		else
+		{
+			Logger.debug( this, "The initializer was already init: " + this.initializer );
 		}
 	}
 
 	/**
-	 * This method checks if some path does not wants to be treatment by the
-	 * {@link SamlFilter} An example of exception might be the
-	 * destroy.jsp, so on.
+	 * This method checks if some path does not wants to be treatment by the {@link SamlFilter} An example of exception might be the destroy.jsp, so on.
 	 * 
 	 * @param uri {@link String}
 	 * @param filterPaths {@link String} array
@@ -309,7 +310,7 @@ public class SamlFilter implements Filter
 		return isLogoutRequest;
 	}
 
-	protected void doRequestLoginSecurityLog( final HttpServletRequest request, final IdpConfig idpConfig )
+	public void doRequestLoginSecurityLog( final HttpServletRequest request, final IdpConfig idpConfig )
 	{
 		try
 		{
@@ -348,10 +349,8 @@ public class SamlFilter implements Filter
 	/**
 	 * Return true if the user is not logged. Work for FE and BE
 	 * 
-	 * @param request
-	 *            {@link HttpServletRequest}
-	 * @param session
-	 *            {@link HttpSession}
+	 * @param request {@link HttpServletRequest}
+	 * @param session {@link HttpSession}
 	 * @return boolean
 	 */
 	protected boolean isNotLogged( final HttpServletRequest request, final HttpSession session )
@@ -373,7 +372,7 @@ public class SamlFilter implements Filter
 		return isNotLogged;
 	}
 
-	protected boolean printMetaData( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig ) throws ServletException
+	public boolean printMetaData( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig ) throws ServletException
 	{
 		// First, get the Entity descriptor.
 		final EntityDescriptor descriptor = MetaDataHelper.getMetaDescriptorService( idpConfig ).getServiceProviderEntityDescriptor( idpConfig );
@@ -404,7 +403,7 @@ public class SamlFilter implements Filter
 		return isOK;
 	}
 
-	protected AutoLoginResult doAutoLogin( final HttpServletRequest request, final HttpServletResponse response, final HttpSession session, final IdpConfig idpConfig ) throws  DotDataException, IOException,JSONException
+	protected AutoLoginResult doAutoLogin( final HttpServletRequest request, final HttpServletResponse response, final HttpSession session, final IdpConfig idpConfig ) throws DotDataException, IOException, JSONException
 	{
 		AutoLoginResult autoLogin = new AutoLoginResult( session, false );
 
