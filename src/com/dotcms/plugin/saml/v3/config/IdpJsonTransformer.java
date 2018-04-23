@@ -54,7 +54,7 @@ public class IdpJsonTransformer
 		{
 			for ( String key : properties.stringPropertyNames() )
 			{
-				jsonObject.put( key, properties.getProperty( key ) );
+				jsonObject.put( key.trim(), properties.getProperty( key.trim() ) );
 			}
 		}
 
@@ -71,7 +71,7 @@ public class IdpJsonTransformer
 			String key = (String) keys.next();
 			String value = jsonObject.getString( key );
 
-			properties.setProperty( key, value );
+			properties.setProperty( key.trim(), value.trim() );
 		}
 
 		return properties;
@@ -81,15 +81,15 @@ public class IdpJsonTransformer
 	{
 		JSONObject jsonObject = new JSONObject();
 
-		jsonObject.put( "id", idpConfig.getId() );
-		jsonObject.put( "idpName", idpConfig.getIdpName() );
+		jsonObject.put( "id", idpConfig.getId().trim() );
+		jsonObject.put( "idpName", idpConfig.getIdpName().trim() );
 		jsonObject.put( "enabled", idpConfig.isEnabled() );
-		jsonObject.put( "sPIssuerURL", idpConfig.getSpIssuerURL() );
-		jsonObject.put( "sPEndpointHostname", idpConfig.getSpEndpointHostname() );
-		jsonObject.put( "privateKey", getCanonicalPathIfExists( idpConfig.getPrivateKey() ) );
-		jsonObject.put( "publicCert", getCanonicalPathIfExists( idpConfig.getPublicCert() ) );
-		jsonObject.put( "idPMetadataFile", getCanonicalPathIfExists( idpConfig.getIdPMetadataFile() ) );
-		jsonObject.put( "signatureValidationType", idpConfig.getSignatureValidationType() );
+		jsonObject.put( "sPIssuerURL", idpConfig.getSpIssuerURL().trim() );
+		jsonObject.put( "sPEndpointHostname", idpConfig.getSpEndpointHostname().trim() );
+		jsonObject.put( "privateKey", getCanonicalPathIfExists( idpConfig.getPrivateKey() ).trim() );
+		jsonObject.put( "publicCert", getCanonicalPathIfExists( idpConfig.getPublicCert() ).trim() );
+		jsonObject.put( "idPMetadataFile", getCanonicalPathIfExists( idpConfig.getIdPMetadataFile() ).trim() );
+		jsonObject.put( "signatureValidationType", idpConfig.getSignatureValidationType().trim() );
 		jsonObject.put( "optionalProperties", getJsonObjectFromProperties( idpConfig.getOptionalProperties() ) );
 		jsonObject.put( "sites", SiteJsonTransformer.getJsonObjecFromtMap( idpConfig.getSites() ) );
 
@@ -100,15 +100,15 @@ public class IdpJsonTransformer
 	{
 		IdpConfig idpConfig = new IdpConfig();
 
-		idpConfig.setId( jsonObject.getString( "id" ) );
-		idpConfig.setIdpName( jsonObject.getString( "idpName" ) );
+		idpConfig.setId( jsonObject.getString( "id" ).trim() );
+		idpConfig.setIdpName( jsonObject.getString( "idpName" ).trim() );
 		idpConfig.setEnabled( jsonObject.getBoolean( "enabled" ) );
-		idpConfig.setSpIssuerURL( jsonObject.getString( "sPIssuerURL" ) );
-		idpConfig.setSpEndpointHostname( jsonObject.getString( "sPEndpointHostname" ) );
-		idpConfig.setPrivateKey( getFileFromCanonicalPath( jsonObject.getString( "privateKey" ) ) );
-		idpConfig.setPublicCert( getFileFromCanonicalPath( jsonObject.getString( "publicCert" ) ) );
-		idpConfig.setIdPMetadataFile( getFileFromCanonicalPath( jsonObject.getString( "idPMetadataFile" ) ) );
-		idpConfig.setSignatureValidationType( jsonObject.getString( "signatureValidationType" ) );
+		idpConfig.setSpIssuerURL( jsonObject.getString( "sPIssuerURL" ).trim() );
+		idpConfig.setSpEndpointHostname( jsonObject.getString( "sPEndpointHostname" ).trim() );
+		idpConfig.setPrivateKey( getFileFromCanonicalPath( jsonObject.getString( "privateKey" ).trim() ) );
+		idpConfig.setPublicCert( getFileFromCanonicalPath( jsonObject.getString( "publicCert" ).trim() ) );
+		idpConfig.setIdPMetadataFile( getFileFromCanonicalPath( jsonObject.getString( "idPMetadataFile" ).trim() ) );
+		idpConfig.setSignatureValidationType( jsonObject.getString( "signatureValidationType" ).trim() );
 		idpConfig.setOptionalProperties( getPropertiesFromJsonObject( jsonObject.getJSONObject( "optionalProperties" ) ) );
 		idpConfig.setSites( SiteJsonTransformer.getMapFromJsonObject( jsonObject.getJSONObject( "sites" ) ) );
 

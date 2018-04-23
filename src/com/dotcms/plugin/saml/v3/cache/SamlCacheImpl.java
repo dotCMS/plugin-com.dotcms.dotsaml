@@ -67,11 +67,11 @@ public class SamlCacheImpl extends SamlCache
 	}
 
 	@Override
-	protected void addDisabledSiteId( String site)
+	protected void addDisabledSiteId( String site )
 	{
 		String tag = "addDisabledSiteId( String ) ";
 
-		site = checkNotNull( site, tag + "site is required." );
+		site = checkNotNull( site.trim(), tag + "site is required." ).trim();
 
 		this.cache.put( site, site, DISABLED_SITES_INDEX_GROUP );
 	}
@@ -91,8 +91,8 @@ public class SamlCacheImpl extends SamlCache
 			this.cache.put( DISABLED_SITES, sites, DISABLED_SITES_GROUP );
 
 			sites.forEach( ( identifier, hostname )->{
-				this.addDisabledSiteId( identifier);
-				this.addDisabledSiteId( hostname);
+				this.addDisabledSiteId( identifier.trim() );
+				this.addDisabledSiteId( hostname.trim() );
 			});
 
 		}
@@ -136,7 +136,7 @@ public class SamlCacheImpl extends SamlCache
 		String tag = "addIdpConfigToIndex( String ) ";
 		List<String> idpIndex = null;
 
-		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." );
+		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." ).trim();
 
 		try
 		{
@@ -190,7 +190,7 @@ public class SamlCacheImpl extends SamlCache
 	{
 		String tag = "addSiteIdpConfig( String, IdpConfig ) ";
 
-		site = checkNotNull( site, tag + "site is required." );
+		site = checkNotNull( site, tag + "site is required." ).trim();
 		idpConfig = checkNotNull( idpConfig, tag + "idpConfig is required." );
 
 		if ( Strings.isNullOrEmpty( idpConfig.getId() ) )
@@ -207,8 +207,8 @@ public class SamlCacheImpl extends SamlCache
 	{
 		String tag = "addSiteIdpConfigId( String, String ) ";
 
-		site = checkNotNull( site, tag + "site is required." );
-		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." );
+		site = checkNotNull( site, tag + "site is required." ).trim();
+		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." ).trim();
 
 		this.cache.put( site, idpConfigId, SITES_TO_IDP_GROUP );
 	}
@@ -225,8 +225,8 @@ public class SamlCacheImpl extends SamlCache
 			sites = checkNotNull( sites, tag + "sites is required." );
 
 			sites.forEach( ( identifier, hostname )->{
-				this.addSiteIdpConfigId( identifier, idpConfigId );
-				this.addSiteIdpConfigId( hostname, idpConfigId );
+				this.addSiteIdpConfigId( identifier.trim(), idpConfigId.trim() );
+				this.addSiteIdpConfigId( hostname.trim(), idpConfigId.trim() );
 			});
 
 		}
@@ -308,7 +308,7 @@ public class SamlCacheImpl extends SamlCache
 		String tag = "getIdpConfig( String ) ";
 		IdpConfig idpConfig = null;
 
-		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." );
+		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." ).trim();
 
 		try
 		{
@@ -362,7 +362,7 @@ public class SamlCacheImpl extends SamlCache
 		String tag = "getSiteIdpConfig( String ) ";
 		IdpConfig idpConfig = null;
 
-		site = checkNotNull( site, tag + "site is required." );
+		site = checkNotNull( site, tag + "site is required." ).trim();
 
 		try
 		{
@@ -478,7 +478,7 @@ public class SamlCacheImpl extends SamlCache
 	{
 		String tag = "removeIdpConfig( String ) ";
 
-		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." );
+		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." ).trim();
 
 		this.cache.remove( idpConfigId, IDP_CONFIG_GROUP );
 		this.removeIdpConfigIdFromIndex( idpConfigId );
@@ -491,7 +491,7 @@ public class SamlCacheImpl extends SamlCache
 		String tag = "removeIdpConfigFromIndex( String ) ";
 		List<String> idpIndex = null;
 
-		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." );
+		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." ).trim();
 
 		try
 		{
@@ -517,7 +517,7 @@ public class SamlCacheImpl extends SamlCache
 	{
 		String tag = "removeSiteIdpConfigId( String ) ";
 
-		site = checkNotNull( site, tag + "site is required." );
+		site = checkNotNull( site, tag + "site is required." ).trim();
 
 		this.cache.remove( site, SITES_TO_IDP_GROUP );
 	}
@@ -534,8 +534,8 @@ public class SamlCacheImpl extends SamlCache
 			sites = checkNotNull( sites, tag + "sites is required." );
 
 			sites.forEach( ( identifier, hostname )->{
-				this.removeSiteIdpConfigId( identifier );
-				this.removeSiteIdpConfigId( hostname );
+				this.removeSiteIdpConfigId( identifier.trim() );
+				this.removeSiteIdpConfigId( hostname.trim() );
 			});
 
 		}

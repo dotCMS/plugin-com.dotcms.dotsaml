@@ -18,7 +18,7 @@ public class SiteJsonTransformer
 		{
 			for ( Map.Entry<String, String> entry : map.entrySet() )
 			{
-				jsonObject.put( entry.getKey(), entry.getValue() );
+				jsonObject.put( entry.getKey().trim(), entry.getValue().trim() );
 			}
 		}
 
@@ -35,7 +35,7 @@ public class SiteJsonTransformer
 			String key = (String) keys.next();
 			String value = jsonObject.getString( key );
 
-			map.put( key, value );
+			map.put( key.trim(), value.trim() );
 		}
 
 		return map;
