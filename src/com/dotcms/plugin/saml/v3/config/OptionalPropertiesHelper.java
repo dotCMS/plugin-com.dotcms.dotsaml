@@ -42,7 +42,7 @@ public class OptionalPropertiesHelper
 		{
 			try
 			{
-				value = (boolean) idpConfig.getOptionalProperties().get( propertyName );
+				value = Boolean.parseBoolean( (String) idpConfig.getOptionalProperties().get( propertyName ) );
 			}
 			catch ( Exception exception )
 			{
@@ -127,7 +127,7 @@ public class OptionalPropertiesHelper
 		{
 			try
 			{
-				value = (int) idpConfig.getOptionalProperties().get( propertyName );
+				value = Integer.parseInt( (String)idpConfig.getOptionalProperties().get( propertyName ) );
 			}
 			catch ( Exception exception )
 			{

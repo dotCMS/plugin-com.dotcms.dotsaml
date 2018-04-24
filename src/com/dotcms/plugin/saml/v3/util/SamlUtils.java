@@ -471,18 +471,16 @@ public class SamlUtils
 	{
 		final EncryptedAssertion encryptedAssertion;
 		Assertion assertion = null;
-
-		// TODO correct the reading of isassertion.encrypted 
-		assertion = response.getAssertions().get( 0 );
-//		if ( OptionalPropertiesHelper.getOptionBoolean( idpConfig, DOTCMS_SAML_IS_ASSERTION_ENCRYPTED, true ) )
-//		{
-//			encryptedAssertion = response.getEncryptedAssertions().get( 0 );
-//			assertion = decryptAssertion( encryptedAssertion, idpConfig ); /// this is the user message itself
-//		}
-//		else
-//		{
-//			assertion = response.getAssertions().get( 0 );
-//		}
+		
+		if ( OptionalPropertiesHelper.getOptionBoolean( idpConfig, DOTCMS_SAML_IS_ASSERTION_ENCRYPTED, true ) )
+		{
+			encryptedAssertion = response.getEncryptedAssertions().get( 0 );
+			assertion = decryptAssertion( encryptedAssertion, idpConfig ); /// this is the user message itself
+		}
+		else
+		{
+			assertion = response.getAssertions().get( 0 );
+		}
 
 		return assertion;
 	}
