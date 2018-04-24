@@ -24,16 +24,8 @@ public class EndpointHelper
 	 */
 	public static String getAssertionConsumerEndpoint( IdpConfig idpConfig )
 	{
-		String spIssuerValue = SamlUtils.getSPIssuerValue( idpConfig );
-
-		if ( null != spIssuerValue && !( spIssuerValue.trim().startsWith( DotSamlConstants.HTTP_SCHEMA ) || spIssuerValue.trim().startsWith( DotSamlConstants.HTTPS_SCHEMA ) ) )
-		{
-			throw new InvalidIssuerValueException( "The issuer: " + spIssuerValue + " should starts with http:// or https:// to be valid" );
-		}
-
-		spIssuerValue += DotSamlConstants.ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP;
-
-		return OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_ASSERTION_CUSTOMER_ENDPOINT_URL, spIssuerValue );
+		// spEndpointHostname is a required field during edit.  Has to have value.
+		return idpConfig.getSpEndpointHostname();
 	}
 
 	/**

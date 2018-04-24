@@ -5,25 +5,11 @@ import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_AUTHN_C
 import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_FORCE_AUTHN;
 import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SLO_URL;
 import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SSO_URL;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_IS_ASSERTION_ENCRYPTED;
 import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_NAME_ID_POLICY_FORMAT;
 import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_POLICY_ALLOW_CREATE;
 import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_PROTOCOL_BINDING;
-import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER;
-import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL;
-import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.HTTPS_SCHEMA;
-import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.HTTP_SCHEMA;
 import static com.dotmarketing.util.UtilMethods.isSet;
-
-import com.dotcms.plugin.saml.v3.config.CredentialHelper;
-import com.dotcms.plugin.saml.v3.config.CredentialProvider;
-import com.dotcms.plugin.saml.v3.config.EndpointHelper;
-import com.dotcms.plugin.saml.v3.config.IdpConfig;
-import com.dotcms.plugin.saml.v3.config.MetaDataHelper;
-import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
-import com.dotcms.plugin.saml.v3.exception.DotSamlException;
-
-import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.UtilMethods;
 
 import java.io.File;
 import java.io.StringWriter;
@@ -47,12 +33,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
-import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
-import net.shibboleth.utilities.java.support.resolver.Criterion;
-import net.shibboleth.utilities.java.support.resolver.ResolverException;
-import net.shibboleth.utilities.java.support.security.RandomIdentifierGenerationStrategy;
 
 import org.joda.time.DateTime;
 import org.opensaml.core.criterion.EntityIdCriterion;
@@ -98,6 +78,21 @@ import org.opensaml.xmlsec.keyinfo.impl.StaticKeyInfoCredentialResolver;
 import org.opensaml.xmlsec.signature.support.SignatureException;
 import org.opensaml.xmlsec.signature.support.SignatureValidator;
 import org.w3c.dom.Element;
+
+import com.dotcms.plugin.saml.v3.config.CredentialHelper;
+import com.dotcms.plugin.saml.v3.config.CredentialProvider;
+import com.dotcms.plugin.saml.v3.config.EndpointHelper;
+import com.dotcms.plugin.saml.v3.config.IdpConfig;
+import com.dotcms.plugin.saml.v3.config.MetaDataHelper;
+import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
+import com.dotmarketing.util.Logger;
+
+import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
+import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
+import net.shibboleth.utilities.java.support.resolver.Criterion;
+import net.shibboleth.utilities.java.support.resolver.ResolverException;
+import net.shibboleth.utilities.java.support.security.RandomIdentifierGenerationStrategy;
 
 /**
  * Provides utils method for the Saml
@@ -333,20 +328,8 @@ public class SamlUtils
 	 */
 	public static String getSPIssuerValue( final IdpConfig idpConfig )
 	{
-		return OptionalPropertiesHelper.getOptionString( idpConfig, DOTCMS_SAML_SERVICE_PROVIDER_ISSUER, getSiteName( idpConfig ) );
-	}
-
-	private static String getSiteName( final IdpConfig idpConfig )
-	{
-		final String defaultHost = idpConfig.getSpIssuerURL();
-
-		if ( UtilMethods.isSet( defaultHost ) )
-		{
-
-			return !( defaultHost.trim().startsWith( HTTP_SCHEMA ) || defaultHost.trim().startsWith( HTTPS_SCHEMA ) ) ? HTTPS_SCHEMA + defaultHost : defaultHost;
-		}
-
-		return OptionalPropertiesHelper.getOptionString( idpConfig, DOT_SAML_DEFAULT_SERVICE_PROVIDER_PROTOCOL, HTTPS_SCHEMA ) + "://" + SPIIssuerResolver.getDefaultServiceProviderIssuer().getHostname();
+		// spIssuerURL is a required field.  It should have value.
+		return idpConfig.getSpIssuerURL();
 	}
 
 	/**
@@ -489,7 +472,7 @@ public class SamlUtils
 		final EncryptedAssertion encryptedAssertion;
 		Assertion assertion = null;
 
-		//TODO This is a work around to get a function login and then correct.
+		// TODO correct the reading of isassertion.encrypted 
 		assertion = response.getAssertions().get( 0 );
 //		if ( OptionalPropertiesHelper.getOptionBoolean( idpConfig, DOTCMS_SAML_IS_ASSERTION_ENCRYPTED, true ) )
 //		{
