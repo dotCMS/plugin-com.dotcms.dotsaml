@@ -338,7 +338,7 @@ public class SamlUtils
 
 	private static String getSiteName( final IdpConfig idpConfig )
 	{
-		final String defaultHost = idpConfig.getSpEndpointHostname();
+		final String defaultHost = idpConfig.getSpIssuerURL();
 
 		if ( UtilMethods.isSet( defaultHost ) )
 		{
