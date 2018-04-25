@@ -48,10 +48,13 @@ public class SamlCacheImpl extends SamlCache
 
 		this.assetsPath = Config.getStringProperty( "ASSET_REAL_PATH", FileUtil.getRealPath( Config.getStringProperty( "ASSET_PATH", "/assets" ) ) );
 		this.idpFilePath = assetsPath + File.separator + "saml" + File.separator + "config.json";
+
+		Logger.info( this, "this.assetsPath = " + this.assetsPath );
+		Logger.info( this, "this.idpFilePath = " + this.idpFilePath );
 	}
 
 	@Override
-	public void addDefaultIdpConfig( IdpConfig idpConfig )
+	public void addDefaultIdpConfig( IdpConfig idpConfig ) throws DotCacheException
 	{
 		String tag = "addDefaultIdpConfig( IdpConfig ) ";
 
@@ -61,6 +64,8 @@ public class SamlCacheImpl extends SamlCache
 		{
 			throw new IllegalArgumentException( tag + "idpConfig must have an id." );
 		}
+
+		Logger.info( this, "Adding default idpConfig to cache id = " + idpConfig.getId() );
 
 		this.cache.put( DEFAULT, idpConfig.getId(), DEFAULT_IDP_CONFIG_GROUP );
 		this.addIdpConfig( idpConfig );
@@ -73,6 +78,8 @@ public class SamlCacheImpl extends SamlCache
 
 		site = checkNotNull( site.trim(), tag + "site is required." ).trim();
 
+		Logger.info( this, "Adding disabled site to cache = " + site.trim() );
+
 		this.cache.put( site, site, DISABLED_SITES_INDEX_GROUP );
 	}
 
@@ -84,6 +91,9 @@ public class SamlCacheImpl extends SamlCache
 		try
 		{
 			sites = checkNotNull( sites, tag + "sites is required." );
+
+			Logger.info( this, "Flushing DISABLED_SITES_GROUP cache." );
+			Logger.info( this, "Flushing DISABLED_SITES_INDEX_GROUP cache." );
 
 			cache.flushGroup( DISABLED_SITES_GROUP );
 			cache.flushGroup( DISABLED_SITES_INDEX_GROUP );
@@ -104,7 +114,7 @@ public class SamlCacheImpl extends SamlCache
 	}
 
 	@Override
-	public void addIdpConfig( IdpConfig idpConfig )
+	public void addIdpConfig( IdpConfig idpConfig ) throws DotCacheException
 	{
 		String tag = "addIdpConfig( IdpConfig ) ";
 
@@ -117,7 +127,10 @@ public class SamlCacheImpl extends SamlCache
 
 		String idpConfigId = idpConfig.getId();
 
+		Logger.info( this, "Adding idpConfig to cache id = " + idpConfig.getId() );
+
 		this.cache.put( idpConfigId, idpConfig, IDP_CONFIG_GROUP );
+		incrementIdpCount();
 		this.addIdpConfigIdToIndex( idpConfigId );
 
 		Map<String, String> sites = idpConfig.getSites();
@@ -155,6 +168,8 @@ public class SamlCacheImpl extends SamlCache
 		idpIndex.remove( idpConfigId );
 		idpIndex.add( idpConfigId );
 
+		Logger.info( this, "Adding idpConfig id to index cache id = " + idpConfigId );
+
 		this.cache.put( INDEX, idpIndex, IDP_INDEX_GROUP );
 	}
 
@@ -162,6 +177,8 @@ public class SamlCacheImpl extends SamlCache
 	public void addIdpConfigs( List<IdpConfig> idpConfigs )
 	{
 		String tag = "addIdpConfigs( List<IdpConfig> ) ";
+
+		Logger.info( this, "Clearing idpConfig cache." );
 
 		this.clearCache();
 
@@ -186,7 +203,7 @@ public class SamlCacheImpl extends SamlCache
 	}
 
 	@Override
-	public void addSiteIdpConfig( String site, IdpConfig idpConfig )
+	public void addSiteIdpConfig( String site, IdpConfig idpConfig ) throws DotCacheException
 	{
 		String tag = "addSiteIdpConfig( String, IdpConfig ) ";
 
@@ -197,6 +214,8 @@ public class SamlCacheImpl extends SamlCache
 		{
 			throw new IllegalArgumentException( tag + "IdpConfig must have an id." );
 		}
+
+		Logger.info( this, "Adding site to idpConfig id cache site = " + site + " idpConfig id = " + idpConfig.getId() );
 
 		this.cache.put( site, idpConfig.getId(), SITES_TO_IDP_GROUP );
 		this.addIdpConfig( idpConfig );
@@ -209,6 +228,8 @@ public class SamlCacheImpl extends SamlCache
 
 		site = checkNotNull( site, tag + "site is required." ).trim();
 		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." ).trim();
+
+		Logger.info( this, "Adding site to idpConfig id cache site = " + site + " idpConfig id = " + idpConfigId );
 
 		this.cache.put( site, idpConfigId, SITES_TO_IDP_GROUP );
 	}
@@ -240,6 +261,8 @@ public class SamlCacheImpl extends SamlCache
 	@Override
 	public void clearCache()
 	{
+		Logger.info( this, "Flushing Saml cache." );
+
 		for ( String cacheGroup : getGroups() )
 		{
 			cache.flushGroup( cacheGroup );
@@ -256,6 +279,8 @@ public class SamlCacheImpl extends SamlCache
 		{
 			String idpConfigId = (String) this.cache.get( DEFAULT, DEFAULT_IDP_CONFIG_GROUP );
 			idpConfig = this.getIdpConfig( idpConfigId );
+
+			Logger.info( this, "Getting default idpConfig from cache id = " + idpConfigId );
 		}
 		catch ( DotCacheException dotCacheException )
 		{
@@ -274,6 +299,8 @@ public class SamlCacheImpl extends SamlCache
 		try
 		{
 			idpConfigId = (String) this.cache.get( DEFAULT, DEFAULT_IDP_CONFIG_GROUP );
+
+			Logger.info( this, "Getting default idpConfig from cache id = " + idpConfigId );
 		}
 		catch ( DotCacheException dotCacheException )
 		{
@@ -293,6 +320,8 @@ public class SamlCacheImpl extends SamlCache
 		try
 		{
 			disabledSitesMap = (Map<String, String>) this.cache.get( DISABLED_SITES, DISABLED_SITES_INDEX_GROUP );
+
+			Logger.info( this, "Getting disabled sites map from cache disabledSitesMap = " + disabledSitesMap );
 		}
 		catch ( DotCacheException dotCacheException )
 		{
@@ -313,6 +342,8 @@ public class SamlCacheImpl extends SamlCache
 		try
 		{
 			idpConfig = (IdpConfig) this.cache.get( idpConfigId, IDP_CONFIG_GROUP );
+
+			Logger.info( this, "Getting idpConfig from cache id = " + idpConfigId );
 		}
 		catch ( DotCacheException dotCacheException )
 		{
@@ -347,6 +378,28 @@ public class SamlCacheImpl extends SamlCache
 				});
 			}
 
+			Logger.info( this, "Getting idpConfigs from cache idpConfigIds.size() = " + idpConfigIds.size() );
+			Logger.info( this, "Getting idpConfigs from cache idpConfigs.size() = " + idpConfigs.size() );
+
+			Integer idpCount = getIdpCount();
+
+			Logger.info( this, "Checking if idpCount == idpConfigs.size()." );
+			Logger.info( this, idpCount + " == " + idpConfigs.size() + " ?" );
+
+			if ( idpCount != idpConfigs.size() )
+			{
+				Logger.info( this, "Counts do not match!" );
+
+				refresh();
+
+				Logger.info( this, "Trying again." );
+
+				return getIdpConfigs();
+			}
+			else
+			{
+				Logger.info( this, "Counts match." );
+			}
 		}
 		catch ( DotCacheException dotCacheException )
 		{
@@ -368,6 +421,8 @@ public class SamlCacheImpl extends SamlCache
 		{
 			String idpConfigId = (String) this.cache.get( site, SITES_TO_IDP_GROUP );
 			idpConfig = this.getIdpConfig( idpConfigId );
+
+			Logger.info( this, "Getting site idpConfig from cache site = " + site + " idpConfig id = " + idpConfigId );
 		}
 		catch ( DotCacheException dotCacheException )
 		{
@@ -404,6 +459,8 @@ public class SamlCacheImpl extends SamlCache
 				});
 			}
 
+			Logger.info( this, "Getting all sites from all idpConfigs from cache idpConfigIds.size() = " + idpConfigIds.size() + " sites.size() = " + sites.size() );
+
 		}
 		catch ( DotCacheException dotCacheException )
 		{
@@ -413,10 +470,31 @@ public class SamlCacheImpl extends SamlCache
 		return sites;
 	}
 
+	private void incrementIdpCount() throws DotCacheException
+	{
+		Integer count = getIdpCount();
+		count++;
+		this.cache.put( COUNT, count, IDP_CONFIG_COUNT_GROUP );
+	}
+
+	private void decrementIdpCount() throws DotCacheException
+	{
+		Integer count = getIdpCount();
+		count--;
+		this.cache.put( COUNT, count, IDP_CONFIG_COUNT_GROUP );
+	}
+
+	private Integer getIdpCount() throws DotCacheException
+	{
+		return (Integer) this.cache.get( COUNT, IDP_CONFIG_COUNT_GROUP );
+	}
+
 	@Override
 	public void refresh()
 	{
 		String tag = "refresh() ";
+
+		Logger.info( this, "Start: Clearing cache and loading all configs." );
 
 		this.clearCache();
 
@@ -427,6 +505,8 @@ public class SamlCacheImpl extends SamlCache
 
 			// Update cache
 			this.addIdpConfigs( idpConfigs );
+
+			Logger.info( this, "End: Clearing cache and loading all configs." );
 		}
 		catch ( IOException | JSONException exception )
 		{
@@ -436,7 +516,7 @@ public class SamlCacheImpl extends SamlCache
 	}
 
 	@Override
-	public void removeDefaultIdpConfig()
+	public void removeDefaultIdpConfig() throws DotCacheException
 	{
 		IdpConfig idpConfig = this.getDefaultIdpConfig();
 
@@ -449,10 +529,12 @@ public class SamlCacheImpl extends SamlCache
 
 		this.removeIdpConfig( idpConfig.getId() );
 		this.cache.remove( DEFAULT, IDP_CONFIG_GROUP );
+
+		Logger.info( this, "Removing default idpConfig from cache id = " + idpConfig.getId() );
 	}
 
 	@Override
-	public void removeIdpConfig( IdpConfig idpConfig )
+	public void removeIdpConfig( IdpConfig idpConfig ) throws DotCacheException
 	{
 		String tag = "removeIdpConfig( IdpConfig ) ";
 
@@ -474,14 +556,17 @@ public class SamlCacheImpl extends SamlCache
 	}
 
 	@Override
-	protected void removeIdpConfig( String idpConfigId )
+	protected void removeIdpConfig( String idpConfigId ) throws DotCacheException
 	{
 		String tag = "removeIdpConfig( String ) ";
 
 		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." ).trim();
 
 		this.cache.remove( idpConfigId, IDP_CONFIG_GROUP );
+		decrementIdpCount();
 		this.removeIdpConfigIdFromIndex( idpConfigId );
+
+		Logger.info( this, "Removing idpConfig from cache id = " + idpConfigId );
 	}
 
 	@SuppressWarnings( "unchecked" )
@@ -510,6 +595,8 @@ public class SamlCacheImpl extends SamlCache
 		idpIndex.remove( idpConfigId );
 
 		this.cache.put( INDEX, idpIndex, IDP_INDEX_GROUP );
+
+		Logger.info( this, "Removing idpConfig from cache index id = " + idpConfigId );
 	}
 
 	@Override
@@ -520,6 +607,8 @@ public class SamlCacheImpl extends SamlCache
 		site = checkNotNull( site, tag + "site is required." ).trim();
 
 		this.cache.remove( site, SITES_TO_IDP_GROUP );
+
+		Logger.info( this, "Removing site from cache site = " + site );
 	}
 
 	@Override

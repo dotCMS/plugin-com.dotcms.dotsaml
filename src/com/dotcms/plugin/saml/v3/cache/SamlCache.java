@@ -3,6 +3,7 @@ package com.dotcms.plugin.saml.v3.cache;
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
 
 import com.dotmarketing.business.Cachable;
+import com.dotmarketing.business.DotCacheException;
 
 import java.util.List;
 import java.util.Map;
@@ -20,9 +21,11 @@ public abstract class SamlCache implements Cachable
 	protected static final String DEFAULT = "default";
 	protected static final String INDEX = "index";
 	protected static final String DISABLED_SITES = "disabled-sites";
+	protected static final String COUNT = "count";
 
 	protected static final String DEFAULT_IDP_CONFIG_GROUP = "Default-Ipd-Config";
 	protected static final String IDP_CONFIG_GROUP = "Ipd-Config";
+	protected static final String IDP_CONFIG_COUNT_GROUP = "Ipd-Config-Count";
 	protected static final String SITES_TO_IDP_GROUP = "Sites-To-Idp";
 	protected static final String DISABLED_SITES_GROUP = "Disabled-Sites";
 	protected static final String IDP_INDEX_GROUP = "Idp-Index";
@@ -34,8 +37,9 @@ public abstract class SamlCache implements Cachable
 	 * the entry will be updated with the new value.
 	 * 
 	 * @param idpConfig - The {@link IdpConfig} object to cache.
+	 * @throws DotCacheException 
 	 */
-	public abstract void addDefaultIdpConfig( IdpConfig idpConfig );
+	public abstract void addDefaultIdpConfig( IdpConfig idpConfig ) throws DotCacheException;
 
 	/**
 	 * Adds a site to the caching structure. Null objects or with empty
@@ -61,13 +65,15 @@ public abstract class SamlCache implements Cachable
 	 * the entry will be updated with the new value.
 	 * 
 	 * @param rule - The {@link IdpConfig} object to cache.
+	 * @throws DotCacheException 
 	 */
-	public abstract void addIdpConfig( IdpConfig idpConfig );
+	public abstract void addIdpConfig( IdpConfig idpConfig ) throws DotCacheException;
 
 	/**
 	 * Adds the idpConfigId to the index.
 	 * 
 	 * @param idpConfigId - The ID of the {@link IdpConfig} object to add to index in cache.
+	 * @throws DotCacheException 
 	 */
 	protected abstract void addIdpConfigIdToIndex( String idpConfigId );
 
@@ -87,8 +93,9 @@ public abstract class SamlCache implements Cachable
 	 * 
 	 * @param site - The associated site to cache.
 	 * @param idpConfig - The associated {@link IdpConfig} object to cache.
+	 * @throws DotCacheException 
 	 */
-	public abstract void addSiteIdpConfig( String site, IdpConfig idpConfig );
+	public abstract void addSiteIdpConfig( String site, IdpConfig idpConfig ) throws DotCacheException;
 
 	/**
 	 * Adds a site to the caching structure. Null objects or with empty
@@ -130,7 +137,7 @@ public abstract class SamlCache implements Cachable
 	@Override
 	public String[] getGroups()
 	{
-		return new String[] { DEFAULT_IDP_CONFIG_GROUP, IDP_CONFIG_GROUP, SITES_TO_IDP_GROUP, DISABLED_SITES_GROUP, IDP_INDEX_GROUP, DISABLED_SITES_INDEX_GROUP };
+		return new String[] { DEFAULT_IDP_CONFIG_GROUP, IDP_CONFIG_GROUP, IDP_CONFIG_COUNT_GROUP, SITES_TO_IDP_GROUP, DISABLED_SITES_GROUP, IDP_INDEX_GROUP, DISABLED_SITES_INDEX_GROUP };
 	}
 
 	/**
@@ -176,22 +183,25 @@ public abstract class SamlCache implements Cachable
 
 	/**
 	 * Removes the default {@link IdpConfig} object from the caching structure.
+	 * @throws DotCacheException 
 	 */
-	public abstract void removeDefaultIdpConfig();
+	public abstract void removeDefaultIdpConfig() throws DotCacheException;
 
 	/**
 	 * Removes the {@link IdpConfig} object from the caching structure.
 	 * 
 	 * @param idpConfig - The {@link IdpConfig} object that will be removed.
+	 * @throws DotCacheException 
 	 */
-	public abstract void removeIdpConfig( IdpConfig idpConfig );
+	public abstract void removeIdpConfig( IdpConfig idpConfig ) throws DotCacheException;
 
 	/**
 	 * Removes the {@link IdpConfig} object from the caching structure.
 	 * 
 	 * @param idpConfigId - The ID of the {@link IdpConfig} object that will be removed.
+	 * @throws DotCacheException 
 	 */
-	protected abstract void removeIdpConfig( String idpConfigId );
+	protected abstract void removeIdpConfig( String idpConfigId ) throws DotCacheException;
 
 	/**
 	 * Removes the idpConfigId from the index.
