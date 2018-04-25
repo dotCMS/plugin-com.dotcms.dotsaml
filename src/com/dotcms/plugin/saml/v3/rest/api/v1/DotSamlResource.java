@@ -428,7 +428,7 @@ public class DotSamlResource implements Serializable
 			final IdpConfig idpConfig = idpConfigHelper.findIdpConfig( idpConfigId );
 
 			// If idpConfig is null, means this site does not need SAML processing
-			if ( idpConfig != null && idpConfig.isEnabled() )
+			if ( idpConfig != null )
 			{
 				Logger.debug( this, "Processing saml login request for idpConfig id: " + idpConfigId );
 				SamlFilter samlFilter = new SamlFilter();

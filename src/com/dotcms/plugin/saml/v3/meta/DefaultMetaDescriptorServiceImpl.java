@@ -6,6 +6,7 @@ import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.util.SamlUtils;
+import com.dotcms.plugin.saml.v3.config.CredentialHelper;
 
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 
@@ -143,8 +144,8 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 		Logger.info( this, "Creating the MetaData for the site: " + idpConfig.getSpEndpointHostname() );
 		Logger.debug( this, "Generating the Entity Provider Descriptor for: " + descriptor.getEntityID() );
 
-		spssoDescriptor.setWantAssertionsSigned( OptionalPropertiesHelper.getOptionBoolean( idpConfig, DotSamlConstants.DOTCMS_SAML_WANT_ASSERTIONS_SIGNED, true ) );
-		spssoDescriptor.setAuthnRequestsSigned( OptionalPropertiesHelper.getOptionBoolean( idpConfig, DotSamlConstants.DOTCMS_SAML_AUTHN_REQUESTS_SIGNED, true ) );
+		spssoDescriptor.setWantAssertionsSigned( CredentialHelper.isVerifyAssertionSignatureNeeded(idpConfig) );
+		spssoDescriptor.setAuthnRequestsSigned( CredentialHelper.isVerifyResponseSignatureNeeded(idpConfig ) );
 		spssoDescriptor.addSupportedProtocol( SAMLConstants.SAML20_NS );
 
 		Logger.debug( this, "Setting the key descriptors for: " + descriptor.getEntityID() );
