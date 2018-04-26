@@ -552,7 +552,7 @@ public class SamlUtils
 	{
 		final SAMLSignatureProfileValidator profileValidator;
 
-		if ( CredentialHelper.isVerifyResponseSignatureNeeded( idpConfig ) && !assertion.isSigned() )
+		if ( CredentialHelper.isVerifyAssertionSignatureNeeded( idpConfig ) && !assertion.isSigned() )
 		{
 			Logger.error( SamlUtils.class, "The assertion is not signed..." );
 			throw new DotSamlException( "The SAML Assertion was not signed" );
