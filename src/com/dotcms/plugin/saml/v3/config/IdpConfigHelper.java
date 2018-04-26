@@ -368,6 +368,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		// Update cache
 		try
 		{
+			// Note, this method also flushes the cache.
 			samlCache.addIdpConfigs( idpConfigs );
 		}
 		catch ( Exception exception )

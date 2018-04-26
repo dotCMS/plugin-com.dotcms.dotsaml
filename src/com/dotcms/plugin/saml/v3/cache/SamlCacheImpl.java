@@ -10,6 +10,7 @@ import com.dotmarketing.business.DotCacheAdministrator;
 import com.dotmarketing.business.DotCacheException;
 import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.json.JSONException;
 
 import com.liferay.util.FileUtil;
@@ -388,13 +389,10 @@ public class SamlCacheImpl extends SamlCache
 
 			if ( idpCount != idpConfigs.size() )
 			{
-				Logger.info( this, "Counts do not match!" );
-
-				refresh();
-
-				Logger.info( this, "Trying again." );
-
-				return getIdpConfigs();
+				// Return an empty list.
+				// This tells the IdpConfigHelper class to
+				// try the file system and invalidate the cache.
+				return new ArrayList<IdpConfig>();
 			}
 			else
 			{
@@ -474,19 +472,30 @@ public class SamlCacheImpl extends SamlCache
 	{
 		Integer count = getIdpCount();
 		count++;
-		this.cache.put( COUNT, count, IDP_CONFIG_COUNT_GROUP );
+		this.cache.put( COUNT, "" + count, IDP_CONFIG_COUNT_GROUP );
 	}
 
 	private void decrementIdpCount() throws DotCacheException
 	{
 		Integer count = getIdpCount();
 		count--;
-		this.cache.put( COUNT, count, IDP_CONFIG_COUNT_GROUP );
+		this.cache.put( COUNT, "" + count, IDP_CONFIG_COUNT_GROUP );
 	}
 
 	private Integer getIdpCount() throws DotCacheException
 	{
-		return (Integer) this.cache.get( COUNT, IDP_CONFIG_COUNT_GROUP );
+		Integer count =  0;
+
+		try
+		{
+			count =  Integer.parseInt( (String) this.cache.get( COUNT, IDP_CONFIG_COUNT_GROUP ) );
+		}
+		catch ( Exception exception )
+		{
+			Logger.info( this, "IdpConfig count not set in cache." );
+		}
+
+		return ( count != null ? count : 0 );
 	}
 
 	@Override
