@@ -181,7 +181,7 @@ public class SamlAccessFilter extends SamlFilter implements Filter
 		}
 		catch ( JSONException | DotDataException exception )
 		{
-			Logger.error( this, "Error reading idpConfig for the site: " + httpServletRequest.getServerName(), exception );
+			Logger.info( this, "Error reading idpConfig for the site: " + httpServletRequest.getServerName());
 		}
 
 		chain.doFilter( httpServletRequest, httpServletResponse );
