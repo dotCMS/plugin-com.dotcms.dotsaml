@@ -3,7 +3,7 @@
 <%@page import="com.liferay.portal.language.LanguageUtil"%>
 <%@page import="java.util.List"%>
 
-<script type="text/javascript" src="/html/plugins/plugin-com.dotcms.dotsaml/saml/view_saml_configuration_js_inc.jsp" ></script>
+<script type="text/javascript" src="/portlet/ext/saml/view_saml_configuration_js_inc.jsp" ></script>
 
 <div class="portlet-main">
 	<!-- START Toolbar -->
