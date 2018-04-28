@@ -167,7 +167,7 @@ public class SamlAccessFilter extends SamlFilter implements Filter
 					// if its, so print it out in the response and return.
 					if ( super.printMetaData( httpServletRequest, httpServletResponse, idpConfig ) )
 					{
-						Logger.debug( this, "Metadata printed" );
+						Logger.info( this, "Metadata printed" );
 						return;
 					}
 				}
@@ -175,7 +175,7 @@ public class SamlAccessFilter extends SamlFilter implements Filter
 			}
 			else
 			{
-				Logger.debug( this, "No idpConfig for the site: " + httpServletRequest.getServerName() + ". Not any SAML filtering for this request: " + httpServletRequest.getRequestURI() );
+				Logger.info( this, "No idpConfig for the site: " + httpServletRequest.getServerName() + ". Not any SAML filtering for this request: " + httpServletRequest.getRequestURI() );
 			}
 
 		}
