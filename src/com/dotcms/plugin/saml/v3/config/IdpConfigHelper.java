@@ -55,7 +55,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 			}
 			catch ( Exception exception )
 			{
-				Logger.info( this, "Error writing to SamlCache" );
+				//Logger.info( this, "Error writing to SamlCache" );
 			}
 		}
 
@@ -73,7 +73,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		else
 		{
-			Logger.warn( this, "IdpConfig with Id: " + idpConfig.getId() + "no longer exists." );
+			//Logger.warn( this, "IdpConfig with Id: " + idpConfig.getId() + "no longer exists." );
 		}
 
 		// Update cache
@@ -83,7 +83,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Error writing to SamlCache" );
+			//Logger.info( this, "Error writing to SamlCache" );
 		}
 	}
 
@@ -120,7 +120,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Error reading SamlCache" );
+			//Logger.info( this, "Error reading SamlCache" );
 		}
 
 		return idpConfig;
@@ -151,7 +151,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Error writing to SamlCache" );
+			//Logger.info( this, "Error writing to SamlCache" );
 		}
 
 		return idpConfig;
@@ -190,7 +190,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Error reading SamlCache" );
+			//Logger.info( this, "Error reading SamlCache" );
 		}
 
 		return idpConfig;
@@ -224,7 +224,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Error writing to SamlCache" );
+			//Logger.info( this, "Error writing to SamlCache" );
 		}
 
 		return idpConfig;
@@ -254,7 +254,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Error writing to SamlCache" );
+			//Logger.info( this, "Error writing to SamlCache" );
 		}
 
 		return idpConfigId;
@@ -274,7 +274,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 			}
 			catch ( Exception exception )
 			{
-				Logger.info( this, "Error writing to SamlCache" );
+				//Logger.info( this, "Error writing to SamlCache" );
 			}
 		}
 
@@ -305,7 +305,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Error reading SamlCache" );
+			//Logger.info( this, "Error reading SamlCache" );
 		}
 
 		return disabledSitesMap;
@@ -324,7 +324,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 			}
 			catch ( Exception exception )
 			{
-				Logger.info( this, "Error writing to SamlCache" );
+				//Logger.info( this, "Error writing to SamlCache" );
 			}
 		}
 
@@ -355,7 +355,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Error reading SamlCache" );
+			//Logger.info( this, "Error reading SamlCache" );
 		}
 
 		return idpConfigs;
@@ -373,7 +373,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Error writing to SamlCache" );
+			//Logger.info( this, "Error writing to SamlCache" );
 		}
 
 		return idpConfigs;
@@ -410,7 +410,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Error reading SamlCache" );
+			//Logger.info( this, "Error reading SamlCache" );
 		}
 
 		return sites;
@@ -439,7 +439,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Error writing to SamlCache" );
+			//Logger.info( this, "Error writing to SamlCache" );
 		}
 
 		return sites;
@@ -474,7 +474,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Error writing to SamlCache" );
+			//Logger.info( this, "Error writing to SamlCache" );
 		}
 
 	}
@@ -507,7 +507,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "Error writing to SamlCache" );
+			//Logger.info( this, "Error writing to SamlCache" );
 		}
 
 		return idpConfig;
@@ -526,7 +526,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 			}
 			catch ( Exception exception )
 			{
-				Logger.info( this, "Error writing to SamlCache" );
+				//Logger.info( this, "Error writing to SamlCache" );
 			}
 
 		}
@@ -546,7 +546,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 		else
 		{
-			Logger.error( this, "IdpConfig with Id: " + idpConfigId + "no longer exists." );
+			//Logger.error( this, "IdpConfig with Id: " + idpConfigId + "no longer exists." );
 			throw new DotDataException( "IdpConfig with Id: " + idpConfigId + "no longer exists." );
 		}
 	}

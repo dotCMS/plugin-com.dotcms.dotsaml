@@ -108,7 +108,7 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( Exception exception )
 		{
-			Logger.error( this, tag + "Error adding disabled sites.", exception );
+			Logger.error( this, tag + "Error adding disabled sites to cache.", exception );
 		}
 
 	}
@@ -157,7 +157,7 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( DotCacheException dotCacheException )
 		{
-			Logger.info( this, tag + "idpIndex not found in [" + IDP_INDEX_GROUP + "] cache group: [" + INDEX + "]. Creating new entry." );
+			//Logger.info( this, tag + "idpIndex not found in [" + IDP_INDEX_GROUP + "] cache group: [" + INDEX + "]. Creating new entry." );
 		}
 
 		if ( idpIndex == null )
@@ -197,7 +197,7 @@ public class SamlCacheImpl extends SamlCache
 			}
 			catch ( Exception exception )
 			{
-				Logger.error( this, tag + "Error adding idpConfig.", exception );
+				Logger.error( this, tag + "Error adding idpConfig to cache.", exception );
 			}
 		});
 	}
@@ -253,7 +253,7 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( Exception exception )
 		{
-			Logger.error( this, tag + "Error adding sites.", exception );
+			Logger.error( this, tag + "Error adding sites to cache.", exception );
 		}
 
 	}
@@ -284,7 +284,7 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( DotCacheException dotCacheException )
 		{
-			Logger.info( this, tag + "SamlCache entry not found in [" + DEFAULT_IDP_CONFIG_GROUP + "] cache group." );
+			//Logger.info( this, tag + "SamlCache entry not found in [" + DEFAULT_IDP_CONFIG_GROUP + "] cache group." );
 		}
 
 		return idpConfig;
@@ -304,7 +304,7 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( DotCacheException dotCacheException )
 		{
-			Logger.info( this, tag + "SamlCache entry not found in [" + DEFAULT_IDP_CONFIG_GROUP + "] cache group." );
+			//Logger.info( this, tag + "SamlCache entry not found in [" + DEFAULT_IDP_CONFIG_GROUP + "] cache group." );
 		}
 
 		return idpConfigId;
@@ -325,7 +325,7 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( DotCacheException dotCacheException )
 		{
-			Logger.info( this, tag + "SamlCache entry not found in [" + DISABLED_SITES_INDEX_GROUP + "] cache group." );
+			//Logger.info( this, tag + "SamlCache entry not found in [" + DISABLED_SITES_INDEX_GROUP + "] cache group." );
 		}
 
 		return disabledSitesMap;
@@ -347,7 +347,7 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( DotCacheException dotCacheException )
 		{
-			Logger.info( this, tag + "SamlCache entry not found in [" + IDP_CONFIG_GROUP + "] cache group: " + idpConfigId );
+			//Logger.info( this, tag + "SamlCache entry not found in [" + IDP_CONFIG_GROUP + "] cache group: " + idpConfigId );
 		}
 
 		return idpConfig;
@@ -400,7 +400,7 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( DotCacheException dotCacheException )
 		{
-			Logger.info( this, tag + "SamlCache read error." );
+			//Logger.info( this, tag + "SamlCache read error." );
 		}
 
 		return idpConfigs;
@@ -423,7 +423,7 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( DotCacheException dotCacheException )
 		{
-			Logger.info( this, tag + "SamlCache entry not found in [" + SITES_TO_IDP_GROUP + "] cache group: " + site );
+			//Logger.info( this, tag + "SamlCache entry not found in [" + SITES_TO_IDP_GROUP + "] cache group: " + site );
 		}
 
 		return idpConfig;
@@ -461,7 +461,7 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( DotCacheException dotCacheException )
 		{
-			Logger.info( this, tag + "SamlCache read error." );
+			//Logger.info( this, tag + "SamlCache read error." );
 		}
 
 		return sites;
@@ -491,7 +491,10 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, "IdpConfig count not set in cache." );
+			//Logger.info( this, "IdpConfig count not set in cache. Setting to 0." );
+
+			cache.flushGroup( IDP_CONFIG_COUNT_GROUP );
+			this.cache.put( COUNT, "" + 0, IDP_CONFIG_COUNT_GROUP );
 		}
 
 		return ( count != null ? count : 0 );
@@ -508,6 +511,8 @@ public class SamlCacheImpl extends SamlCache
 
 		try
 		{
+			this.cache.put( COUNT, "" + 0, IDP_CONFIG_COUNT_GROUP );
+
 			// Read file system
 			List<IdpConfig> idpConfigs = IdpConfigWriterReader.readIdpConfigs( new File( idpFilePath ) );
 
@@ -592,7 +597,7 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( DotCacheException dotCacheException )
 		{
-			Logger.info( this, tag + "idpIndex not found in [" + IDP_INDEX_GROUP + "] cache group: [" + INDEX + "]. Creating new entry." );
+			//Logger.info( this, tag + "idpIndex not found in [" + IDP_INDEX_GROUP + "] cache group: [" + INDEX + "]. Creating new entry." );
 		}
 
 		if ( idpIndex == null )
@@ -638,7 +643,7 @@ public class SamlCacheImpl extends SamlCache
 		}
 		catch ( Exception exception )
 		{
-			Logger.info( this, tag + "Error removing sites." );
+			Logger.info( this, tag + "Error removing sites from cache." );
 		}
 
 	}
