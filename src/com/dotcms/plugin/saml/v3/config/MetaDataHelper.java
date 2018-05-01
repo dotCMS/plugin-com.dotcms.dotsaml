@@ -36,7 +36,19 @@ public class MetaDataHelper
 
 		try
 		{
-			metadataBean = descriptorParser.parse( new FileInputStream( idpConfig.getIdPMetadataFile() ), idpConfig );
+			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) START ");
+			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) idpConfig.getId() = " + ( idpConfig == null ? "null" : idpConfig.getId() ) );
+			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) idpConfig.getIdPMetadataFile() = " + ( idpConfig.getIdPMetadataFile() == null ? "null" : idpConfig.getIdPMetadataFile().getAbsoluteFile() ) );
+
+			FileInputStream fileInputStream = new FileInputStream( idpConfig.getIdPMetadataFile() );
+
+			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) fileInputStream.getFD() = " + ( fileInputStream == null ? "null" : fileInputStream.getFD() ) );
+
+			metadataBean = descriptorParser.parse( fileInputStream, idpConfig );
+
+			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) metadataBean.getEntityId() = " + ( metadataBean == null ? "null" : metadataBean.getEntityId() ) );
+
+			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) END ");
 		}
 		catch ( Exception exception )
 		{
