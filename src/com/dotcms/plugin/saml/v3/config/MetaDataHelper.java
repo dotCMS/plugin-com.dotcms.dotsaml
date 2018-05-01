@@ -1,8 +1,10 @@
 package com.dotcms.plugin.saml.v3.config;
 
 import java.io.FileInputStream;
+import java.nio.charset.Charset;
 import java.util.Collection;
 
+import org.apache.commons.io.FileUtils;
 import org.opensaml.security.credential.Credential;
 
 import com.dotcms.plugin.saml.v3.key.BindingType;
@@ -34,17 +36,19 @@ public class MetaDataHelper
 		MetadataBean metadataBean = null;
 		MetaDescriptorService descriptorParser = InstanceUtil.newInstance( OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_IDP_METADATA_PARSER_CLASS_NAME, null ), DefaultMetaDescriptorServiceImpl.class );
 
+		FileInputStream fileInputStream = null ;
+		
 		try
 		{
 			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) START ");
 			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) idpConfig.getId() = " + ( idpConfig == null ? "null" : idpConfig.getId() ) );
 			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) idpConfig.getIdPMetadataFile() = " + ( idpConfig.getIdPMetadataFile() == null ? "null" : idpConfig.getIdPMetadataFile().getAbsoluteFile() ) );
 
-			FileInputStream fileInputStream = new FileInputStream( idpConfig.getIdPMetadataFile() );
+			fileInputStream = new FileInputStream( idpConfig.getIdPMetadataFile() );
 
 			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) fileInputStream.getFD() = " + ( fileInputStream == null ? "null" : fileInputStream.getFD() ) );
 			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) idpConfig.getIdPMetadataFile().length() = " + idpConfig.getIdPMetadataFile() );
-			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) fileInputStream as String = " + IOUtils.toString(fileInputStream, "UTF-8") );
+			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) fileInputStream as String = " + FileUtils.readFileToString(idpConfig.getIdPMetadataFile(), Charset.forName("utf-8")) );
 
 			metadataBean = descriptorParser.parse( fileInputStream, idpConfig );
 
@@ -55,6 +59,11 @@ public class MetaDataHelper
 		catch ( Exception exception )
 		{
 			Logger.error( MetaDataHelper.class, exception.getMessage(), exception );
+		}
+		finally {
+			if ( fileInputStream != null ) {
+				IOUtils.closeQuietly(fileInputStream);
+			}
 		}
 
 		return metadataBean;

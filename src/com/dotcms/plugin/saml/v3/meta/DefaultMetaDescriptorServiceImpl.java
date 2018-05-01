@@ -15,6 +15,7 @@ import com.dotmarketing.util.Logger;
 
 import net.shibboleth.utilities.java.support.xml.ParserPool;
 
+import org.apache.commons.io.FileUtils;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.Unmarshaller;
@@ -37,6 +38,7 @@ import org.w3c.dom.Element;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.util.LinkedHashMap;
@@ -441,13 +443,12 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 
 		try
 		{
-			Logger.info( DefaultMetaDescriptorServiceImpl.class, "unmarshall( final InputStream is ) 'is' as String = " + IOUtils.toString(is, "UTF-8") );
 			// Parse metadata file
 			final Element metadata = this.parserPool.parse( is ).getDocumentElement();
-			Logger.info( DefaultMetaDescriptorServiceImpl.class, "unmarshall( final InputStream is ) metadata = " + (( metadata == null ) ? "null" : metadata.toString()) );
+			Logger.info( DefaultMetaDescriptorServiceImpl.class, "unmarshall( final InputStream is ) metadata = " + (( metadata == null ) ? "null" : "has value") );
 			// Get apropriate unmarshaller
 			final Unmarshaller unmarshaller = this.unmarshallerFactory.getUnmarshaller( metadata );
-			Logger.info( DefaultMetaDescriptorServiceImpl.class, "unmarshall( final InputStream is ) unmarshaller = " + (( metadata == null ) ? "null" : "has value") );
+			Logger.info( DefaultMetaDescriptorServiceImpl.class, "unmarshall( final InputStream is ) unmarshaller = " + (( unmarshaller == null ) ? "null" : "has value") );
 			// Unmarshall using the document root element, an EntitiesDescriptor in this case
 			descriptor = EntityDescriptor.class.cast( unmarshaller.unmarshall( metadata ) );
 		}
