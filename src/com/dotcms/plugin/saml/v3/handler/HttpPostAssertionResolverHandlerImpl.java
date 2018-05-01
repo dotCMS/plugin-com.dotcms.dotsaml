@@ -72,6 +72,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 
 			messageContext = decoder.getMessageContext();
 			samlResponse = (Response) messageContext.getMessage();
+			
 
 			Logger.debug( this, "Post message context decoded: " + toXMLObjectString( samlResponse ) );
 
@@ -91,7 +92,20 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 		assertion = getAssertion( samlResponse, idpConfig );
 
 		Logger.debug( this, "Decrypted Assertion: " + toXMLObjectString( assertion ) );
+		
+		// Verify Response Signature if Needed.
+		if ( CredentialHelper.isVerifyResponseSignatureNeeded( idpConfig ) )
+		{
+			Logger.debug( this, "Doing the verification response signature." );
 
+			verifyResponseSignature( samlResponse, idpConfig );
+		}
+		else
+		{
+			Logger.debug( this, "The verification response signature and status code was skipped." );
+		}
+
+		// Verify Assertion Signature if needed.
 		if ( CredentialHelper.isVerifyAssertionSignatureNeeded( idpConfig ) )
 		{
 			Logger.debug( this, "Doing the verification assertion signature." );

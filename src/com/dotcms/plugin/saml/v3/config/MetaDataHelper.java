@@ -1,18 +1,18 @@
 package com.dotcms.plugin.saml.v3.config;
 
+import java.io.FileInputStream;
+import java.util.Collection;
+
+import org.opensaml.security.credential.Credential;
+
 import com.dotcms.plugin.saml.v3.key.BindingType;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.meta.DefaultMetaDescriptorServiceImpl;
 import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
 import com.dotcms.plugin.saml.v3.meta.MetadataBean;
 import com.dotcms.plugin.saml.v3.util.InstanceUtil;
-
+import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotmarketing.util.Logger;
-
-import java.io.FileInputStream;
-import java.util.Collection;
-
-import org.opensaml.security.credential.Credential;
 
 /**
  * Provides a helper to read xml metadata file of the SAML config.
@@ -43,6 +43,8 @@ public class MetaDataHelper
 			FileInputStream fileInputStream = new FileInputStream( idpConfig.getIdPMetadataFile() );
 
 			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) fileInputStream.getFD() = " + ( fileInputStream == null ? "null" : fileInputStream.getFD() ) );
+			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) idpConfig.getIdPMetadataFile().length() = " + idpConfig.getIdPMetadataFile() );
+			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) fileInputStream as String = " + IOUtils.toString(fileInputStream, "UTF-8") );
 
 			metadataBean = descriptorParser.parse( fileInputStream, idpConfig );
 

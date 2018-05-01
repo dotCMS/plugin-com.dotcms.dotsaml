@@ -542,6 +542,25 @@ public class SamlUtils
 
 		throw new SignatureException( "Signature cannot be validated" );
 	}
+	
+	private static void validateSignature( final Response response, final Collection<Credential> credentials ) throws SignatureException
+	{
+		for ( Credential credential : credentials )
+		{
+			try
+			{
+				SignatureValidator.validate( response.getSignature(), credential );
+
+				return;
+			}
+			catch ( SignatureException ignore )
+			{
+				Logger.info( SamlUtils.class, "Validation failed with credential: " + ignore.getMessage() );
+			}
+		}
+
+		throw new SignatureException( "Signature cannot be validated" );
+	}
 
 	/**
 	 * Does the verification of the assertion
@@ -603,7 +622,66 @@ public class SamlUtils
 		}
 	}
 
-		
+	/**
+	 * Does the verification of the assertion
+	 * 
+	 * @param response {@link Assertion}
+	 */
+	public static void verifyResponseSignature( final Response response, final IdpConfig idpConfig )
+	{
+		final SAMLSignatureProfileValidator profileValidator;
+
+		if ( CredentialHelper.isVerifyResponseSignatureNeeded( idpConfig ) && !response.isSigned() )
+		{
+			Logger.error( SamlUtils.class, "The assertion is not signed..." );
+			throw new DotSamlException( "The SAML Assertion was not signed" );
+		}
+
+		try
+		{
+			if ( CredentialHelper.isVerifySignatureProfileNeeded( idpConfig ) )
+			{
+				Logger.debug( SamlUtils.class, "Doing Profile Validation" );
+				profileValidator = new SAMLSignatureProfileValidator();
+				profileValidator.validate( response.getSignature() );
+				Logger.debug( SamlUtils.class, "Done Profile Validation" );
+			}
+			else
+			{
+				Logger.debug( SamlUtils.class, "Skipping the Verify Signature Profile check" );
+			}
+
+			// Ask on the config if the app wants signature validator
+			if ( CredentialHelper.isVerifySignatureCredentialsNeeded( idpConfig ) )
+			{
+				if ( null != MetaDataHelper.getSigningCredentials( idpConfig ) )
+				{
+					Logger.debug( SamlUtils.class, "Validating the signatures: " + MetaDataHelper.getSigningCredentials( idpConfig ) );
+					validateSignature( response, MetaDataHelper.getSigningCredentials( idpConfig ) );
+					Logger.debug( SamlUtils.class, "Doing signatures validation" );
+				}
+				else
+				{
+					Logger.debug( SamlUtils.class, "Validating the signature with a IdP Credentials " );
+					SignatureValidator.validate( response.getSignature(), getIdPCredentials( idpConfig ) );
+					Logger.debug( SamlUtils.class, "Done validation of the signature with a IdP Credentials " );
+				}
+			}
+			else
+			{
+				Logger.debug( SamlUtils.class, "Skipping the Verify Signature Profile check" );
+			}
+
+			Logger.debug( SamlUtils.class, "SAML Assertion signature verified" );
+
+		}
+		catch ( SignatureException e )
+		{
+			Logger.error( SamlUtils.class, e.getMessage(), e );
+			throw new DotSamlException( e.getMessage(), e );
+		}
+	}
+	
 	public static Credential createCredential( final IdpConfig idpConfig )
 	{
 		IdpConfigCredentialResolver resolver ;
