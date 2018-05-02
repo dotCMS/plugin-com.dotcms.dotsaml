@@ -1,9 +1,5 @@
 package com.dotcms.plugin.saml.v3.init;
 
-import com.dotcms.plugin.saml.v3.config.IdpConfigHelper;
-import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.json.JSONException;
-
 import java.io.IOException;
 import java.security.Provider;
 import java.security.Security;
@@ -12,7 +8,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.opensaml.core.config.InitializationException;
 import org.opensaml.core.config.InitializationService;
+import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.xmlsec.config.JavaCryptoValidationInitializer;
+
+import com.dotcms.plugin.saml.v3.config.IdpConfigHelper;
+import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.json.JSONException;
+
+import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 
 /**
  * Default initializer Responsibilities: - Init the Java Crypto. - Init Saml
@@ -65,6 +68,10 @@ public class SamlInitializer implements Initializer
 		{
 			Logger.info( this, "Initializing" );
 			InitializationService.initialize();
+			
+			if (XMLObjectProviderRegistrySupport.getParserPool() == null ) {
+				XMLObjectProviderRegistrySupport.setParserPool(new BasicParserPool());
+			}
 		}
 		catch ( InitializationException e )
 		{

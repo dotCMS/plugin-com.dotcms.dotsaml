@@ -633,8 +633,8 @@ public class SamlUtils
 
 		if ( CredentialHelper.isVerifyResponseSignatureNeeded( idpConfig ) && !response.isSigned() )
 		{
-			Logger.error( SamlUtils.class, "The assertion is not signed..." );
-			throw new DotSamlException( "The SAML Assertion was not signed" );
+			Logger.error( SamlUtils.class, "The response is not signed..." );
+			throw new DotSamlException( "The SAML Response was not signed" );
 		}
 
 		try
@@ -672,7 +672,7 @@ public class SamlUtils
 				Logger.debug( SamlUtils.class, "Skipping the Verify Signature Profile check" );
 			}
 
-			Logger.debug( SamlUtils.class, "SAML Assertion signature verified" );
+			Logger.debug( SamlUtils.class, "SAML Response signature verified" );
 
 		}
 		catch ( SignatureException e )
