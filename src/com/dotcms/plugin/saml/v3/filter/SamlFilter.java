@@ -1,7 +1,6 @@
 package com.dotcms.plugin.saml.v3.filter;
 
 import com.dotcms.cms.login.LoginServiceAPI;
-
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
 import com.dotcms.plugin.saml.v3.config.MetaDataHelper;
 import com.dotcms.plugin.saml.v3.exception.NotNullEmailAllowedException;
@@ -9,15 +8,14 @@ import com.dotcms.plugin.saml.v3.exception.SamlUnauthorizedException;
 import com.dotcms.plugin.saml.v3.init.Initializer;
 import com.dotcms.plugin.saml.v3.init.SamlInitializer;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
-import com.dotcms.plugin.saml.v3.service.*;
+import com.dotcms.plugin.saml.v3.service.OpenSamlAuthenticationServiceImpl;
+import com.dotcms.plugin.saml.v3.service.SamlAuthenticationService;
 import com.dotcms.plugin.saml.v3.util.InstanceUtil;
 import com.dotcms.plugin.saml.v3.util.MetaDataXMLPrinter;
 import com.dotcms.plugin.saml.v3.util.SamlUtils;
-
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
 import com.dotcms.repackage.org.apache.commons.io.IOUtils;
 import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
-
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.IdentifierAPI;
@@ -31,16 +29,14 @@ import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.portlets.contentlet.business.ContentletAPI;
 import com.dotmarketing.util.*;
 import com.dotmarketing.util.json.JSONException;
-
 import com.liferay.portal.PortalException;
 import com.liferay.portal.SystemException;
 import com.liferay.portal.auth.PrincipalThreadLocal;
 import com.liferay.portal.model.User;
 import com.liferay.portal.servlet.PortletSessionPool;
-
-import java.io.IOException;
-import java.io.Writer;
-import java.util.*;
+import org.opensaml.core.xml.io.MarshallingException;
+import org.opensaml.saml.saml2.core.NameID;
+import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 
 import javax.servlet.*;
 import javax.servlet.http.Cookie;
@@ -49,10 +45,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-
-import org.opensaml.core.xml.io.MarshallingException;
-import org.opensaml.saml.saml2.core.NameID;
-import org.opensaml.saml.saml2.metadata.EntityDescriptor;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.*;
 
 public class SamlFilter implements Filter
 {
@@ -303,7 +298,9 @@ public class SamlFilter implements Filter
 		{
 			for ( String logoutPath : logoutPathArray )
 			{
-				isLogoutRequest |= requestURI.startsWith( logoutPath );
+				if(requestURI.startsWith( logoutPath )  || requestURI.equals( logoutPath )) {
+					isLogoutRequest = true;
+				}
 			}
 		}
 
