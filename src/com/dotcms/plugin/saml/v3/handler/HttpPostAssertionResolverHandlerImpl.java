@@ -1,13 +1,11 @@
 package com.dotcms.plugin.saml.v3.handler;
 
-import com.dotcms.plugin.saml.v3.config.CredentialHelper;
-import com.dotcms.plugin.saml.v3.config.IdpConfig;
-import com.dotcms.plugin.saml.v3.exception.DotSamlException;
-import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
-
-import com.dotmarketing.exception.DotDataException;
-import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.json.JSONException;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.getAssertion;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.invokeMessageHandlerChain;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.toXMLObjectString;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.verifyAssertionSignature;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.verifyResponseSignature;
+import static com.dotmarketing.util.UtilMethods.isSet;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,8 +13,6 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.messaging.context.MessageContext;
@@ -27,10 +23,19 @@ import org.opensaml.saml.common.SAMLObject;
 import org.opensaml.saml.common.binding.security.impl.MessageLifetimeSecurityHandler;
 import org.opensaml.saml.common.messaging.context.SAMLMessageInfoContext;
 import org.opensaml.saml.saml2.binding.decoding.impl.HTTPPostDecoder;
-import org.opensaml.saml.saml2.core.*;
+import org.opensaml.saml.saml2.core.Assertion;
+import org.opensaml.saml.saml2.core.Response;
+import org.opensaml.saml.saml2.core.Status;
+import org.opensaml.saml.saml2.core.StatusCode;
 
-import static com.dotcms.plugin.saml.v3.util.SamlUtils.*;
-import static com.dotmarketing.util.UtilMethods.isSet;
+import com.dotcms.plugin.saml.v3.config.IdpConfig;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
+import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
+import com.dotmarketing.exception.DotDataException;
+import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.json.JSONException;
+
+import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 
 /**
  * Handles the http post
@@ -93,34 +98,12 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 
 		Logger.debug( this, "Decrypted Assertion: " + toXMLObjectString( assertion ) );
 		
-		// Verify Response Signature if Needed.
-		if ( CredentialHelper.isVerifyResponseSignatureNeeded( idpConfig ) )
-		{
-			Logger.debug( this, "Doing the verification response signature." );
-
-			verifyResponseSignature( samlResponse, idpConfig );
-		}
-		else
-		{
-			Logger.debug( this, "The verification response signature and status code was skipped." );
-		}
-
-		// Verify Assertion Signature if needed.
-		if ( CredentialHelper.isVerifyAssertionSignatureNeeded( idpConfig ) )
-		{
-			Logger.debug( this, "Doing the verification assertion signature." );
-
-			verifyAssertionSignature( assertion, idpConfig );
-
-			this.verifyStatus( samlResponse );
-		}
-		else
-		{
-			Logger.debug( this, "The verification assertion signature and status code was skipped." );
-		}
-
-		Logger.debug( this, "Decrypted Assertion: " + toXMLObjectString( assertion ) );
-
+		// Verify Signatures.
+		verifyResponseSignature( samlResponse, idpConfig );
+		verifyAssertionSignature( assertion, idpConfig );
+		
+		this.verifyStatus( samlResponse );
+		
 		return assertion;
 	}
 

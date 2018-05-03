@@ -571,12 +571,20 @@ public class SamlUtils
 	{
 		final SAMLSignatureProfileValidator profileValidator;
 
-		if ( CredentialHelper.isVerifyAssertionSignatureNeeded( idpConfig ) && !assertion.isSigned() )
+		if ( CredentialHelper.isVerifyAssertionSignatureNeeded( idpConfig ) != assertion.isSigned() )
 		{
-			Logger.error( SamlUtils.class, "The assertion is not signed..." );
-			throw new DotSamlException( "The SAML Assertion was not signed" );
+			Logger.error( SamlUtils.class, "The assertion signatures do not match..." );
+			throw new DotSamlException( "The SAML Assertion does not match" );
+		}
+		
+		// If unsigned, No need to go further.
+		if ( !CredentialHelper.isVerifyAssertionSignatureNeeded( idpConfig ) )
+		{
+			Logger.debug( SamlUtils.class, "The verification assertion signature and status code was skipped." );
+			return ;  // Exit
 		}
 
+		// Here on out we are checking signature
 		try
 		{
 			if ( CredentialHelper.isVerifySignatureProfileNeeded( idpConfig ) )
@@ -630,13 +638,22 @@ public class SamlUtils
 	public static void verifyResponseSignature( final Response response, final IdpConfig idpConfig )
 	{
 		final SAMLSignatureProfileValidator profileValidator;
-
-		if ( CredentialHelper.isVerifyResponseSignatureNeeded( idpConfig ) && !response.isSigned() )
+		
+		// The check signature in dotCMS and IdP must match
+		if ( CredentialHelper.isVerifyResponseSignatureNeeded( idpConfig ) != response.isSigned() )
 		{
-			Logger.error( SamlUtils.class, "The response is not signed..." );
-			throw new DotSamlException( "The SAML Response was not signed" );
+			Logger.error( SamlUtils.class, "The response signatures do not match..." );
+			throw new DotSamlException( "The SAML Response does not match" );
 		}
-
+		
+		// If unsigned, No need to go further.
+		if ( !CredentialHelper.isVerifyResponseSignatureNeeded( idpConfig ) )
+		{
+			Logger.debug( SamlUtils.class, "The verification response signature and status code was skipped." );
+			return ;  // Exit
+		}
+		
+		// Here on out we are checking signature
 		try
 		{
 			if ( CredentialHelper.isVerifySignatureProfileNeeded( idpConfig ) )
