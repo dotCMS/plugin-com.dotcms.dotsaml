@@ -74,7 +74,7 @@
 					<dt><label><%=LanguageUtil.get(pageContext, "idp-status-label")%></label></dt>
 					<dd>
 						<input type="radio" name="enabled" value="true" id="enabledTrue" /> <label for="enabledTrue">Yes</label>
-						<input type="radio" name="enabled" value="false" id="enabledFalse" /> <label for="enabledFalse">No</label>
+						<input type="radio" name="enabled" value="false" id="enabledFalse" checked="checked"/> <label for="enabledFalse">No</label>
 					</dd>
 
 				</dl>
@@ -90,18 +90,18 @@
 				</dl>
 
 				<dl>
-					<dt><label for="privateKey" class="required"><%=LanguageUtil.get(pageContext, "private-key-label")%></label></dt>
-					<dd><div id="privateKeySavedFile" id="privateKeySavedFile"></div><input type="file" id="privateKey" name="privateKey" required="true"></dd>
+					<dt><label for="privateKey"><%=LanguageUtil.get(pageContext, "private-key-label")%></label></dt>
+					<dd><div id="privateKeySavedFile" id="privateKeySavedFile"></div><input type="file" id="privateKey" name="privateKey"></dd>
 				</dl>
 
 				<dl>
-					<dt><label for="publicCert" class="required"><%=LanguageUtil.get(pageContext, "public-certificate-label")%></label></dt>
-					<dd><div id="publicCertSavedFile" id="publicCertSavedFile"></div><input type="file" id="publicCert" name="publicCert" required="true"></dd>
+					<dt><label for="publicCert""><%=LanguageUtil.get(pageContext, "public-certificate-label")%></label></dt>
+					<dd><div id="publicCertSavedFile" id="publicCertSavedFile"></div><input type="file" id="publicCert" name="publicCert"></dd>
 				</dl>
 
 				<dl>
-					<dt><label for="idPMetadataFile" class="required"><%=LanguageUtil.get(pageContext, "idp-metadata-label")%></label></dt>
-					<dd><div id="idPMetadataSavedFile" id="idPMetadataSavedFile"></div><input type="file" id="idPMetadataFile" name="idPMetadataFile" required="true"></dd>
+					<dt><label for="idPMetadataFile"><%=LanguageUtil.get(pageContext, "idp-metadata-label")%></label></dt>
+					<dd><div id="idPMetadataSavedFile" id="idPMetadataSavedFile"></div><input type="file" id="idPMetadataFile" name="idPMetadataFile"></dd>
 				</dl>
 
 
@@ -146,8 +146,7 @@
 				</dl>
 
 
-				<!-- Placeholder table with sites already assigned to the current IdP configuration .. Not sure if
-				a table is what we need here, though-->
+				<!-- Placeholder table with sites already assigned to the current IdP configuration -->
 
 				<table id="siteListingTable" class="listingTable">
 					<thead id="siteTableHeader">
