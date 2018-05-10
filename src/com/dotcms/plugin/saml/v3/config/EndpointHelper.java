@@ -1,9 +1,10 @@
 package com.dotcms.plugin.saml.v3.config;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import com.dotcms.plugin.saml.v3.exception.InvalidIssuerValueException;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
-import com.dotcms.plugin.saml.v3.util.SamlUtils;
-
 import com.dotmarketing.util.UtilMethods;
 
 /**
@@ -32,18 +33,35 @@ public class EndpointHelper
 	 * In case the user wants some specific logout url, otherwise null. This URL
 	 * is used on the metadata to fill out the assertion customer service
 	 * 
+	 * We are assuming that the issuerUrl which is posted by the Idp and 
+	 * SingleLogoutEndpoint which is also posted by the Idp will be on the
+	 * same domain and port.
+	 * 
 	 * @param idpConfig IdpConfig
 	 * @return String
+	 * @throws MalformedURLException 
 	 */
-	public static String getSingleLogoutEndpoint( IdpConfig idpConfig )
+	public static String getSingleLogoutEndpoint( IdpConfig idpConfig ) 
 	{
-		String spIssuerValue = SamlUtils.getSPIssuerValue( idpConfig );
+		URL issuerUrl;
+		String spIssuerValue = "";	
+		try {
+			
+			issuerUrl = new URL(idpConfig.getSpEndpointHostname());
+			// Build base URL from Assertion Consumer Endpoint
+			spIssuerValue = issuerUrl.getProtocol() + "://" + issuerUrl.getAuthority();
+			
+		} catch (MalformedURLException e) {
+			
+			throw new InvalidIssuerValueException( "The logout endpoint: " + spIssuerValue + " unable to extract base URL from Assertion Consumer Endpoint" );
+		}
 
 		if ( null != spIssuerValue && !( spIssuerValue.trim().startsWith( DotSamlConstants.HTTP_SCHEMA ) || spIssuerValue.trim().startsWith( DotSamlConstants.HTTPS_SCHEMA ) ) )
 		{
-			throw new InvalidIssuerValueException( "The issuer: " + spIssuerValue + " should starts with http:// or https:// to be valid" );
+			throw new InvalidIssuerValueException( "The logout endpoint : " + spIssuerValue + " should starts with http:// or https:// to be valid" );
 		}
 
+		// Add logout path
 		spIssuerValue += DotSamlConstants.LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP;
 
 		return OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_LOGOUT_SERVICE_ENDPOINT_URL, spIssuerValue );

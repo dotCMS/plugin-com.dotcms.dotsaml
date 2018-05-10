@@ -39,22 +39,10 @@ public class MetaDataHelper
 		FileInputStream fileInputStream = null ;
 		
 		try
-		{
-			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) START ");
-			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) idpConfig.getId() = " + ( idpConfig == null ? "null" : idpConfig.getId() ) );
-			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) idpConfig.getIdPMetadataFile() = " + ( idpConfig.getIdPMetadataFile() == null ? "null" : idpConfig.getIdPMetadataFile().getAbsoluteFile() ) );
-
+		{		
 			fileInputStream = new FileInputStream( idpConfig.getIdPMetadataFile() );
 
-			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) fileInputStream.getFD() = " + ( fileInputStream == null ? "null" : fileInputStream.getFD() ) );
-			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) idpConfig.getIdPMetadataFile().length() = " + idpConfig.getIdPMetadataFile() );
-			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) fileInputStream as String = " + FileUtils.readFileToString(idpConfig.getIdPMetadataFile(), Charset.forName("utf-8")) );
-
 			metadataBean = descriptorParser.parse( fileInputStream, idpConfig );
-
-			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) metadataBean.getEntityId() = " + ( metadataBean == null ? "null" : metadataBean.getEntityId() ) );
-
-			Logger.info( MetaDataHelper.class, "MetaDataHelper.getMetaData( IdpConfig ) END ");
 		}
 		catch ( Exception exception )
 		{
