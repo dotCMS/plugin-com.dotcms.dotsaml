@@ -128,7 +128,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 
 		try
 		{
-			clockSkew = (long) idpConfig.getOptionalProperties().get( DotSamlConstants.DOT_SAML_CLOCK_SKEW );
+			clockSkew = Long.parseLong( (String)idpConfig.getOptionalProperties().get( DotSamlConstants.DOT_SAML_CLOCK_SKEW ));
 		}
 		catch ( Exception exception )
 		{
@@ -137,7 +137,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 
 		try
 		{
-			lifeTime = (long) idpConfig.getOptionalProperties().get( DotSamlConstants.DOT_SAML_MESSAGE_LIFE_TIME );
+			lifeTime = Long.parseLong( (String) idpConfig.getOptionalProperties().get( DotSamlConstants.DOT_SAML_MESSAGE_LIFE_TIME ));
 		}
 		catch ( Exception exception )
 		{
