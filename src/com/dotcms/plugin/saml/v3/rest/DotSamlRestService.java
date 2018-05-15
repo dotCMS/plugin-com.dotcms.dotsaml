@@ -18,17 +18,22 @@ import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.json.JSONException;
 
-import java.io.IOException;
-import java.io.Serializable;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 @Path( "/dotsaml" )
 public class DotSamlRestService implements Serializable
 {
 	private static final long serialVersionUID = 6901877501532737335L;
 	private final IdpConfigHelper idpConfigHelper;
+	public static final List<String> dotsamlPathSegments = new ArrayList<String>() {{
+		add("login");
+		add("metadata");
+	}};
 
 	public DotSamlRestService()
 	{
