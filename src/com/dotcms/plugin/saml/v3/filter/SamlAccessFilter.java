@@ -42,8 +42,7 @@ import com.dotmarketing.util.json.JSONException;
 
 /**
  * Access filter for SAML plugin, it does the autologin and also redirect to the
- * IDP if the user is not logged in. In addition prints out the metadata.xml
- * information for the dotCMS SP.
+ * IDP if the user is not logged in.
  * 
  * @author jsanca
  */
@@ -97,14 +96,6 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 				// Is this a response back from the IdP for logout
 				if (httpServletRequest.getRequestURI().contains(DotSamlConstants.LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP)) {
 					processLogoutReturn(idpConfig, httpServletRequest, httpServletResponse);
-					return;
-				}
-
-				// First, check if the current request is the SP metadata xml.
-				if (httpServletRequest.getRequestURI()
-						.contains(MetaDataHelper.getServiceProviderCustomMetadataPath(idpConfig))) {
-					// if its, so print it out in the response and return.
-					super.printMetaData(httpServletRequest, httpServletResponse, idpConfig);
 					return;
 				}
 
@@ -178,18 +169,6 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 				if (isLogoutNeed && session != null && super.isLogoutRequest(httpServletRequest.getRequestURI(),
 						EndpointHelper.getLogoutPathArray(idpConfig))) {
 					if (super.doLogout(httpServletResponse, httpServletRequest, session, idpConfig)) {
-						return;
-					}
-				}
-
-			} else if (idpConfig != null && !idpConfig.isEnabled()) {
-				// if the idpConfig for this host is not enabled
-				// we check if the url is a default metadata url.
-				if (httpServletRequest.getRequestURI()
-						.contains(DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH_DEFAULT_VALUE)) {
-					// if its, so print it out in the response and return.
-					if (super.printMetaData(httpServletRequest, httpServletResponse, idpConfig)) {
-						Logger.info(this, "Metadata printed");
 						return;
 					}
 				}

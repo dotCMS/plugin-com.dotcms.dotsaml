@@ -129,7 +129,7 @@ public class SamlFilter implements Filter
 		{
 			for ( String filterPath : filterPaths )
 			{
-				filter |= uri.contains( filterPath ); //("saml3/metadata/dotcms_metadata.xml")
+				filter |= uri.contains( filterPath );
 			}
 		}
 

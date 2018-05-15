@@ -4,6 +4,8 @@ import com.dotcms.contenttype.model.field.FieldTypeResource;
 
 import com.dotcms.plugin.saml.v3.rest.api.v1.DotSamlResource;
 
+import com.dotcms.plugin.saml.v3.rest.DotSamlRestService;
+
 import com.dotcms.repackage.org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import com.dotcms.rest.RulesEnginePortlet;
@@ -134,6 +136,7 @@ public class DotRestApplication extends com.dotcms.repackage.javax.ws.rs.core.Ap
 
 					// SAML RESOURCES
 					REST_CLASSES.add( DotSamlResource.class );
+					REST_CLASSES.add( DotSamlRestService.class );
 				}
 			}
 		}

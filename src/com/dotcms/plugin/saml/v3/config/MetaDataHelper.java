@@ -1,10 +1,8 @@
 package com.dotcms.plugin.saml.v3.config;
 
 import java.io.FileInputStream;
-import java.nio.charset.Charset;
 import java.util.Collection;
 
-import org.apache.commons.io.FileUtils;
 import org.opensaml.security.credential.Credential;
 
 import com.dotcms.plugin.saml.v3.key.BindingType;
@@ -118,17 +116,5 @@ public class MetaDataHelper
 		}
 
 		return url;
-	}
-
-	/**
-	 * Returns the path to mapping the metadata.xml info for SP (Service
-	 * Provider), in our case the SP is dotCMS.
-	 * 
-	 * @param idpConfig IdpConfig
-	 * @return String
-	 */
-	public static String getServiceProviderCustomMetadataPath( IdpConfig idpConfig )
-	{
-		return OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH, DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH_DEFAULT_VALUE );
 	}
 }

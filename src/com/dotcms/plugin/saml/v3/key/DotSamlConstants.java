@@ -364,23 +364,6 @@ public class DotSamlConstants
 	public static final String DOT_SAML_SERVICE_PROVIDER_CUSTOM_CREDENTIAL_PROVIDER_CLASSNAME = "service.provider.custom.credential.provider.classname";
 
 	/**
-	 * By default we use:
-	 * "{@link DotSamlConstants}.DOT_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH_DEFAULT_VALUE",
-	 * you can override the path to mapping the metadata with whatever value you
-	 * need.
-	 */
-	public static final String DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH = "service.provider.custom.metadata.path";
-
-	/**
-	 * Default value "/dotsaml/metadata.xml" for the
-	 * {@link DotSamlConstants}.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH
-	 * This is the path you have to use in the metadata providers on the open
-	 * saml idp (for instance shibboleth) or you can override by using
-	 * {@link DotSamlConstants}.DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH
-	 */
-	public static final String DOTCMS_SAML_SERVICE_PROVIDER_CUSTOM_METADATA_PATH_DEFAULT_VALUE = "/dotsaml/metadata.xml";
-
-	/**
 	 * For the provider issue which is the identifier for the sender, by default
 	 * is: DotSamlConstants.DOTCMS_SAML_SERVICE_PROVIDER_ISSUER_DEFAULT_VALUE
 	 * Usually you overrides it to your host domain, for instance our id could
