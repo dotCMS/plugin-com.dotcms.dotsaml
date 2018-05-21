@@ -26,7 +26,10 @@ public class EndpointHelper
 	public static String getAssertionConsumerEndpoint( IdpConfig idpConfig )
 	{
 		// spEndpointHostname is a required field during edit.  Has to have value.
-		return idpConfig.getSpEndpointHostname();
+		return spEndpointHostname( idpConfig ) 
+				+ DotSamlConstants.ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP 
+				+ "/"
+				+ idpConfig.getId();
 	}
 
 	/**
@@ -43,28 +46,10 @@ public class EndpointHelper
 	 */
 	public static String getSingleLogoutEndpoint( IdpConfig idpConfig ) 
 	{
-		URL issuerUrl;
-		String spIssuerValue = "";	
-		try {
-			
-			issuerUrl = new URL(idpConfig.getSpEndpointHostname());
-			// Build base URL from Assertion Consumer Endpoint
-			spIssuerValue = issuerUrl.getProtocol() + "://" + issuerUrl.getAuthority();
-			
-		} catch (MalformedURLException e) {
-			
-			throw new InvalidIssuerValueException( "The logout endpoint: " + spIssuerValue + " unable to extract base URL from Assertion Consumer Endpoint" );
-		}
-
-		if ( null != spIssuerValue && !( spIssuerValue.trim().startsWith( DotSamlConstants.HTTP_SCHEMA ) || spIssuerValue.trim().startsWith( DotSamlConstants.HTTPS_SCHEMA ) ) )
-		{
-			throw new InvalidIssuerValueException( "The logout endpoint : " + spIssuerValue + " should starts with http:// or https:// to be valid" );
-		}
-
-		// Add logout path
-		spIssuerValue += DotSamlConstants.LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP;
-
-		return OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_LOGOUT_SERVICE_ENDPOINT_URL, spIssuerValue );
+		return spEndpointHostname( idpConfig ) 
+				+ DotSamlConstants.LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP 
+				+ "/"
+				+ idpConfig.getId();
 	}
 
 	/**
@@ -105,8 +90,21 @@ public class EndpointHelper
 	 */
 	public static String[] getIncludePathArray( IdpConfig idpConfig )
 	{
-		String accessFilterValues = OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_INCLUDE_PATH_VALUES, "^" + DotSamlConstants.ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP + "$," + "^/dotCMS/login.*$," + "^/html/portal/login.*$," + "^/c/public/login.*$," + "^/c/portal_public/login.*$," + "^/c/portal/logout.*$," + "^/dotCMS/logout.*$," + "^/application/login/login.*$," + "^/dotAdmin.*$," + "^" + DotSamlConstants.LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP + "$" );
+		//String accessFilterValues = OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_INCLUDE_PATH_VALUES, "^" + DotSamlConstants.ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP + "$," + "^/dotCMS/login.*$," + "^/html/portal/login.*$," + "^/c/public/login.*$," + "^/c/portal_public/login.*$," + "^/c/portal/logout.*$," + "^/dotCMS/logout.*$," + "^/application/login/login.*$," + "^/dotAdmin.*$," + "^" + DotSamlConstants.LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP + "$" );
+		String accessFilterValues = OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_INCLUDE_PATH_VALUES, "^" + DotSamlConstants.ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP + "$," + "^/dotCMS/login.*$," + "^/html/portal/login.*$," + "^/c/public/login.*$," + "^/c/portal_public/login.*$," + "^/c/portal/logout.*$," + "^/dotCMS/logout.*$," + "^/application/login/login.*$," + "^/dotAdmin.*$" );
 
 		return ( UtilMethods.isSet( accessFilterValues ) ) ? accessFilterValues.split( "," ) : null;
+	}
+	
+	/*
+	 * Utility to trim whitespace and remove the dash at the end if it exists.
+	 */
+	private static String spEndpointHostname( IdpConfig idpConfig ) {
+		String spHostName = idpConfig.getSpEndpointHostname().trim();
+		 if (spHostName != null && spHostName.length() > 0 && spHostName.charAt(spHostName.length() - 1) == '/') {
+			 spHostName = spHostName.substring(0, spHostName.length() - 1);
+		    }
+		 
+		 return spHostName;
 	}
 }

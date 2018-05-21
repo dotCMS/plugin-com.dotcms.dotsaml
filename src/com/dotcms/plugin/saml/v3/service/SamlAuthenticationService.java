@@ -76,20 +76,12 @@ public interface SamlAuthenticationService extends Serializable
 	Assertion resolveAssertion( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig ) throws DotDataException, IOException, JSONException;
 
 	/**
-	 * Perform the logic to get or create the user from the SAML and DotCMS If
-	 * the SAML_ART_PARAM_KEY, will resolve the Assertion by calling a Resolver
-	 * and will create/get/update the user on the dotcms data.
 	 * 
-	 * @param request {@link HttpServletRequest}
-	 * @param response {@link HttpServletResponse}
-	 * @param idpConfig {@link IdpConfig}
-	 * @return User
-	 * @throws IOException 
-	 * @throws JSONException 
-	 * @throws DotDataException 
+	 * @param assertion
+	 * @param idpConfig
 	 */
-	User getUser( final HttpServletRequest request, final HttpServletResponse response, final IdpConfig idpConfig ) throws DotDataException, JSONException, IOException;
-
+	public User resolveUser( final Assertion assertion, final IdpConfig idpConfig );
+	
 	/**
 	 * Perform the logic to get or create the user from the SAML and DotCMS If
 	 * the SAML_ART_PARAM_KEY, will resolve the Assertion by calling a Resolver
@@ -97,13 +89,12 @@ public interface SamlAuthenticationService extends Serializable
 	 * 
 	 * @param request {@link HttpServletRequest}
 	 * @param response {@link HttpServletResponse}
-	 * @param loginHttpSession {@link HttpSession} session to store the
 	 * @param idpConfig {@link IdpConfig}
 	 * @return User
 	 * @throws IOException 
 	 * @throws JSONException 
 	 * @throws DotDataException 
 	 */
-	User getUser( final HttpServletRequest request, final HttpServletResponse response, final HttpSession loginHttpSession, final IdpConfig idpConfig ) throws DotDataException, JSONException, IOException;
-
+	
+	User getUser(final HttpServletRequest request, final IdpConfig idpConfig);
 }

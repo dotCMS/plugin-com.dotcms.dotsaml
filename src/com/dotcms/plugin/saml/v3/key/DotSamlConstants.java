@@ -22,6 +22,8 @@ public class DotSamlConstants
 	public static final String RESPONSE_AND_ASSERTION = "responseandassertion";
 	public static final String RESPONSE = "response";
 	public static final String ASSERTION = "assertion";
+	public static final String SAML_USER_ID = "SAMLUserId" ;
+	public static final String DEFAULT_LOGIN_PATH = "/dotAdmin";
 
 	public static final String SAML_NAME_ID_SESSION_ATTR = "SAML_NAME_ID";
 

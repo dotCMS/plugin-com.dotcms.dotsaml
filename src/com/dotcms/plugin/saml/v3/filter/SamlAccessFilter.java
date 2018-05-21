@@ -14,7 +14,6 @@ import javax.servlet.http.HttpSession;
 import com.dotcms.cms.login.LoginServiceAPI;
 import com.dotcms.plugin.saml.v3.config.EndpointHelper;
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
-import com.dotcms.plugin.saml.v3.config.MetaDataHelper;
 import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
@@ -93,11 +92,7 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 				isLogoutNeed = OptionalPropertiesHelper.getOptionBoolean(idpConfig,
 						DotSamlConstants.DOTCMS_SAML_IS_LOGOUT_NEED, true);
 
-				// Is this a response back from the IdP for logout
-				if (httpServletRequest.getRequestURI().contains(DotSamlConstants.LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP)) {
-					processLogoutReturn(idpConfig, httpServletRequest, httpServletResponse);
-					return;
-				}
+
 
 				// check if there is any exception filter path, to avoid to
 				// canApply all the logic.
@@ -111,13 +106,9 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 					// id) is in the request query string
 					// for artifact resolution or SAMLResponse for post
 					// resolution.
-					final AutoLoginResult autoLoginResult = super.doAutoLogin(httpServletRequest, httpServletResponse,
+					
+					final AutoLoginResult autoLoginResult = super.autoLogin(httpServletRequest, httpServletResponse,
 							session, idpConfig);
-
-					if (!autoLoginResult.isAutoLogin()) {
-						return; // no continue. Usually no continue when there
-								// is a sendRedirect or sendError done.
-					}
 
 					// we have to assign again the session, since the
 					// doAutoLogin might be renewed.
@@ -183,25 +174,6 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 		}
 
 		chain.doFilter(httpServletRequest, httpServletResponse);
-
-	}
-
-	private void processLogoutReturn(IdpConfig idpConfig, HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse) throws IOException {
-		
-		String logoutPath = OptionalPropertiesHelper.getOptionString(idpConfig,
-				DotSamlConstants.DOT_SAML_LOGOUT_SERVICE_ENDPOINT_URL, 
-				buildBaseUrlFromRequest( httpServletRequest ) + "/");
-		
-		httpServletResponse.sendRedirect( logoutPath ); 
-	}
-
-	private String buildBaseUrlFromRequest(HttpServletRequest httpServletRequest) {
-		String uri = httpServletRequest.getScheme() + "://" + 
-	                 httpServletRequest.getServerName() + ":" + 
-				     httpServletRequest.getServerPort() ;
-
-		return uri;
 	}
 
 	@Override
