@@ -483,45 +483,6 @@ public class SamlFilter implements Filter {
 		return uri.startsWith("/dotCMS/login") || uri.startsWith("/application/login");
 	}
 
-//	protected boolean checkRedirection(final HttpServletRequest request, final HttpServletResponse response,
-//			final HttpSession session) {
-//		final String redirectAfterLogin = (String) session.getAttribute(WebKeys.REDIRECT_AFTER_LOGIN);
-//
-//		if (null != redirectAfterLogin) {
-//			session.removeAttribute(WebKeys.REDIRECT_AFTER_LOGIN);
-//			final String currentRequest = request.getRequestURI()
-//					+ ((null != request.getQueryString()) ? "?" + request.getQueryString() : StringUtils.EMPTY);
-//
-//			// if it is not the same request.
-//			if (!currentRequest.equals(redirectAfterLogin)) {
-//				try {
-//					if (this.isBackEndLoginPage(redirectAfterLogin) || this.isFrontEndLoginPage(redirectAfterLogin)) {
-//						if (this.isBackEndAdmin(session, redirectAfterLogin)) {
-//							Logger.debug(this, "Redirecting to: /dotAdmin");
-//							response.sendRedirect("/dotAdmin");
-//						} else {
-//							// if it is front end
-//							Logger.debug(this, "Redirecting to: /");
-//							response.sendRedirect("/");
-//						}
-//					} else {
-//						Logger.debug(this, "Redirecting to: " + redirectAfterLogin);
-//						response.sendRedirect(redirectAfterLogin);
-//					}
-//
-//					return false; // not continue. since it is a redirect.
-//				} catch (IOException e) {
-//					Logger.error(this, e.getMessage(), e);
-//				}
-//			}
-//		}
-//
-//		// continue with the current request.
-//		return true;
-//	}
-
-
-
 	@Override
 	public void destroy() {
 
