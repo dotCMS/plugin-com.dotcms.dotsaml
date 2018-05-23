@@ -357,7 +357,7 @@
 				getDisabledSites();
 			},
 			downloadSPMedatadata : function( id ) {
-				var metadataUrl = "/api/v1/dotsaml/metadata/" + id;
+				var metadataUrl = "/dotsaml/metadata/" + id;
 				window.open( metadataUrl );
 			},
 			gotoNextPage: function(){
