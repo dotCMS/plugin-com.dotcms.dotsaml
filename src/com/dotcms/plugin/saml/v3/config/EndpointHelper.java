@@ -26,7 +26,8 @@ public class EndpointHelper
 	public static String getAssertionConsumerEndpoint( IdpConfig idpConfig )
 	{
 		// spEndpointHostname is a required field during edit.  Has to have value.
-		return spEndpointHostname( idpConfig ) 
+		return DotSamlConstants.HTTPS_SCHEMA
+				+ spEndpointHostname( idpConfig ) 
 				+ DotSamlConstants.ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP 
 				+ "/"
 				+ idpConfig.getId();
@@ -46,7 +47,8 @@ public class EndpointHelper
 	 */
 	public static String getSingleLogoutEndpoint( IdpConfig idpConfig ) 
 	{
-		return spEndpointHostname( idpConfig ) 
+		return DotSamlConstants.HTTPS_SCHEMA
+				+ spEndpointHostname( idpConfig ) 
 				+ DotSamlConstants.LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP 
 				+ "/"
 				+ idpConfig.getId();
