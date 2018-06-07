@@ -46,7 +46,6 @@ public class IdpConfigPaginator implements Paginator<IdpConfig>
 
 			//if ( UtilMethods.isSet( trimFilter ) )
 			if (UtilMethods.isSet(filter)){
-			{
 				//idpConfigs = idpConfigs.stream().filter( x -> x.getIdpName().toLowerCase().contains( trimFilter.toLowerCase() ) ).collect( Collectors.toList() );
 				idpConfigs = idpConfigs.stream().filter(x -> x.contains(filter));
 			}
