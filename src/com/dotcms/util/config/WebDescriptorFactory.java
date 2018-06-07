@@ -8,52 +8,51 @@ import java.io.StringWriter;
 
 /**
  * Factory for a {@link WebDescriptor}
+ * 
  * @author jsanca
  */
-public class WebDescriptorFactory {
+public class WebDescriptorFactory
+{
+	public static WebDescriptor createWebDescriptor( final String file ) throws Exception
+	{
+		return createWebDescriptor( new File( file ) );
+	}
 
-    public static WebDescriptor createWebDescriptor (final String file) throws Exception {
+	public static WebDescriptor createWebDescriptor( final File file ) throws Exception
+	{
+		return new DomXMLWebDescriptorImpl( file );
+	}
 
-        return createWebDescriptor(new File(file));
-    }
+	public static WebDescriptor createWebDescriptor( final InputStream stream ) throws Exception
+	{
+		return new DomXMLWebDescriptorImpl( stream );
+	}
 
-    public static WebDescriptor createWebDescriptor (final File file) throws Exception {
+	public static void main( String[] args ) throws Exception
+	{
+		WebDescriptor webDescriptor = WebDescriptorFactory.createWebDescriptor( "web.xml" );
 
-        return new DomXMLWebDescriptorImpl(file);
-    }
+		webDescriptor.addFilterBefore( "AutoLoginFilter", new FilterConfigBean( SamlAccessFilter.class, "/*" ) );
 
-    public static WebDescriptor createWebDescriptor (final InputStream stream) throws Exception {
+		StringWriter stringWriter = new StringWriter();
+		webDescriptor.transform( stringWriter );
 
-        return new DomXMLWebDescriptorImpl(stream);
-    }
+		System.out.println( stringWriter );
+		String filterClassName = SamlAccessFilter.class.getName();
+		System.out.println( "Looking for :" + filterClassName );
+		System.out.println( stringWriter.toString().contains( filterClassName ) );
 
-    public static void main(String[] args) throws Exception {
+		System.out.println( "Exists SamlAccessFilter : " + webDescriptor.existsElement( "filter", "filter-name", SamlAccessFilter.class.getSimpleName() ) );
 
-        WebDescriptor webDescriptor =
-                WebDescriptorFactory.createWebDescriptor("web.xml");
+		webDescriptor.removeFilter( SamlAccessFilter.class );
 
-        webDescriptor.addFilterBefore("AutoLoginFilter",
-                new FilterConfigBean(SamlAccessFilter.class, "/*"));
-
-        StringWriter stringWriter = new StringWriter();
-        webDescriptor.transform(stringWriter);
-
-        System.out.println(stringWriter);
-        String filterClassName = SamlAccessFilter.class.getName();
-        System.out.println("Looking for :" + filterClassName);
-        System.out.println(stringWriter.toString().contains(filterClassName));
-
-        System.out.println("Exists SamlAccessFilter : " + webDescriptor.existsElement("filter", "filter-name", SamlAccessFilter.class.getSimpleName()));
-
-        webDescriptor.removeFilter(SamlAccessFilter.class);
-
-        stringWriter = new StringWriter();
-        webDescriptor.transform(stringWriter);
-        System.out.println("**********************************************");
-        System.out.println("**********************************************");
-        System.out.println("**********************************************");
-        System.out.println(stringWriter);
-        System.out.println("Looking for :" + filterClassName);
-        System.out.println(stringWriter.toString().contains(filterClassName));
-    }
-} // E:O:F:WebDescriptorFactory.
+		stringWriter = new StringWriter();
+		webDescriptor.transform( stringWriter );
+		System.out.println( "**********************************************" );
+		System.out.println( "**********************************************" );
+		System.out.println( "**********************************************" );
+		System.out.println( stringWriter );
+		System.out.println( "Looking for :" + filterClassName );
+		System.out.println( stringWriter.toString().contains( filterClassName ) );
+	}
+}
