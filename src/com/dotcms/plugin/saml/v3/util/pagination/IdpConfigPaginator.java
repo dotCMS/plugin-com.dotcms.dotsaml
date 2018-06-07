@@ -40,13 +40,14 @@ public class IdpConfigPaginator implements Paginator<IdpConfig>
 	{
 		try
 		{
-			final String trimFilter = filter.trim();
+			//final String trimFilter = filter.trim();
 
 			List<IdpConfig> idpConfigs = IdpConfigHelper.getInstance().getIdpConfigs();
 
-			if ( UtilMethods.isSet( trimFilter ) )
-			{
-				idpConfigs = idpConfigs.stream().filter( x -> x.getIdpName().toLowerCase().contains( trimFilter.toLowerCase() ) ).collect( Collectors.toList() );
+			//if ( UtilMethods.isSet( trimFilter ) )
+			if (UtilMethods.isSet(filter)){
+				//idpConfigs = idpConfigs.stream().filter( x -> x.getIdpName().toLowerCase().contains( trimFilter.toLowerCase() ) ).collect( Collectors.toList() );
+				idpConfigs = idpConfigs.stream().filter(x -> x.contains(filter));
 			}
 
 			List<IdpConfig> paginatedAndFiltered = idpConfigs.stream().skip( offset ).limit( limit ).collect( Collectors.toList() );
