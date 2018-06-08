@@ -14,9 +14,10 @@ import javax.servlet.http.HttpSession;
 import com.dotcms.cms.login.LoginServiceAPI;
 import com.dotcms.plugin.saml.v3.config.EndpointHelper;
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
-import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
 import com.dotcms.plugin.saml.v3.service.OpenSamlAuthenticationServiceImpl;
 import com.dotcms.plugin.saml.v3.service.SamlAuthenticationService;
 import com.dotcms.plugin.saml.v3.util.InstanceUtil;
@@ -89,8 +90,8 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 			// If idpConfig is null, means this site does not need SAML
 			// processing
 			if (idpConfig != null && idpConfig.isEnabled()) {
-				isLogoutNeed = OptionalPropertiesHelper.getOptionBoolean(idpConfig,
-						DotSamlConstants.DOTCMS_SAML_IS_LOGOUT_NEED, true);
+				isLogoutNeed = DotsamlPropertiesService.getOptionBoolean(idpConfig,
+						DotsamlPropertyName.DOTCMS_SAML_IS_LOGOUT_NEED);
 
 
 

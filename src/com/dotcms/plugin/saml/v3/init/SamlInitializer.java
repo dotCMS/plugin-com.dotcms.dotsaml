@@ -1,6 +1,7 @@
 package com.dotcms.plugin.saml.v3.init;
 
 import com.dotcms.plugin.saml.v3.config.IdpConfigHelper;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlDefaultPropertiesService;
 import com.dotcms.plugin.saml.v3.rest.DotSamlRestService;
 import com.dotcms.repackage.org.tuckey.web.filters.urlrewrite.NormalRule;
 import com.dotmarketing.filters.DotUrlRewriteFilter;
@@ -39,6 +40,9 @@ public class SamlInitializer implements Initializer
 	@Override
 	public void init( final Map<String, Object> context )
 	{
+		// Prepare the default properties.
+		DotsamlDefaultPropertiesService.init();
+		
 		JavaCryptoValidationInitializer javaCryptoValidationInitializer = new JavaCryptoValidationInitializer();
 
 		try

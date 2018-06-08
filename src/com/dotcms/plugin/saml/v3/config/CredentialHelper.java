@@ -1,6 +1,8 @@
 package com.dotcms.plugin.saml.v3.config;
 
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
 import com.dotcms.plugin.saml.v3.util.InstanceUtil;
 
 public class CredentialHelper
@@ -17,7 +19,7 @@ public class CredentialHelper
 	@SuppressWarnings( { "rawtypes", "unchecked" } )
 	public static CredentialProvider getIdProviderCustomCredentialProvider( IdpConfig idpConfig )
 	{
-		String className = OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_ID_PROVIDER_CUSTOM_CREDENTIAL_PROVIDER_CLASSNAME, null );
+		String className = DotsamlPropertiesService.getOptionString( idpConfig, DotsamlPropertyName.DOT_SAML_ID_PROVIDER_CUSTOM_CREDENTIAL_PROVIDER_CLASSNAME);
 
 		Class clazz = InstanceUtil.getClass( className );
 
@@ -35,7 +37,7 @@ public class CredentialHelper
 	@SuppressWarnings( { "rawtypes", "unchecked" } )
 	public static CredentialProvider getServiceProviderCustomCredentialProvider( IdpConfig idpConfig )
 	{
-		String className = OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_SERVICE_PROVIDER_CUSTOM_CREDENTIAL_PROVIDER_CLASSNAME, null );
+		String className = DotsamlPropertiesService.getOptionString( idpConfig, DotsamlPropertyName.DOT_SAML_SERVICE_PROVIDER_CUSTOM_CREDENTIAL_PROVIDER_CLASSNAME);
 
 		Class clazz = InstanceUtil.getClass( className );
 
@@ -92,7 +94,7 @@ public class CredentialHelper
 	 */
 	public static boolean isVerifySignatureCredentialsNeeded( IdpConfig idpConfig )
 	{
-		return OptionalPropertiesHelper.getOptionBoolean( idpConfig, DotSamlConstants.DOT_SAML_VERIFY_SIGNATURE_CREDENTIALS, true );
+		return DotsamlPropertiesService.getOptionBoolean( idpConfig, DotsamlPropertyName.DOT_SAML_VERIFY_SIGNATURE_CREDENTIALS);
 	}
 
 	/**
@@ -107,6 +109,6 @@ public class CredentialHelper
 	 */
 	public static boolean isVerifySignatureProfileNeeded( IdpConfig idpConfig )
 	{
-		return OptionalPropertiesHelper.getOptionBoolean( idpConfig, DotSamlConstants.DOT_SAML_VERIFY_SIGNATURE_PROFILE, true );
+		return DotsamlPropertiesService.getOptionBoolean( idpConfig, DotsamlPropertyName.DOT_SAML_VERIFY_SIGNATURE_PROFILE);
 	}
 }

@@ -1,10 +1,10 @@
 package com.dotcms.plugin.saml.v3.config;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 
-import com.dotcms.plugin.saml.v3.exception.InvalidIssuerValueException;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
 import com.dotmarketing.util.UtilMethods;
 
 /**
@@ -65,7 +65,7 @@ public class EndpointHelper
 	 */
 	public static String[] getAccessFilterArray( IdpConfig idpConfig )
 	{
-		String accessFilterValues = OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_ACCESS_FILTER_VALUES, null );
+		String accessFilterValues = DotsamlPropertiesService.getOptionString( idpConfig, DotsamlPropertyName.DOT_SAML_ACCESS_FILTER_VALUES );
 
 		return ( UtilMethods.isSet( accessFilterValues ) ) ? accessFilterValues.split( "," ) : null;
 	}
@@ -78,7 +78,7 @@ public class EndpointHelper
 	 */
 	public static String[] getLogoutPathArray( IdpConfig idpConfig )
 	{
-		String logoutPathValues = OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_LOGOUT_PATH_VALUES, "/c/portal/logout,/dotCMS/logout,/dotsaml/request/logout" );
+		String logoutPathValues = DotsamlPropertiesService.getOptionString( idpConfig, DotsamlPropertyName.DOT_SAML_LOGOUT_PATH_VALUES );
 
 		return ( UtilMethods.isSet( logoutPathValues ) ) ? logoutPathValues.split( "," ) : null;
 	}
@@ -92,8 +92,7 @@ public class EndpointHelper
 	 */
 	public static String[] getIncludePathArray( IdpConfig idpConfig )
 	{
-		//String accessFilterValues = OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_INCLUDE_PATH_VALUES, "^" + DotSamlConstants.ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP + "$," + "^/dotCMS/login.*$," + "^/html/portal/login.*$," + "^/c/public/login.*$," + "^/c/portal_public/login.*$," + "^/c/portal/logout.*$," + "^/dotCMS/logout.*$," + "^/application/login/login.*$," + "^/dotAdmin.*$," + "^" + DotSamlConstants.LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP + "$" );
-		String accessFilterValues = OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_INCLUDE_PATH_VALUES, "^" + DotSamlConstants.ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP + "$," + "^/dotCMS/login.*$," + "^/html/portal/login.*$," + "^/c/public/login.*$," + "^/c/portal_public/login.*$," + "^/c/portal/logout.*$," + "^/dotCMS/logout.*$," + "^/application/login/login.*$," + "^/dotAdmin.*$" );
+		String accessFilterValues = DotsamlPropertiesService.getOptionString( idpConfig, DotsamlPropertyName.DOT_SAML_INCLUDE_PATH_VALUES);
 
 		return ( UtilMethods.isSet( accessFilterValues ) ) ? accessFilterValues.split( "," ) : null;
 	}
