@@ -40,7 +40,9 @@ public class DotsamlProperties {
 	private String dotcmsSamlNameIdPolicyFormat = NameIDType.PERSISTENT;
 	private String dotcmsSamlOptionalUserRole = null;
 	private Boolean dotcmsSamlPolicyAllowCreate = false;
-	private String dotcmsSamlProtocolBinding = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
+	// Changed by Gabby while com.dotcms.plugin.saml.v3.BindingType.java is introduced back in the latest code
+	// private String dotcmsSamlProtocolBinding = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
+	private String dotcmsSamlProtocolBinding = SAML2_REDIRECT_BINDING_URI;
 	private String dotSamlRemoveRolesPrefix = StringUtils.EMPTY;
 	private String dotSamlServiceProviderCustomCredentialProviderClassname = null;
 	private Boolean dotcmsSamlUseEncryptedDescriptor = false;
