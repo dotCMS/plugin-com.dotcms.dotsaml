@@ -73,14 +73,9 @@ import com.dotcms.plugin.saml.v3.config.CredentialProvider;
 import com.dotcms.plugin.saml.v3.config.EndpointHelper;
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
 import com.dotcms.plugin.saml.v3.config.MetaDataHelper;
-<<<<<<< HEAD
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
-=======
-import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
-import com.dotcms.plugin.saml.v3.exception.DotSamlException;
->>>>>>> 4.0-4.3.x
 import com.dotmarketing.util.Logger;
 
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
