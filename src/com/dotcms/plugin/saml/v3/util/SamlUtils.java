@@ -73,9 +73,14 @@ import com.dotcms.plugin.saml.v3.config.CredentialProvider;
 import com.dotcms.plugin.saml.v3.config.EndpointHelper;
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
 import com.dotcms.plugin.saml.v3.config.MetaDataHelper;
+<<<<<<< HEAD
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
+=======
+import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
+>>>>>>> 4.0-4.3.x
 import com.dotmarketing.util.Logger;
 
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
@@ -89,6 +94,7 @@ import net.shibboleth.utilities.java.support.security.RandomIdentifierGeneration
  * 
  * @author jsanca
  */
+
 public class SamlUtils {
 	private final static RandomIdentifierGenerationStrategy secureRandomIdGenerator = new RandomIdentifierGenerationStrategy();
 
@@ -301,6 +307,7 @@ public class SamlUtils {
 	 * 
 	 * @return Issuer
 	 */
+
 	public static Issuer buildIssuer(final IdpConfig idpConfig) {
 		final Issuer issuer = buildSAMLObject(Issuer.class);
 
@@ -435,7 +442,7 @@ public class SamlUtils {
 
 	/**
 	 * Get the Assertion decrypted
-	 * 
+	 *
 	 * @param artifactResponse
 	 *            {@link ArtifactResponse}
 	 * @return Assertion
@@ -454,7 +461,7 @@ public class SamlUtils {
 
 	/**
 	 * Get the Assertion decrypted
-	 * 
+	 *
 	 * @param response
 	 *            {@link Response}
 	 * @return Assertion
@@ -481,7 +488,7 @@ public class SamlUtils {
 
 	/**
 	 * Just get the Encrypted assertion from the {@link ArtifactResponse}
-	 * 
+	 *
 	 * @param artifactResponse
 	 *            {@link ArtifactResponse}
 	 * @return EncryptedAssertion
@@ -493,7 +500,7 @@ public class SamlUtils {
 
 	/**
 	 * Decrypt an {@link EncryptedAssertion}
-	 * 
+	 *
 	 * @param encryptedAssertion
 	 *            {@link EncryptedAssertion}
 	 * @return Assertion
@@ -554,7 +561,7 @@ public class SamlUtils {
 
 	/**
 	 * Does the verification of the assertion
-	 * 
+	 *
 	 * @param assertion
 	 *            {@link Assertion}
 	 */
@@ -609,7 +616,7 @@ public class SamlUtils {
 
 	/**
 	 * Does the verification of the assertion
-	 * 
+	 *
 	 * @param response
 	 *            {@link Assertion}
 	 */
@@ -755,7 +762,7 @@ public class SamlUtils {
 
 	/**
 	 * Convert to String an {@link XMLObject}
-	 * 
+	 *
 	 * @param object
 	 *            {@link XMLObject}
 	 * @return String
@@ -770,12 +777,13 @@ public class SamlUtils {
 
 	/**
 	 * Convert to String an {@link Element}
-	 * 
+	 *
 	 * @param element
 	 *            {@link Element}
 	 * @return String
 	 */
 	public static String toElementString(final Element element) {
+
 		final Transformer transformer;
 		final StreamResult result;
 		final DOMSource source;
@@ -810,7 +818,7 @@ public class SamlUtils {
 
 	/**
 	 * Invoke a message handler chain
-	 * 
+	 *
 	 * @param handlerChain
 	 *            {@link BasicMessageHandlerChain}
 	 * @param context

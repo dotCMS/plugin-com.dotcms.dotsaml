@@ -8,6 +8,7 @@ import com.dotcms.plugin.saml.v3.service.SamlAuthenticationService;
  *
  * @author jsanca
  */
+
 public class DotSamlConstants {
 	public static final char ARRAY_SEPARATOR_CHAR = ',';
 	public static final String HTTP_SCHEMA = "http://";
@@ -76,10 +77,9 @@ public class DotSamlConstants {
 	 */
 	public static final String DOT_SAML_LOGOUT_PATH_DEFAULT_VALUES = "/c/portal/logout,/dotCMS/logout,/dotsaml/request/logout";
 
-	
 	/**
 	 * Default SAML User role
 	 */
 	public static final String DOTCMS_SAML_USER_ROLE = "SAML User";
-
+	
 }

@@ -184,10 +184,11 @@ public class IdpConfig
 	
 		return sb.toString();
 	}
+
 	public boolean contains(String string){
 		return getSearchable().toLowerCase().contains(string.trim().toLowerCase());
 	}
-	
+
 	public void setSpEndpointHostname( String sPEndpointHostname )
 	{
 		this.sPEndpointHostname = sPEndpointHostname;

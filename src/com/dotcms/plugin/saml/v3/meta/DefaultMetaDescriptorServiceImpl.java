@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.Unmarshaller;
@@ -33,6 +32,7 @@ import org.opensaml.xmlsec.keyinfo.KeyInfoGenerator;
 import org.opensaml.xmlsec.keyinfo.impl.X509KeyInfoGeneratorFactory;
 import org.opensaml.xmlsec.signature.KeyInfo;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
+
 import org.w3c.dom.Element;
 
 import com.dotcms.plugin.saml.v3.config.CredentialHelper;
@@ -54,6 +54,7 @@ import net.shibboleth.utilities.java.support.xml.ParserPool;
  * 
  * @author jsanca
  */
+
 public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 	private static final long serialVersionUID = 7259833793217618045L;
 

@@ -175,7 +175,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 		if (includeIDPRoles && attributesBean.isAddRoles() && null != attributesBean.getRoles()
 				&& null != attributesBean.getRoles().getAttributeValues()
 				&& attributesBean.getRoles().getAttributeValues().size() > 0) {
-			
+
 			final String removeRolePrefix = DotsamlPropertiesService.getOptionString(idpConfig,
 					DotsamlPropertyName.DOT_SAML_REMOVE_ROLES_PREFIX);
 			

@@ -4,7 +4,6 @@ import java.io.FileInputStream;
 import java.util.Collection;
 
 import org.opensaml.security.credential.Credential;
-
 import com.dotcms.plugin.saml.v3.meta.DefaultMetaDescriptorServiceImpl;
 import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
 import com.dotcms.plugin.saml.v3.meta.MetadataBean;
@@ -56,7 +55,7 @@ public class MetaDataHelper {
 	/**
 	 * The meta descriptor service is created on the configuration, so we take
 	 * advance and return the instance from it.
-	 * 
+	 *
 	 * @param idpConfig
 	 *            IdpConfig
 	 * @return MetaDescriptorService
@@ -79,7 +78,7 @@ public class MetaDataHelper {
 
 	/**
 	 * Gets the Identity Provider Destination Single Sign on URL
-	 * 
+	 *
 	 * @param idpConfig
 	 *            IdpConfig
 	 * @return String
@@ -100,7 +99,7 @@ public class MetaDataHelper {
 
 	/**
 	 * Gets the Identity Provider Destination Single Logout URL
-	 * 
+	 *
 	 * @param idpConfig
 	 *            IdpConfig
 	 * @return String

@@ -1,7 +1,6 @@
 package com.dotcms.plugin.saml.v3.config;
 
 import java.net.MalformedURLException;
-
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
@@ -26,8 +25,9 @@ public class EndpointHelper
 	public static String getAssertionConsumerEndpoint( IdpConfig idpConfig )
 	{
 		// spEndpointHostname is a required field during edit.  Has to have value.
+
 		return DotSamlConstants.HTTPS_SCHEMA
-				+ spEndpointHostname( idpConfig ) 
+				+ spEndpointHostname( idpConfig )
 				+ DotSamlConstants.ASSERTION_CONSUMER_ENDPOINT_DOTSAML3SP 
 				+ "/"
 				+ idpConfig.getId();
@@ -48,7 +48,7 @@ public class EndpointHelper
 	public static String getSingleLogoutEndpoint( IdpConfig idpConfig ) 
 	{
 		return DotSamlConstants.HTTPS_SCHEMA
-				+ spEndpointHostname( idpConfig ) 
+				+ spEndpointHostname( idpConfig )
 				+ DotSamlConstants.LOGOUT_SERVICE_ENDPOINT_DOTSAML3SP 
 				+ "/"
 				+ idpConfig.getId();
@@ -79,6 +79,7 @@ public class EndpointHelper
 	public static String[] getLogoutPathArray( IdpConfig idpConfig )
 	{
 		String logoutPathValues = DotsamlPropertiesService.getOptionString( idpConfig, DotsamlPropertyName.DOT_SAML_LOGOUT_PATH_VALUES );
+
 
 		return ( UtilMethods.isSet( logoutPathValues ) ) ? logoutPathValues.split( "," ) : null;
 	}

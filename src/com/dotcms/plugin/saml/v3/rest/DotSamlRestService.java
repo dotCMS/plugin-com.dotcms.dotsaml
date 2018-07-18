@@ -157,7 +157,7 @@ public class DotSamlRestService implements Serializable {
 				Logger.debug(this, message);
 				throw new DotSamlException(message);
 			}
-
+			
 			String logoutPath = DotsamlPropertiesService.getOptionString(idpConfig,
 					DotsamlPropertyName.DOT_SAML_LOGOUT_SERVICE_ENDPOINT_URL,
 					buildBaseUrlFromRequest(httpServletRequest) + "/");

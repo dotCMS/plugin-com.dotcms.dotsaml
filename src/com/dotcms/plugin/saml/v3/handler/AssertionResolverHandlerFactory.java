@@ -7,6 +7,7 @@ import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
+
 import com.liferay.util.InstancePool;
 
 /**
@@ -14,12 +15,13 @@ import com.liferay.util.InstancePool;
  * 
  * @author jsanca
  */
+
 public class AssertionResolverHandlerFactory implements Serializable {
 	private static final long serialVersionUID = 2434118681822205248L;
 
 	/**
 	 * Get the resolver assertion depending on the site.
-	 * 
+	 *
 	 * @param idpConfig
 	 *            {@link IdpConfig}
 	 * @return

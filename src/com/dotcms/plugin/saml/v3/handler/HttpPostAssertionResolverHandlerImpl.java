@@ -43,6 +43,7 @@ import net.shibboleth.utilities.java.support.component.ComponentInitializationEx
  *
  * @author jsanca
  */
+
 public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHandler {
 	private static final long serialVersionUID = 3479922364325870009L;
 
@@ -152,7 +153,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 		final BasicMessageHandlerChain<SAMLObject> handlerChain = new BasicMessageHandlerChain<SAMLObject>();
 		final List<MessageHandler<SAMLObject>> handlers = new ArrayList<MessageHandler<SAMLObject>>();
 		final Response response = (Response) context.getMessage();
-
+		
 		messageInfoContext.setMessageIssueInstant(response.getIssueInstant());
 
 		// message lifetime validation.

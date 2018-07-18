@@ -40,9 +40,10 @@ public class SamlInitializer implements Initializer
 	@Override
 	public void init( final Map<String, Object> context )
 	{
+
 		// Prepare the default properties.
 		DotsamlDefaultPropertiesService.init();
-		
+
 		JavaCryptoValidationInitializer javaCryptoValidationInitializer = new JavaCryptoValidationInitializer();
 
 		try

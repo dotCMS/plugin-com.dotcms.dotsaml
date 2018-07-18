@@ -93,8 +93,6 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 				isLogoutNeed = DotsamlPropertiesService.getOptionBoolean(idpConfig,
 						DotsamlPropertyName.DOTCMS_SAML_IS_LOGOUT_NEED);
 
-
-
 				// check if there is any exception filter path, to avoid to
 				// canApply all the logic.
 				if (!super.checkAccessFilters(httpServletRequest.getRequestURI(),

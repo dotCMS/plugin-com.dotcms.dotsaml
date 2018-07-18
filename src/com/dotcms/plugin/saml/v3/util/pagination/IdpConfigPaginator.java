@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 public class IdpConfigPaginator implements Paginator<IdpConfig>
 {
 	private final AtomicInteger lastTotalRecords = new AtomicInteger( 0 );
+<<<<<<< HEAD
 
 	public IdpConfigPaginator()
 	{
@@ -47,6 +48,32 @@ public class IdpConfigPaginator implements Paginator<IdpConfig>
 				idpConfigs = idpConfigs.stream()
 						.filter(x -> x.contains(filter))
 						.collect( Collectors.toList() );
+=======
+
+	public IdpConfigPaginator()
+	{
+
+	}
+
+	@Override
+	public long getTotalRecords( String s )
+	{
+		return lastTotalRecords.get();
+	}
+
+	@Override
+	public Collection<IdpConfig> getItems( final User user, final String filter, final int limit, final int offset, final String orderby, final OrderDirection direction, final Map<String, Object> extraParams )
+	{
+		try
+		{
+			final String trimFilter = filter.trim();
+
+			List<IdpConfig> idpConfigs = IdpConfigHelper.getInstance().getIdpConfigs();
+
+			if ( UtilMethods.isSet( trimFilter ) )
+			{
+				idpConfigs = idpConfigs.stream().filter( x -> x.getIdpName().toLowerCase().contains( trimFilter.toLowerCase() ) ).collect( Collectors.toList() );
+>>>>>>> 4.0-4.3.x
 			}
 
 			List<IdpConfig> paginatedAndFiltered = idpConfigs.stream().skip( offset ).limit( limit ).collect( Collectors.toList() );

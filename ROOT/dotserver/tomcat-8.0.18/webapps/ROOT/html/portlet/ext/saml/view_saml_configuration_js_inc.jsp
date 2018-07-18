@@ -292,6 +292,7 @@
 				this.RESULTS_PER_PAGE = 10;
 				this.total = 0;
 				this.filter = "";
+
 			},
 
 			tableResultSummaryTemplate: '<%= LanguageUtil.get(pageContext, "Viewing-Results") %> {startRecord} <%= LanguageUtil.get(pageContext, "to") %> \

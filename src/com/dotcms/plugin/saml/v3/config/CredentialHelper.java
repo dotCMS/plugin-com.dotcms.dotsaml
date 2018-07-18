@@ -95,6 +95,7 @@ public class CredentialHelper
 	public static boolean isVerifySignatureCredentialsNeeded( IdpConfig idpConfig )
 	{
 		return DotsamlPropertiesService.getOptionBoolean( idpConfig, DotsamlPropertyName.DOT_SAML_VERIFY_SIGNATURE_CREDENTIALS);
+
 	}
 
 	/**
