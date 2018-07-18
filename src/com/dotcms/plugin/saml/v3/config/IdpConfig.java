@@ -160,6 +160,35 @@ public class IdpConfig
 		this.sites = sites;
 	}
 
+	private String getSearchable(){
+		StringBuilder sb = new StringBuilder();
+	
+		//config name.
+		sb.append(this.idpName);
+		sb.append(" ");
+		//SP Issuer URL.
+		sb.append(this.sPIssuerURL);
+		sb.append(" ");
+		//SP Endpoint Hostname.
+		sb.append(this.sPEndpointHostname);
+		sb.append(" ");
+		//sites related to the IdP.
+		for (Map.Entry<String,String> entry : this.sites.entrySet()) {
+			sb.append(entry.getKey());
+			sb.append(" ");
+			sb.append(entry.getValue());
+			sb.append(" ");
+		}
+		//any override parameter.
+		sb.append(this.optionalProperties);
+	
+		return sb.toString();
+	}
+
+	public boolean contains(String string){
+		return getSearchable().toLowerCase().contains(string.trim().toLowerCase());
+	}
+
 	public void setSpEndpointHostname( String sPEndpointHostname )
 	{
 		this.sPEndpointHostname = sPEndpointHostname;

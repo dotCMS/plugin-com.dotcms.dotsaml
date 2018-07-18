@@ -1,21 +1,13 @@
 package com.dotcms.plugin.saml.v3.meta;
 
-import com.dotcms.plugin.saml.v3.config.EndpointHelper;
-import com.dotcms.plugin.saml.v3.config.IdpConfig;
-import com.dotcms.plugin.saml.v3.config.MetaDataHelper;
-import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
-import com.dotcms.plugin.saml.v3.exception.DotSamlException;
-import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
-import com.dotcms.plugin.saml.v3.util.SamlUtils;
-import com.dotcms.plugin.saml.v3.config.CredentialHelper;
-
-import com.dotcms.repackage.org.apache.commons.io.IOUtils;
-
-import com.dotmarketing.util.Logger;
-
-import net.shibboleth.utilities.java.support.xml.ParserPool;
-
-import org.apache.commons.io.FileUtils;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.core.xml.io.Unmarshaller;
@@ -23,7 +15,14 @@ import org.opensaml.core.xml.io.UnmarshallerFactory;
 import org.opensaml.saml.common.SAMLObjectBuilder;
 import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.NameIDType;
-import org.opensaml.saml.saml2.metadata.*;
+import org.opensaml.saml.saml2.metadata.AssertionConsumerService;
+import org.opensaml.saml.saml2.metadata.EncryptionMethod;
+import org.opensaml.saml.saml2.metadata.EntityDescriptor;
+import org.opensaml.saml.saml2.metadata.IDPSSODescriptor;
+import org.opensaml.saml.saml2.metadata.KeyDescriptor;
+import org.opensaml.saml.saml2.metadata.NameIDFormat;
+import org.opensaml.saml.saml2.metadata.SPSSODescriptor;
+import org.opensaml.saml.saml2.metadata.SingleLogoutService;
 import org.opensaml.saml.saml2.metadata.impl.EncryptionMethodBuilder;
 import org.opensaml.security.credential.Credential;
 import org.opensaml.security.credential.UsageType;
@@ -36,23 +35,27 @@ import org.opensaml.xmlsec.signature.support.SignatureConstants;
 
 import org.w3c.dom.Element;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.dotcms.plugin.saml.v3.config.CredentialHelper;
+import com.dotcms.plugin.saml.v3.config.EndpointHelper;
+import com.dotcms.plugin.saml.v3.config.IdpConfig;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
+import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
+import com.dotcms.plugin.saml.v3.util.SamlUtils;
+import com.dotcms.repackage.com.swabunga.spell.engine.Configuration;
+import com.dotcms.repackage.org.apache.commons.io.IOUtils;
+import com.dotmarketing.util.Logger;
+
+import net.shibboleth.utilities.java.support.xml.ParserPool;
 
 /**
  * Idp Meta Descriptor service default implementation.
  * 
  * @author jsanca
  */
-public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
-{
+
+public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 	private static final long serialVersionUID = 7259833793217618045L;
 
 	private final ParserPool parserPool;
@@ -61,8 +64,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 
 	private final XMLObjectBuilderFactory xmlObjectBuilderFactory;
 
-	public DefaultMetaDescriptorServiceImpl()
-	{
+	public DefaultMetaDescriptorServiceImpl() {
 		this.parserPool = XMLObjectProviderRegistrySupport.getParserPool();
 
 		this.unmarshallerFactory = XMLObjectProviderRegistrySupport.getUnmarshallerFactory();
@@ -85,26 +87,26 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	 * @throws Exception
 	 */
 	@Override
-	public MetadataBean parse( final InputStream inputStream, final IdpConfig idpConfig ) throws Exception
-	{
-		final EntityDescriptor descriptor = unmarshall( inputStream );
-		final String protocol = OptionalPropertiesHelper.getOptionString( idpConfig, DotSamlConstants.DOT_SAML_IDP_METADATA_PROTOCOL, DotSamlConstants.DOT_SAML_IDP_METADATA_PROTOCOL_DEFAULT_VALUE );
-		final IDPSSODescriptor idpDescriptor = descriptor.getIDPSSODescriptor( protocol );
+	public MetadataBean parse(final InputStream inputStream, final IdpConfig idpConfig) throws Exception {
+		final EntityDescriptor descriptor = unmarshall(inputStream);
+		final String protocol = DotsamlPropertiesService.getOptionString(idpConfig,
+				DotsamlPropertyName.DOT_SAML_IDP_METADATA_PROTOCOL);
+		final IDPSSODescriptor idpDescriptor = descriptor.getIDPSSODescriptor(protocol);
 
-		Logger.info( this, "Parsing the Id Provider, with the entityId: " + descriptor.getEntityID() );
+		Logger.info(this, "Parsing the Id Provider, with the entityId: " + descriptor.getEntityID());
 
-		return new MetadataBean( descriptor.getEntityID(), idpDescriptor.getErrorURL(), this.getSingleSignOnMap( idpDescriptor ), this.getSingleLogoutMap( idpDescriptor ), this.getCredentialSigningList( descriptor.getEntityID(), idpDescriptor ) );
+		return new MetadataBean(descriptor.getEntityID(), idpDescriptor.getErrorURL(),
+				this.getSingleSignOnMap(idpDescriptor), this.getSingleLogoutMap(idpDescriptor),
+				this.getCredentialSigningList(descriptor.getEntityID(), idpDescriptor));
 	}
 
-	protected Map<String, String> getSingleLogoutMap( IDPSSODescriptor idpDescriptor )
-	{
+	protected Map<String, String> getSingleLogoutMap(IDPSSODescriptor idpDescriptor) {
 		final Map<String, String> singleLogoutBindingLocationMap = new LinkedHashMap<>();
 
-		idpDescriptor.getSingleLogoutServices().stream().forEach( sso ->
-		{
-			Logger.debug( this, "Add SLO binding " + sso.getBinding() + "(" + sso.getLocation() + ")" );
-			singleLogoutBindingLocationMap.put( sso.getBinding(), sso.getLocation() );
-		} );
+		idpDescriptor.getSingleLogoutServices().stream().forEach(sso -> {
+			Logger.debug(this, "Add SLO binding " + sso.getBinding() + "(" + sso.getLocation() + ")");
+			singleLogoutBindingLocationMap.put(sso.getBinding(), sso.getLocation());
+		});
 
 		return singleLogoutBindingLocationMap;
 	}
@@ -130,36 +132,44 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	 *            {@link Configuration}
 	 * @return EntityDescriptor
 	 */
-	@SuppressWarnings( "unchecked" )
+	@SuppressWarnings("unchecked")
 	@Override
-	public EntityDescriptor getServiceProviderEntityDescriptor( final IdpConfig idpConfig )
-	{
-		final SAMLObjectBuilder<EntityDescriptor> entityDescriptorBuilder = (SAMLObjectBuilder<EntityDescriptor>) this.xmlObjectBuilderFactory.getBuilder( EntityDescriptor.DEFAULT_ELEMENT_NAME );
-		final SAMLObjectBuilder<SPSSODescriptor> spssoDescriptorBuilder = (SAMLObjectBuilder<SPSSODescriptor>) this.xmlObjectBuilderFactory.getBuilder( SPSSODescriptor.DEFAULT_ELEMENT_NAME );
-		final SAMLObjectBuilder<AssertionConsumerService> assertionConsumerServiceBuilder = (SAMLObjectBuilder<AssertionConsumerService>) this.xmlObjectBuilderFactory.getBuilder( AssertionConsumerService.DEFAULT_ELEMENT_NAME );
-		final SAMLObjectBuilder<SingleLogoutService> singleLogoutServiceBuilder = (SAMLObjectBuilder<SingleLogoutService>) this.xmlObjectBuilderFactory.getBuilder( SingleLogoutService.DEFAULT_ELEMENT_NAME );
+	public EntityDescriptor getServiceProviderEntityDescriptor(final IdpConfig idpConfig) {
+		final SAMLObjectBuilder<EntityDescriptor> entityDescriptorBuilder = (SAMLObjectBuilder<EntityDescriptor>) this.xmlObjectBuilderFactory
+				.getBuilder(EntityDescriptor.DEFAULT_ELEMENT_NAME);
+		final SAMLObjectBuilder<SPSSODescriptor> spssoDescriptorBuilder = (SAMLObjectBuilder<SPSSODescriptor>) this.xmlObjectBuilderFactory
+				.getBuilder(SPSSODescriptor.DEFAULT_ELEMENT_NAME);
+		final SAMLObjectBuilder<AssertionConsumerService> assertionConsumerServiceBuilder = (SAMLObjectBuilder<AssertionConsumerService>) this.xmlObjectBuilderFactory
+				.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
+		final SAMLObjectBuilder<SingleLogoutService> singleLogoutServiceBuilder = (SAMLObjectBuilder<SingleLogoutService>) this.xmlObjectBuilderFactory
+				.getBuilder(SingleLogoutService.DEFAULT_ELEMENT_NAME);
 
 		final EntityDescriptor descriptor = entityDescriptorBuilder.buildObject();
 		final SPSSODescriptor spssoDescriptor = spssoDescriptorBuilder.buildObject();
 
-		descriptor.setEntityID( SamlUtils.getSPIssuerValue( idpConfig ) ); // this get from the dotmarketing-config.properties.
+		descriptor.setEntityID(SamlUtils.getSPIssuerValue(idpConfig)); // this
+																		// get
+																		// from
+																		// the
+																		// dotmarketing-config.properties.
 
-		Logger.info( this, "Creating the MetaData for the site: " + idpConfig.getSpEndpointHostname() );
-		Logger.debug( this, "Generating the Entity Provider Descriptor for: " + descriptor.getEntityID() );
+		Logger.info(this, "Creating the MetaData for the site: " + idpConfig.getSpEndpointHostname());
+		Logger.debug(this, "Generating the Entity Provider Descriptor for: " + descriptor.getEntityID());
 
-		spssoDescriptor.setWantAssertionsSigned( CredentialHelper.isVerifyAssertionSignatureNeeded(idpConfig) );
-		spssoDescriptor.setAuthnRequestsSigned( CredentialHelper.isVerifyResponseSignatureNeeded(idpConfig ) );
-		spssoDescriptor.addSupportedProtocol( SAMLConstants.SAML20_NS );
+		spssoDescriptor.setWantAssertionsSigned(CredentialHelper.isVerifyAssertionSignatureNeeded(idpConfig));
+		spssoDescriptor.setAuthnRequestsSigned(CredentialHelper.isVerifyResponseSignatureNeeded(idpConfig));
+		spssoDescriptor.addSupportedProtocol(SAMLConstants.SAML20_NS);
 
-		Logger.debug( this, "Setting the key descriptors for: " + descriptor.getEntityID() );
+		Logger.debug(this, "Setting the key descriptors for: " + descriptor.getEntityID());
 
 		// set's the SIGNING and ENCRYPTION keyinfo.
-		this.setKeyDescriptors( spssoDescriptor, idpConfig );
+		this.setKeyDescriptors(spssoDescriptor, idpConfig);
 
 		// set's the messages format.
-		this.setFormat( idpConfig, spssoDescriptor );
+		this.setFormat(idpConfig, spssoDescriptor);
 
-		// set's the assertion customer services, this will be a fixed url on dotCMS.
+		// set's the assertion customer services, this will be a fixed url on
+		// dotCMS.
 		/*
 		 * spssoDescriptor.getAssertionConsumerServices().add
 		 * (this.createAssertionConsumerService(0,
@@ -168,9 +178,13 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 		 * assertionConsumerServiceBuilder));
 		 */
 
-		spssoDescriptor.getAssertionConsumerServices().add( this.createAssertionConsumerService( 0, SAMLConstants.SAML2_POST_BINDING_URI, EndpointHelper.getAssertionConsumerEndpoint( idpConfig ), assertionConsumerServiceBuilder ) );
+		spssoDescriptor.getAssertionConsumerServices()
+				.add(this.createAssertionConsumerService(0, SAMLConstants.SAML2_POST_BINDING_URI,
+						EndpointHelper.getAssertionConsumerEndpoint(idpConfig), assertionConsumerServiceBuilder));
 
-		spssoDescriptor.getSingleLogoutServices().add( this.createSingleLogoutService( SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI, EndpointHelper.getSingleLogoutEndpoint( idpConfig ), singleLogoutServiceBuilder ) );
+		spssoDescriptor.getSingleLogoutServices()
+				.add(this.createSingleLogoutService(SAMLConstants.SAML2_POST_SIMPLE_SIGN_BINDING_URI,
+						EndpointHelper.getSingleLogoutEndpoint(idpConfig), singleLogoutServiceBuilder));
 
 		/*
 		 * spssoDescriptor.getAssertionConsumerServices().add
@@ -180,10 +194,10 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 		 * assertionConsumerServiceBuilder));
 		 */
 
-		spssoDescriptor.addSupportedProtocol( SAMLConstants.SAML20P_NS );
-		descriptor.getRoleDescriptors().add( spssoDescriptor );
+		spssoDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
+		descriptor.getRoleDescriptors().add(spssoDescriptor);
 
-		Logger.debug( this, "Descriptor DONE" );
+		Logger.debug(this, "Descriptor DONE");
 
 		return descriptor;
 	}
@@ -201,14 +215,14 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	 *            {@link SAMLObjectBuilder}
 	 * @return AssertionConsumerService
 	 */
-	protected AssertionConsumerService createAssertionConsumerService( final int index, final String binding, final String location, final SAMLObjectBuilder<AssertionConsumerService> assertionConsumerServiceBuilder )
-	{
-		Logger.debug( this, "Assertion consumer service, location: " + location );
+	protected AssertionConsumerService createAssertionConsumerService(final int index, final String binding,
+			final String location, final SAMLObjectBuilder<AssertionConsumerService> assertionConsumerServiceBuilder) {
+		Logger.debug(this, "Assertion consumer service, location: " + location);
 
 		final AssertionConsumerService assertionConsumerServiceArtifact = assertionConsumerServiceBuilder.buildObject();
-		assertionConsumerServiceArtifact.setIndex( index );
-		assertionConsumerServiceArtifact.setBinding( binding );
-		assertionConsumerServiceArtifact.setLocation( location );
+		assertionConsumerServiceArtifact.setIndex(index);
+		assertionConsumerServiceArtifact.setBinding(binding);
+		assertionConsumerServiceArtifact.setLocation(location);
 
 		return assertionConsumerServiceArtifact;
 	}
@@ -224,14 +238,14 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	 *            {@link SAMLObjectBuilder}
 	 * @return SingleLogoutService
 	 */
-	protected SingleLogoutService createSingleLogoutService( final String binding, final String location, final SAMLObjectBuilder<SingleLogoutService> singleLogoutServiceBuilder )
-	{
-		Logger.debug( this, "Assertion consumer service, location: " + location );
+	protected SingleLogoutService createSingleLogoutService(final String binding, final String location,
+			final SAMLObjectBuilder<SingleLogoutService> singleLogoutServiceBuilder) {
+		Logger.debug(this, "Assertion consumer service, location: " + location);
 
 		final SingleLogoutService assertionConsumerService = singleLogoutServiceBuilder.buildObject();
 
-		assertionConsumerService.setBinding( binding );
-		assertionConsumerService.setLocation( location );
+		assertionConsumerService.setBinding(binding);
+		assertionConsumerService.setLocation(location);
 
 		return assertionConsumerService;
 	}
@@ -244,23 +258,23 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	 * @param spssoDescriptor
 	 *            {@link SPSSODescriptor}
 	 */
-	@SuppressWarnings( "unchecked" )
-	protected void setFormat( final IdpConfig idpConfig, final SPSSODescriptor spssoDescriptor )
-	{
-		final SAMLObjectBuilder<NameIDFormat> nameIDFormatBuilder = (SAMLObjectBuilder<NameIDFormat>) this.xmlObjectBuilderFactory.getBuilder( NameIDFormat.DEFAULT_ELEMENT_NAME );
+	@SuppressWarnings("unchecked")
+	protected void setFormat(final IdpConfig idpConfig, final SPSSODescriptor spssoDescriptor) {
+		final SAMLObjectBuilder<NameIDFormat> nameIDFormatBuilder = (SAMLObjectBuilder<NameIDFormat>) this.xmlObjectBuilderFactory
+				.getBuilder(NameIDFormat.DEFAULT_ELEMENT_NAME);
 
-		final String[] formats = OptionalPropertiesHelper.getOptionStringArray( idpConfig, DotSamlConstants.DOTCMS_SAML_NAME_ID_POLICY_FORMAT, new String[] { NameIDType.PERSISTENT } );
+		final String[] formats = DotsamlPropertiesService.getOptionStringArray(idpConfig,
+				DotsamlPropertyName.DOTCMS_SAML_NAME_ID_POLICY_FORMAT);
 
-		for ( String format : formats )
-		{
-			spssoDescriptor.getNameIDFormats().add( this.createFormat( format, nameIDFormatBuilder ) );
+		for (String format : formats) {
+			spssoDescriptor.getNameIDFormats().add(this.createFormat(format, nameIDFormatBuilder));
 		}
 	}
 
-	protected NameIDFormat createFormat( final String format, final SAMLObjectBuilder<NameIDFormat> nameIDFormatBuilder )
-	{
+	protected NameIDFormat createFormat(final String format,
+			final SAMLObjectBuilder<NameIDFormat> nameIDFormatBuilder) {
 		final NameIDFormat nameIDFormat = nameIDFormatBuilder.buildObject();
-		nameIDFormat.setFormat( format );
+		nameIDFormat.setFormat(format);
 		return nameIDFormat;
 	}
 
@@ -270,9 +284,8 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	 * 
 	 * @return Credential
 	 */
-	protected Credential getCredential( final IdpConfig idpConfig )
-	{
-		return SamlUtils.getCredential( idpConfig );
+	protected Credential getCredential(final IdpConfig idpConfig) {
+		return SamlUtils.getCredential(idpConfig);
 	}
 
 	/**
@@ -281,59 +294,50 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	 * @param spssoDescriptor
 	 *            {@link SPSSODescriptor}
 	 */
-	@SuppressWarnings( "unchecked" )
-	protected void setKeyDescriptors( final SPSSODescriptor spssoDescriptor, final IdpConfig idpConfig )
-	{
-		final boolean isEncryptedDescriptor = OptionalPropertiesHelper.getOptionBoolean( idpConfig, DotSamlConstants.DOTCMS_SAML_USE_ENCRYPTED_DESCRIPTOR, false );
-		final SAMLObjectBuilder<KeyDescriptor> keyDescriptorBuilder = (SAMLObjectBuilder<KeyDescriptor>) this.xmlObjectBuilderFactory.getBuilder( KeyDescriptor.DEFAULT_ELEMENT_NAME );
+	@SuppressWarnings("unchecked")
+	protected void setKeyDescriptors(final SPSSODescriptor spssoDescriptor, final IdpConfig idpConfig) {
+		final boolean isEncryptedDescriptor = DotsamlPropertiesService.getOptionBoolean(idpConfig,
+				DotsamlPropertyName.DOTCMS_SAML_USE_ENCRYPTED_DESCRIPTOR);
+		final SAMLObjectBuilder<KeyDescriptor> keyDescriptorBuilder = (SAMLObjectBuilder<KeyDescriptor>) this.xmlObjectBuilderFactory
+				.getBuilder(KeyDescriptor.DEFAULT_ELEMENT_NAME);
 		final KeyDescriptor signKeyDescriptor;
 		KeyDescriptor encryptedKeyDescriptor = null;
-		final Credential credential = this.getCredential( idpConfig );
+		final Credential credential = this.getCredential(idpConfig);
 		final EncryptionMethodBuilder encryptionMethodBuilder = new EncryptionMethodBuilder();
 		final EncryptionMethod encryptionMethod;
 
-		try
-		{
+		try {
 			signKeyDescriptor = keyDescriptorBuilder.buildObject();
-			signKeyDescriptor.setUse( UsageType.SIGNING );
+			signKeyDescriptor.setUse(UsageType.SIGNING);
 
-			if ( isEncryptedDescriptor )
-			{
+			if (isEncryptedDescriptor) {
 				encryptedKeyDescriptor = keyDescriptorBuilder.buildObject();
-				encryptedKeyDescriptor.setUse( UsageType.ENCRYPTION );
+				encryptedKeyDescriptor.setUse(UsageType.ENCRYPTION);
 			}
 
-			try
-			{
-				signKeyDescriptor.setKeyInfo( getKeyInfo( credential ) );
+			try {
+				signKeyDescriptor.setKeyInfo(getKeyInfo(credential));
 
 				encryptionMethod = encryptionMethodBuilder.buildObject();
-				encryptionMethod.setAlgorithm( SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256 );
-				signKeyDescriptor.getEncryptionMethods().add( encryptionMethod );
+				encryptionMethod.setAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256);
+				signKeyDescriptor.getEncryptionMethods().add(encryptionMethod);
 
-				spssoDescriptor.getKeyDescriptors().add( signKeyDescriptor );
+				spssoDescriptor.getKeyDescriptors().add(signKeyDescriptor);
 
-				if ( isEncryptedDescriptor )
-				{
-					encryptedKeyDescriptor.setKeyInfo( getKeyInfo( credential ) );
-					spssoDescriptor.getKeyDescriptors().add( encryptedKeyDescriptor );
+				if (isEncryptedDescriptor) {
+					encryptedKeyDescriptor.setKeyInfo(getKeyInfo(credential));
+					spssoDescriptor.getKeyDescriptors().add(encryptedKeyDescriptor);
 				}
-			}
-			catch ( Exception e )
-			{
+			} catch (Exception e) {
 
-				Logger.error( this, "Error generating credentials", e );
-				throw new DotSamlException( e.getMessage(), e );
+				Logger.error(this, "Error generating credentials", e);
+				throw new DotSamlException(e.getMessage(), e);
 			}
-		}
-		catch ( DotSamlException e )
-		{
+		} catch (DotSamlException e) {
 			throw e;
-		}
-		catch ( Exception e )
-		{
-			Logger.error( this, "Error retrieving credentials", e );
-			throw new DotSamlException( e.getMessage(), e );
+		} catch (Exception e) {
+			Logger.error(this, "Error retrieving credentials", e);
+			throw new DotSamlException(e.getMessage(), e);
 		}
 	}
 
@@ -345,16 +349,15 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	 * @return KeyInfo
 	 * @throws Exception
 	 */
-	protected KeyInfo getKeyInfo( final Credential credential ) throws Exception
-	{
+	protected KeyInfo getKeyInfo(final Credential credential) throws Exception {
 		final X509KeyInfoGeneratorFactory keyInfoGeneratorFactory = new X509KeyInfoGeneratorFactory();
 
-		keyInfoGeneratorFactory.setEmitEntityCertificate( true );
+		keyInfoGeneratorFactory.setEmitEntityCertificate(true);
 		final KeyInfoGenerator keyInfoGenerator = keyInfoGeneratorFactory.newInstance();
 
-		Logger.debug( this, "Meta Data Credential: " + credential );
+		Logger.debug(this, "Meta Data Credential: " + credential);
 
-		return keyInfoGenerator.generate( credential );
+		return keyInfoGenerator.generate(credential);
 	}
 
 	/**
@@ -366,10 +369,16 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	 *            {@link IDPSSODescriptor}
 	 * @return
 	 */
-	protected List<Credential> getCredentialSigningList( final String entityId, final IDPSSODescriptor idpDescriptor )
-	{
-		return idpDescriptor.getKeyDescriptors().stream().filter( key -> null != key.getKeyInfo() && key.getKeyInfo().getX509Datas().get( 0 ).getX509Certificates().size() > 0 && UsageType.SIGNING == key.getUse() ) // not signing are relevant by now.
-				.map( key -> convertToCredential( entityId, key.getKeyInfo().getX509Datas().get( 0 ).getX509Certificates().get( 0 ) ) ).collect( Collectors.toList() );
+	protected List<Credential> getCredentialSigningList(final String entityId, final IDPSSODescriptor idpDescriptor) {
+		return idpDescriptor.getKeyDescriptors().stream()
+				.filter(key -> null != key.getKeyInfo()
+						&& key.getKeyInfo().getX509Datas().get(0).getX509Certificates().size() > 0
+						&& UsageType.SIGNING == key.getUse()) // not signing are
+																// relevant by
+																// now.
+				.map(key -> convertToCredential(entityId,
+						key.getKeyInfo().getX509Datas().get(0).getX509Certificates().get(0)))
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -383,35 +392,30 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	 *            {@link org.opensaml.xmlsec.signature.X509Certificate}
 	 * @return Credential
 	 */
-	protected Credential convertToCredential( final String entityId, final org.opensaml.xmlsec.signature.X509Certificate x509Certificate )
-	{
+	protected Credential convertToCredential(final String entityId,
+			final org.opensaml.xmlsec.signature.X509Certificate x509Certificate) {
 		final byte[] decoded;
 		final CertificateFactory cf;
 		final java.security.cert.X509Certificate javaX509Certificate;
 		ByteArrayInputStream bais = null;
 		Credential credential = null;
 
-		try
-		{
-			decoded = Base64.decode( x509Certificate.getValue() );
-			cf = CertificateFactory.getInstance( X_509 );
-			bais = new ByteArrayInputStream( decoded );
-			javaX509Certificate = java.security.cert.X509Certificate.class.cast( cf.generateCertificate( bais ) );
+		try {
+			decoded = Base64.decode(x509Certificate.getValue());
+			cf = CertificateFactory.getInstance(X_509);
+			bais = new ByteArrayInputStream(decoded);
+			javaX509Certificate = java.security.cert.X509Certificate.class.cast(cf.generateCertificate(bais));
 
 			javaX509Certificate.checkValidity();
 
-			final BasicX509Credential signing = new BasicX509Credential( javaX509Certificate );
-			signing.setEntityId( entityId );
+			final BasicX509Credential signing = new BasicX509Credential(javaX509Certificate);
+			signing.setEntityId(entityId);
 			credential = signing;
-		}
-		catch ( CertificateException e )
-		{
-			Logger.error( this, e.getMessage(), e );
+		} catch (CertificateException e) {
+			Logger.error(this, e.getMessage(), e);
 			credential = null;
-		}
-		finally
-		{
-			IOUtils.closeQuietly( bais );
+		} finally {
+			IOUtils.closeQuietly(bais);
 		}
 
 		return credential;
@@ -424,38 +428,35 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService
 	 *            IDPSSODescriptor
 	 * @return Map
 	 */
-	protected Map<String, String> getSingleSignOnMap( final IDPSSODescriptor idpDescriptor )
-	{
+	protected Map<String, String> getSingleSignOnMap(final IDPSSODescriptor idpDescriptor) {
 		final Map<String, String> singleSignOnBindingLocationMap = new LinkedHashMap<>();
 
-		idpDescriptor.getSingleSignOnServices().stream().forEach( sso ->
-		{
-			Logger.debug( this, "Add SSO binding " + sso.getBinding() + "(" + sso.getLocation() + ")" );
-			singleSignOnBindingLocationMap.put( sso.getBinding(), sso.getLocation() );
-		} );
+		idpDescriptor.getSingleSignOnServices().stream().forEach(sso -> {
+			Logger.debug(this, "Add SSO binding " + sso.getBinding() + "(" + sso.getLocation() + ")");
+			singleSignOnBindingLocationMap.put(sso.getBinding(), sso.getLocation());
+		});
 
 		return singleSignOnBindingLocationMap;
 	}
 
-	protected EntityDescriptor unmarshall( final InputStream is ) throws Exception
-	{
+	protected EntityDescriptor unmarshall(final InputStream is) throws Exception {
 		EntityDescriptor descriptor = null;
 
-		try
-		{
+		try {
 			// Parse metadata file
-			final Element metadata = this.parserPool.parse( is ).getDocumentElement();
-			Logger.info( DefaultMetaDescriptorServiceImpl.class, "unmarshall( final InputStream is ) metadata = " + (( metadata == null ) ? "null" : "has value") );
+			final Element metadata = this.parserPool.parse(is).getDocumentElement();
+			Logger.info(DefaultMetaDescriptorServiceImpl.class,
+					"unmarshall( final InputStream is ) metadata = " + ((metadata == null) ? "null" : "has value"));
 			// Get apropriate unmarshaller
-			final Unmarshaller unmarshaller = this.unmarshallerFactory.getUnmarshaller( metadata );
-			Logger.info( DefaultMetaDescriptorServiceImpl.class, "unmarshall( final InputStream is ) unmarshaller = " + (( unmarshaller == null ) ? "null" : "has value") );
-			// Unmarshall using the document root element, an EntitiesDescriptor in this case
-			descriptor = EntityDescriptor.class.cast( unmarshaller.unmarshall( metadata ) );
-		}
-		catch ( Exception e )
-		{
-			Logger.error( this, e.getMessage(), e );
-			throw new DotSamlException( e.getMessage(), e );
+			final Unmarshaller unmarshaller = this.unmarshallerFactory.getUnmarshaller(metadata);
+			Logger.info(DefaultMetaDescriptorServiceImpl.class, "unmarshall( final InputStream is ) unmarshaller = "
+					+ ((unmarshaller == null) ? "null" : "has value"));
+			// Unmarshall using the document root element, an EntitiesDescriptor
+			// in this case
+			descriptor = EntityDescriptor.class.cast(unmarshaller.unmarshall(metadata));
+		} catch (Exception e) {
+			Logger.error(this, e.getMessage(), e);
+			throw new DotSamlException(e.getMessage(), e);
 		}
 
 		return descriptor;

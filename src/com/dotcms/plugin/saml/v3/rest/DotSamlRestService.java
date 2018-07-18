@@ -19,10 +19,10 @@ import org.opensaml.saml.saml2.core.Assertion;
 
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
 import com.dotcms.plugin.saml.v3.config.IdpConfigHelper;
-import com.dotcms.plugin.saml.v3.config.OptionalPropertiesHelper;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.filter.SamlFilter;
-import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
 import com.dotcms.repackage.javax.ws.rs.GET;
 import com.dotcms.repackage.javax.ws.rs.POST;
 import com.dotcms.repackage.javax.ws.rs.Path;
@@ -157,9 +157,9 @@ public class DotSamlRestService implements Serializable {
 				Logger.debug(this, message);
 				throw new DotSamlException(message);
 			}
-
-			String logoutPath = OptionalPropertiesHelper.getOptionString(idpConfig,
-					DotSamlConstants.DOT_SAML_LOGOUT_SERVICE_ENDPOINT_URL,
+			
+			String logoutPath = DotsamlPropertiesService.getOptionString(idpConfig,
+					DotsamlPropertyName.DOT_SAML_LOGOUT_SERVICE_ENDPOINT_URL,
 					buildBaseUrlFromRequest(httpServletRequest) + "/");
 
 			httpServletResponse.sendRedirect(logoutPath);

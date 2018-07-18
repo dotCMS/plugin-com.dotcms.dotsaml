@@ -1,4 +1,4 @@
-package com.dotcms.plugin.saml.v3.config;
+	package com.dotcms.plugin.saml.v3.config;
 
 import java.io.Serializable;
 
@@ -20,3 +20,4 @@ public interface CredentialProvider extends Serializable
 	 */
 	Credential createCredential();
 }
+	

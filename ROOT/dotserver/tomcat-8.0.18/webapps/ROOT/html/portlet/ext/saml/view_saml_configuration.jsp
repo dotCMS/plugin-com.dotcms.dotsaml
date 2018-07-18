@@ -8,12 +8,14 @@
 <div class="portlet-main">
 	<!-- START Toolbar -->
 	<div class="portlet-toolbar">
-		<%--<div class="portlet-toolbar__actions-primary">
-			<div class="inline-form">
-				<input type="text" name="filter" id="filter" onkeydown="" dojoType="dijit.form.TextBox" value="" />
-				<button dojoType="dijit.form.Button" onclick="" class="dijitButtonFlat">
-			</div>
-		</div>--%>
+		<div class="portlet-toolbar__actions-primary">
+		    <div class="inline-form">
+		        <input type="text" name="filter" id="filter" dojoType="dijit.form.TextBox" intermediateChanges="true" onChange="idpAdmin.searchIdpByName();"/>
+		        <button dojoType="dijit.form.Button" onclick="idpAdmin.resetSearch();" class="dijitButtonFlat">
+		            <%=LanguageUtil.get(pageContext, "Reset")%>
+		        </button>
+		    </div>
+		</div>
 		<div class="portlet-toolbar__info">
 		</div>
 		<div class="portlet-toolbar__actions-secondary">
