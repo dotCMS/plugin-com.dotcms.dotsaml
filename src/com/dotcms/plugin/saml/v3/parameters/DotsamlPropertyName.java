@@ -273,8 +273,14 @@ public enum DotsamlPropertyName {
 	 * By default the system will do the verification of the profile signature,
 	 * if for some reason you want to avoid it feel free to set it to "false".
 	 */
-	DOT_SAML_VERIFY_SIGNATURE_PROFILE("verify.signature.profile");
+	DOT_SAML_VERIFY_SIGNATURE_PROFILE("verify.signature.profile"),
 	//@formatter:on
+
+	/**
+	 * By default any query string included on the endpoints Locations from the IDP metadata will be removed in the moment to redirect to the IDP endpoint.
+	 * However you can set this on false in order to keep any query string parameter on the IDP metadata
+	 */
+	DOTCMS_SAML_CLEAR_LOCATION_QUERY_PARAMS("location.cleanqueryparams");
 
 	private String propertyName;
 
@@ -292,6 +298,7 @@ public enum DotsamlPropertyName {
 	 * @param propertyName
 	 * @return found enum or null if not found.
 	 */
+
 	public static DotsamlPropertyName findProperty(String propertyName) {
 		for (DotsamlPropertyName dotcmsPropertyName : values()) {
 			

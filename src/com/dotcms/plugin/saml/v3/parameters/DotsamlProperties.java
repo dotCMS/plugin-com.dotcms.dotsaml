@@ -48,6 +48,7 @@ public class DotsamlProperties {
 	private Boolean dotcmsSamlUseEncryptedDescriptor = false;
 	private Boolean dotSamlVerifySignatureCredentials = true;
 	private Boolean dotSamlVerifySignatureProfile = true;
+	private Boolean dotcmsSamlClearLocationQueryParams = true;
 
 	public String getDotSamlAccessFilterValues() {
 		return dotSamlAccessFilterValues;
@@ -337,6 +338,14 @@ public class DotsamlProperties {
 
 	public void setDotSamlVerifySignatureProfile(Boolean dotSamlVerifySignatureProfile) {
 		this.dotSamlVerifySignatureProfile = dotSamlVerifySignatureProfile;
+	}
+
+	public Boolean isDotcmsSamlClearLocationQueryParams() {
+		return dotcmsSamlClearLocationQueryParams;
+	}
+
+	public void setDotcmsSamlClearLocationQueryParams(Boolean dotcmsSamlClearLocationQueryParams) {
+		this.dotcmsSamlClearLocationQueryParams = dotcmsSamlClearLocationQueryParams;
 	}
 
 }
