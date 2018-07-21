@@ -247,7 +247,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 		endpointContext.setEndpoint(getIdentityProviderDestinationEndpoint(idpConfig));
 
 		this.setSignatureSigningParams(context, idpConfig);
-		this.doRedirect(context, response, authnRequest);
+		this.doRedirect(context, response, authnRequest, idpConfig);
 	}
 
 	/**
@@ -279,7 +279,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 		endpointContext.setEndpoint(getIdentityProviderDestinationEndpoint(idpConfig));
 
 		this.setSignatureSigningParams(context, idpConfig);
-		this.doRedirect(context, response, authnRequest);
+		this.doRedirect(context, response, authnRequest, idpConfig);
 	}
 
 	private String checkDefaultValue(final String lastNameForNullValue, final String logMessage,
@@ -403,11 +403,13 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 	// this makes the redirect to the IdP
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void doRedirect(final MessageContext context, final HttpServletResponse response,
-			final XMLObject xmlObject) {
+			final XMLObject xmlObject, final IdpConfig idpConfig) {
 		final HTTPRedirectDeflateEncoder encoder;
 
+		final boolean clearQueryParams = DotsamlPropertiesService.getOptionBoolean(idpConfig, DotsamlPropertyName.DOTCMS_SAML_CLEAR_LOCATION_QUERY_PARAMS);
+
 		try {
-			encoder = new HTTPRedirectDeflateEncoder();
+			encoder = new DotHTTPRedirectDeflateEncoder(clearQueryParams);
 
 			encoder.setMessageContext(context);
 			encoder.setHttpServletResponse(response);
@@ -563,7 +565,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 		endpointContext.setEndpoint(getIdentityProviderSLODestinationEndpoint(idpConfig));
 
 		this.setSignatureSigningParams(context, idpConfig);
-		this.doRedirect(context, response, logoutRequest);
+		this.doRedirect(context, response, logoutRequest, idpConfig);
 	}
 
 	private boolean match(final String role, final String rolePattern) {

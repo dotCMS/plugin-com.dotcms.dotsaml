@@ -209,6 +209,9 @@ public class DotsamlDefaultPropertiesService {
 		case DOT_SAML_VERIFY_SIGNATURE_PROFILE:
 			defaultParams.setDotSamlVerifySignatureProfile(Boolean.parseBoolean(value));
 			break;
+		case DOTCMS_SAML_CLEAR_LOCATION_QUERY_PARAMS:
+			defaultParams.setDotcmsSamlClearLocationQueryParams(Boolean.parseBoolean(value));
+			break;
 		default:
 			Logger.warn(DotsamlDefaultPropertiesService.class,
 					NOT_FOUND_ERROR + property.getPropertyName() + ":" + value);
@@ -307,6 +310,8 @@ public class DotsamlDefaultPropertiesService {
 			return defaultParams.isDotSamlVerifySignatureCredentials();
 		case DOT_SAML_VERIFY_SIGNATURE_PROFILE:
 			return defaultParams.isDotSamlVerifySignatureProfile();
+		case DOTCMS_SAML_CLEAR_LOCATION_QUERY_PARAMS:
+				return defaultParams.isDotcmsSamlClearLocationQueryParams();
 		default:
 			break;
 		}
