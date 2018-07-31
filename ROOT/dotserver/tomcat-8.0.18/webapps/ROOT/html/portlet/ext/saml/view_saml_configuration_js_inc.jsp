@@ -191,12 +191,20 @@
 
 				dijit.byId("signatureValidationType").set("value", idp.signatureValidationType);
 
-				if(idp.privateKey){
-					document.getElementById("privateKeySavedFile").innerText = idp.privateKey.replace(/^.*[\\\/]/, '');
+				if(idp.privateKey && idp.privateKey != "") {
+				    document.getElementById("privateKeySavedFile").innerText = idp.privateKey.replace(/^.*[\\\/]/, '');
+				    document.getElementById("privateKey").required = false;
+				} else {
+				    document.getElementById("privateKey").required = true;
 				}
-				if(idp.publicCert){
-					document.getElementById("publicCertSavedFile").innerText = idp.publicCert.replace(/^.*[\\\/]/, '');
+
+				if(idp.publicCert && idp.publicCert != "") {
+				    document.getElementById("publicCertSavedFile").innerText = idp.publicCert.replace(/^.*[\\\/]/, '');
+					document.getElementById("publicCert").required = false;
+				} else {
+				    document.getElementById("publicCert").required = true;
 				}
+
 				if(idp.idPMetadataFile){
 					document.getElementById("idPMetadataSavedFile").innerText = idp.idPMetadataFile.replace(/^.*[\\\/]/, '');
 				}

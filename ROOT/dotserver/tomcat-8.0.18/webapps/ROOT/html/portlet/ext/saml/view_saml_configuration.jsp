@@ -92,18 +92,18 @@
 				</dl>
 
 				<dl>
-					<dt><label for="privateKey"><%=LanguageUtil.get(pageContext, "private-key-label")%></label></dt>
-					<dd><div id="privateKeySavedFile" id="privateKeySavedFile"></div><input type="file" id="privateKey" name="privateKey"></dd>
+					<dt><label for="privateKey" class="required"><%=LanguageUtil.get(pageContext, "private-key-label")%></label></dt>
+					<dd><div id="privateKeySavedFile" id="privateKeySavedFile"></div><input type="file" id="privateKey" name="privateKey" required /></dd>
 				</dl>
 
 				<dl>
-					<dt><label for="publicCert""><%=LanguageUtil.get(pageContext, "public-certificate-label")%></label></dt>
-					<dd><div id="publicCertSavedFile" id="publicCertSavedFile"></div><input type="file" id="publicCert" name="publicCert"></dd>
+					<dt><label for="publicCert" class="required"><%=LanguageUtil.get(pageContext, "public-certificate-label")%></label></dt>
+					<dd><div id="publicCertSavedFile" id="publicCertSavedFile"></div><input type="file" id="publicCert" name="publicCert" required /></dd>
 				</dl>
 
 				<dl>
 					<dt><label for="idPMetadataFile"><%=LanguageUtil.get(pageContext, "idp-metadata-label")%></label></dt>
-					<dd><div id="idPMetadataSavedFile" id="idPMetadataSavedFile"></div><input type="file" id="idPMetadataFile" name="idPMetadataFile"></dd>
+					<dd><div id="idPMetadataSavedFile" id="idPMetadataSavedFile"></div><input type="file" id="idPMetadataFile" name="idPMetadataFile" /></dd>
 				</dl>
 
 
