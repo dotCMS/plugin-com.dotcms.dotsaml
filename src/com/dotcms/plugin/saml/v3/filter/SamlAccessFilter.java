@@ -40,6 +40,7 @@ import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.WebKeys;
 import com.dotmarketing.util.json.JSONException;
 
+
 /**
  * Access filter for SAML plugin, it does the autologin and also redirect to the
  * IDP if the user is not logged in.
@@ -80,6 +81,12 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 
 		if (super.isByPass(httpServletRequest, session)) {
 			Logger.debug(this, "Using SAML by pass");
+			chain.doFilter(httpServletRequest, httpServletResponse);
+			return;
+		}
+		
+		if (!SiteIdpConfigResolver.getInstance().isSAMLConfigured()) {
+			Logger.debug(this, "No SAML Configuration Defined");
 			chain.doFilter(httpServletRequest, httpServletResponse);
 			return;
 		}

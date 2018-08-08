@@ -94,7 +94,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 			// Try cache
 			IdpConfig idpConfig = this.findIdpConfigCache( id );
 
-			if ( idpConfig == null )
+			if ( idpConfig == null && !IdpConfigWriterReader.hasBeenRead())
 			{
 				// Try file system
 				idpConfig = this.findIdpConfigFileSystem( id );
@@ -164,7 +164,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 			// Try cache
 			IdpConfig idpConfig = this.findSiteIdpConfigCache( site );
 
-			if ( idpConfig == null )
+			if ( idpConfig == null && !IdpConfigWriterReader.hasBeenRead())
 			{
 				// Try file system
 				idpConfig = this.findSiteIdpConfigFileSystem( site );
@@ -336,7 +336,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		// Try cache
 		List<IdpConfig> idpConfigs = this.getIdpConfigsCache();
 
-		if ( idpConfigs.size() == 0 )
+		if ( idpConfigs.size() == 0 && !IdpConfigWriterReader.hasBeenRead() )
 		{
 			// Try file system
 			idpConfigs = this.getIdpConfigsFileSystem();
@@ -391,7 +391,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		// Try cache
 		List<String> sites = this.getIdpSitesCache();
 
-		if ( sites.size() == 0 )
+		if ( sites.size() == 0 && !IdpConfigWriterReader.hasBeenRead() )
 		{
 			// Try file system
 			sites = this.getIdpSitesFileSystem();
