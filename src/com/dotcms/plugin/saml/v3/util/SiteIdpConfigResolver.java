@@ -2,7 +2,6 @@ package com.dotcms.plugin.saml.v3.util;
 
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
 import com.dotcms.plugin.saml.v3.config.IdpConfigHelper;
-import com.dotcms.plugin.saml.v3.config.IdpConfigWriterReader;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.exception.DotDataException;
@@ -36,9 +35,6 @@ public class SiteIdpConfigResolver implements Serializable
 		return SiteIdpConfigResolver.SingletonHolder.INSTANCE;
 	}
 	
-	public Boolean isSAMLConfigured() {
-		return IdpConfigWriterReader.isSAMLConfigured() ;
-	}
 
 	/**
 	 * Returns the Configuration associate to the current site, if it is not

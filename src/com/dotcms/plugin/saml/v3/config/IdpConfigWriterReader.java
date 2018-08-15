@@ -16,30 +16,14 @@ import java.util.Map;
 
 public class IdpConfigWriterReader
 {
-	public static final String IDP_CONFIGS = "samlConfigs";
-	public static final String DEFAULT_SAML_CONFIG = "defaultSamlConfig";
-	public static final String DISABLE_SAML_SITES = "disabledSamlSites";
-	// Start with TRUE to get at least on read.
-	private static Boolean samlConfigured = Boolean.TRUE;
-	// Triggered when the configuration has been read and has at least one entry
-	private static Boolean isRead = Boolean.FALSE;
-	
-	public static Boolean isSAMLConfigured() {
-		return samlConfigured ;
-	}
-	
-	public static Boolean hasBeenRead() {
-		return isRead;
-	}
+	public static volatile String IDP_CONFIGS = "samlConfigs";
+	public static volatile String DEFAULT_SAML_CONFIG = "defaultSamlConfig";
+	public static volatile String DISABLE_SAML_SITES = "disabledSamlSites";
 
 	public static String readDefaultIdpConfigId( final File idpConfigFile ) throws IOException, JSONException
 	{
 		String defaultIdpConfigId = "";
-		
-		if ( !samlConfigured ) {
-			return defaultIdpConfigId ;
-		}
-		
+
 		if ( idpConfigFile.exists() )
 		{
 			String content = new String( Files.readAllBytes( idpConfigFile.toPath() ) );
@@ -48,9 +32,6 @@ public class IdpConfigWriterReader
 			{
 				defaultIdpConfigId = jsonObject.getString( DEFAULT_SAML_CONFIG );
 			}
-		} else {
-			//  There can be valid to not have Default Idp defined.  Only set if no file.
-			samlConfigured = Boolean.FALSE ;
 		}
 
 		return defaultIdpConfigId;
@@ -59,10 +40,6 @@ public class IdpConfigWriterReader
 	public static Map<String, String> readDisabledSiteIds( final File idpConfigFile ) throws IOException, JSONException
 	{
 		Map<String, String> disabledSites = new HashMap<>();
-		
-		if ( !samlConfigured ) {
-			return disabledSites ;
-		}
 
 		if ( idpConfigFile.exists() )
 		{
@@ -74,9 +51,6 @@ public class IdpConfigWriterReader
 				final JSONObject jsonObjectDisabledSites = jsonObject.getJSONObject( DISABLE_SAML_SITES );
 				disabledSites = SiteJsonTransformer.getMapFromJsonObject( jsonObjectDisabledSites );
 			}
-		} else {
-			//  There can be valid to not have Disabled Sites.  Only set if no file.
-			samlConfigured = Boolean.FALSE;
 		}
 
 		return disabledSites;
@@ -86,24 +60,12 @@ public class IdpConfigWriterReader
 	public static List<IdpConfig> readIdpConfigs( final File idpConfigFile ) throws IOException, JSONException
 	{
 		List<IdpConfig> idpConfigList = new ArrayList<>();
-		
-		if ( !samlConfigured ) {
-			return idpConfigList ;
-		}
 
-		samlConfigured = Boolean.FALSE; //  This should catch exceptions as well
 		if ( idpConfigFile.exists() )
 		{
 			String content = new String( Files.readAllBytes( idpConfigFile.toPath() ) );
-			
 			JSONObject jsonObjectFile = new JSONObject( content );
 			final JSONArray jsonArray = jsonObjectFile.getJSONArray( IDP_CONFIGS );
-			
-			if ( !jsonArray.isEmpty() ) {
-				// Only set to true if we have found sites defined.
-				samlConfigured = Boolean.TRUE ;
-				isRead = Boolean.TRUE;
-			}
 
 			for ( int i = 0; i < jsonArray.size(); i++ )
 			{
@@ -119,7 +81,7 @@ public class IdpConfigWriterReader
 				final IdpConfig idpConfig = IdpJsonTransformer.jsonToIdp( jsonObject );
 				idpConfigList.add( idpConfig );
 			}
-		} 
+		}
 
 		return idpConfigList;
 	}
@@ -149,8 +111,6 @@ public class IdpConfigWriterReader
 		try ( FileWriter file = new FileWriter( idpConfigFile ) )
 		{
 			file.write( jsonObject.toString() );
-			// New entry.  Make sure we are reading
-			samlConfigured = Boolean.TRUE ;
 
 		}
 

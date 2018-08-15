@@ -14,6 +14,7 @@ import javax.servlet.http.HttpSession;
 import com.dotcms.cms.login.LoginServiceAPI;
 import com.dotcms.plugin.saml.v3.config.EndpointHelper;
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
+import com.dotcms.plugin.saml.v3.exception.DotSamlByPassException;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
@@ -39,7 +40,6 @@ import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.WebKeys;
 import com.dotmarketing.util.json.JSONException;
-
 
 /**
  * Access filter for SAML plugin, it does the autologin and also redirect to the
@@ -84,12 +84,6 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 			chain.doFilter(httpServletRequest, httpServletResponse);
 			return;
 		}
-		
-		if (!SiteIdpConfigResolver.getInstance().isSAMLConfigured()) {
-			Logger.debug(this, "No SAML Configuration Defined");
-			chain.doFilter(httpServletRequest, httpServletResponse);
-			return;
-		}
 
 		try {
 			final IdpConfig idpConfig = SiteIdpConfigResolver.getInstance().resolveIdpConfig(httpServletRequest);
@@ -112,7 +106,7 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 					// id) is in the request query string
 					// for artifact resolution or SAMLResponse for post
 					// resolution.
-					
+
 					final AutoLoginResult autoLoginResult = super.autoLogin(httpServletRequest, httpServletResponse,
 							session, idpConfig);
 
@@ -175,6 +169,9 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 						+ ". Not any SAML filtering for this request: " + httpServletRequest.getRequestURI());
 			}
 
+		} catch (DotSamlByPassException exception) {
+			Logger.debug(this, "No SAML Configuration Defined");
+			
 		} catch (JSONException | DotDataException exception) {
 			Logger.info(this, "Error reading idpConfig for the site: " + httpServletRequest.getServerName());
 		}
