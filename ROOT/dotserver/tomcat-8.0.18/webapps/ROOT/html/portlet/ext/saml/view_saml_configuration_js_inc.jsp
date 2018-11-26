@@ -251,7 +251,7 @@
 		var tableRows = document.getElementById(tableId).rows.length;
 		if (tableRows > 1) {
 			for (i = 1; i < tableRows; i++) {
-				document.getElementById(tableId).deleteRow(i);
+				document.getElementById(tableId).deleteRow(1);
 			}
 		}
 	}
