@@ -481,7 +481,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 
 	public IdpConfig saveIdpConfig( IdpConfig idpConfig ) throws IOException, JSONException
 	{
-		List<IdpConfig> idpConfigList = this.getIdpConfigs();
+		List<IdpConfig> idpConfigList = this.getIdpConfigsFileSystem();
 
 		if ( UtilMethods.isSet( idpConfig.getId() ) )
 		{
