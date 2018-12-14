@@ -49,6 +49,7 @@ public class DotsamlProperties {
 	private Boolean dotSamlVerifySignatureCredentials = true;
 	private Boolean dotSamlVerifySignatureProfile = true;
 	private Boolean dotcmsSamlClearLocationQueryParams = true;
+	private Boolean dotcmsSamlLoginEmailUpdate = true;
 
 	public String getDotSamlAccessFilterValues() {
 		return dotSamlAccessFilterValues;
@@ -348,4 +349,11 @@ public class DotsamlProperties {
 		this.dotcmsSamlClearLocationQueryParams = dotcmsSamlClearLocationQueryParams;
 	}
 
+	public Boolean isDotcmsSamlLoginEmailUpdate() {
+		return dotcmsSamlLoginEmailUpdate;
+	}
+
+	public void setDotcmsSamlLoginEmailUpdate(Boolean dotcmsSamlLoginEmailUpdate) {
+		this.dotcmsSamlLoginEmailUpdate = dotcmsSamlLoginEmailUpdate;
+	}
 }

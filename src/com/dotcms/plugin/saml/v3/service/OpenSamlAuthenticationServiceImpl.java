@@ -765,7 +765,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 			user = this.createNewUser(systemUser, attributesBean, idpConfig);
 		} else {
 			// update it, since exists
-			user = this.updateUser(user, systemUser, attributesBean);
+			user = this.updateUser(user, systemUser, attributesBean, idpConfig);
 		}
 
 		if (user.isActive()) {
@@ -796,9 +796,15 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 		return null == rolePatterns ? NULL : Arrays.asList(rolePatterns).toString();
 	}
 
-	private User updateUser(final User user, final User systemUser, final AttributesBean attributesBean) {
+	private User updateUser(final User user, final User systemUser,
+							final AttributesBean attributesBean, final IdpConfig idpConfig) {
 		try {
-			user.setEmailAddress(attributesBean.getEmail());
+			if (DotsamlPropertiesService.getOptionBoolean(idpConfig,
+					DotsamlPropertyName.DOTCMS_SAML_LOGIN_UPDATE_EMAIL)){
+
+				user.setEmailAddress(attributesBean.getEmail());
+			}
+
 			user.setFirstName(attributesBean.getFirstName());
 			user.setLastName(attributesBean.getLastName());
 

@@ -212,6 +212,9 @@ public class DotsamlDefaultPropertiesService {
 		case DOTCMS_SAML_CLEAR_LOCATION_QUERY_PARAMS:
 			defaultParams.setDotcmsSamlClearLocationQueryParams(Boolean.parseBoolean(value));
 			break;
+		case DOTCMS_SAML_LOGIN_UPDATE_EMAIL:
+			defaultParams.setDotcmsSamlLoginEmailUpdate(Boolean.parseBoolean(value));
+			break;
 		default:
 			Logger.warn(DotsamlDefaultPropertiesService.class,
 					NOT_FOUND_ERROR + property.getPropertyName() + ":" + value);
@@ -311,7 +314,9 @@ public class DotsamlDefaultPropertiesService {
 		case DOT_SAML_VERIFY_SIGNATURE_PROFILE:
 			return defaultParams.isDotSamlVerifySignatureProfile();
 		case DOTCMS_SAML_CLEAR_LOCATION_QUERY_PARAMS:
-				return defaultParams.isDotcmsSamlClearLocationQueryParams();
+			return defaultParams.isDotcmsSamlClearLocationQueryParams();
+		case DOTCMS_SAML_LOGIN_UPDATE_EMAIL:
+			return defaultParams.isDotcmsSamlLoginEmailUpdate();
 		default:
 			break;
 		}
