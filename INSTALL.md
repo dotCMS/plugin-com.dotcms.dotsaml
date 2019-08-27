@@ -27,8 +27,7 @@ Download the required version of the plugin from [the repo](https://github.com/d
 * There's a known-issue with a jar that needs to be placed into tomcat's lib directory:
 
 ```bash
-# Inside plugin's root directory
-mv dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/lib/slf4j-api-1.7.25.jar ${DOTCMS_HOME}/dotserver/tomcat-8.0.18/lib/
+mv ${DOTCMS_HOME}/dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/lib/slf4j-api-1.7.25.jar ${DOTCMS_HOME}/dotserver/tomcat-8.0.18/lib/
 ```
 
 * Re-deploy the plugins (stop, deploy plugins and start dotCMS)
