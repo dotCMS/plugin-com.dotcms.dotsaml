@@ -22,6 +22,7 @@ import javax.servlet.http.HttpSession;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
+import com.dotmarketing.util.PageMode;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.saml2.core.NameID;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
@@ -109,16 +110,16 @@ public class SamlFilter implements Filter {
 
 	@Override
 	public void init(final FilterConfig filterConfig) throws ServletException {
-		Logger.debug(this, "Going to call the Initializer: " + this.initializer);
+		Logger.debug(this, "Calling the SAML Filter Initializer: " + this.initializer);
 
 		if (!this.initializer.isInitializationDone()) {
 			try {
 				this.initializer.init(Collections.emptyMap());
-			} catch (Throwable e) {
-				Logger.error(this, "SAML ERROR: " + e.getMessage(), e);
+			} catch (final Throwable e) {
+				Logger.error(this, "An error occurred when initializing the SAML Filter: " + e.getMessage(), e);
 			}
 		} else {
-			Logger.debug(this, "The initializer was already init: " + this.initializer);
+			Logger.debug(this, "The SAML Filter initializer was already initialized: " + this.initializer);
 		}
 	}
 
@@ -163,23 +164,12 @@ public class SamlFilter implements Filter {
 
 		// this is the backend uri test.
 		for (String includePath : includePaths) {
-			Logger.debug(this, "Evaluating the uri: " + uri + ", with the pattern: " + includePath);
+			Logger.debug(this, "Evaluating URI '" + uri + "' with pattern: " + includePath);
 
 			include |= RegEX.contains(uri, includePath);
 		}
 
-		// note: by now we are going to
-		/*
-		 * if (!include) { try { Logger.debug(this,
-		 * "The include paths were not included the uri: " + uri +
-		 * ", doing the check file page permission"); include =
-		 * this.checkFilePagePermission (uri, request); } catch (Exception e) {
-		 * Logger.error(this,
-		 * "Unable to check File/Page permission current request host for URI "
-		 * + uri); include = false; } }
-		 */
-
-		Logger.debug(this, "The uri: " + uri + ", include = " + include);
+		Logger.debug(this, "Incoming URI '" + uri + "', include? " + include);
 
 		return include;
 	}
@@ -220,18 +210,18 @@ public class SamlFilter implements Filter {
 		try {
 			if (null != nameID && null != samlSessionIndex) {
 				Logger.debug(this,
-						"The uri: " + request.getRequestURI() + ", is a logout request. Doing the logout call to saml");
-				Logger.debug(this, "Doing dotCMS logout");
+						"The URI '" + request.getRequestURI() + "' is a logout request. Executing the logout call to SAML");
+				Logger.debug(this, "Executing dotCMS logout");
 
 				doLogout(response, request);
-				Logger.debug(this, "Doing SAML redirect logout");
+				Logger.debug(this, "Executing SAML redirect logout");
 				this.samlAuthenticationService.logout(request, response, nameID, samlSessionIndex, idpConfig);
-				Logger.info(this, "User " + nameID + " has logged out");
+				Logger.info(this, "User '" + nameID + "' has logged out");
 
 				doLogoutDone = true;
 			} else {
-				Logger.warn(this,
-						"Couldn't do the logout request. Because the saml name id or the saml session index are not in the http session");
+				Logger.warn(this, "Couldn't execute the logout request. The SAML NameID or the SAML session index are not " +
+						"in the HTTP session");
 			}
 		} catch (Throwable e) {
 			Logger.error(this, "Error on Logout: " + e.getMessage(), e);
@@ -299,7 +289,7 @@ public class SamlFilter implements Filter {
 		try {
 			final Host host = this.hostWebAPI.getCurrentHost(request);
 			final String env = this.isFrontEndLoginPage(request.getRequestURI()) ? "frontend" : "backend";
-			final String log = new Date() + ": SAML login request for host: (" + host.getHostname() + ") site: "
+			final String log = new Date() + ": SAML login request for Site '" + host.getHostname() + "' with IdP ID: "
 					+ idpConfig.getId() + " (" + env + ") from " + request.getRemoteAddr();
 
 			// “$TIMEDATE: SAML login request for $host (frontend|backend)from
@@ -316,9 +306,9 @@ public class SamlFilter implements Filter {
 		try {
 			final Host host = this.hostWebAPI.getCurrentHost(request);
 			final String env = this.isFrontEndLoginPage(request.getRequestURI()) ? "frontend" : "backend";
-			final String log = new Date() + ": SAML login success for host: (" + host.getHostname() + ") site: "
-					+ idpConfig.getId() + " (" + env + ") from " + request.getRemoteAddr() + " for an user: "
-					+ user.getEmailAddress();
+			final String log = new Date() + ": Successfull SAML login for Site '" + host.getHostname() + "' with IdP " +
+					"ID: " + idpConfig.getId() + " (" + env + ") from " + request.getRemoteAddr() + " for user: " +
+					user.getEmailAddress();
 
 			// “$TIMEDATE: SAML login success for $host (frontend|backend)from
 			// $REQUEST_ADDR for user $username”
@@ -345,7 +335,7 @@ public class SamlFilter implements Filter {
 			isNotLogged = (isBackend) ? !this.userWebAPI.isLoggedToBackend(request)
 					: null == this.userWebAPI.getLoggedInFrontendUser(request);
 
-			Logger.debug(this, "The user is in backend: " + isBackend + ", is not logged: " + isNotLogged);
+			Logger.debug(this, "Trying to go to back-end login? " + isBackend + ", Is user NOT logged in? " + isNotLogged);
 		} catch (PortalException | SystemException e) {
 			Logger.error(this, e.getMessage(), e);
 			isNotLogged = true;
@@ -360,17 +350,18 @@ public class SamlFilter implements Filter {
 		final EntityDescriptor descriptor = MetaDataHelper.getMetaDescriptorService(idpConfig)
 				.getServiceProviderEntityDescriptor(idpConfig);
 		Writer writer = null;
-		boolean isOK = false;
+		boolean isOK;
 
 		try {
-			Logger.debug(this, "Going to print the descriptor: " + descriptor);
+			Logger.debug(this, "Printing Metadata Descriptor:");
+			Logger.debug(this, "\n\n" + descriptor);
 			// get ready to convert it to XML.
 			response.setContentType(TEXT_XML);
 			writer = response.getWriter();
 			this.metaDataXMLPrinter.print(descriptor, writer);
 			response.setStatus(HttpServletResponse.SC_OK);
 			isOK = true;
-			Logger.debug(this, "Descriptor printed...");
+			Logger.debug(this, "Metadata Descriptor printed.");
 		} catch (ParserConfigurationException | TransformerException | IOException | MarshallingException e) {
 			Logger.error(this.getClass(), e.getMessage(), e);
 			throw new ServletException(e);
@@ -391,38 +382,35 @@ public class SamlFilter implements Filter {
 			// we are going to do the autologin, so if the session is null,
 			// create it!
 			try {
-				Logger.debug(this,
-						"User returned by SAML Service, id " + user.getUserId() + ", user Map: " + user.toMap());
+				Logger.debug(this, "User with ID '" + user.getUserId() + "' has been returned by SAML Service. User " +
+						"Map: " + user.toMap());
 			} catch (Exception e) {
-				Logger.error(this, e.getMessage(), e);
+				Logger.error(this, "An error occurred when retrieving data from user '" + user.getUserId() + "': " + e
+						.getMessage(), e);
 			}
 
 			final boolean doCookieLogin = this.loginService
 					.doCookieLogin(PublicEncryptionFactory.encryptString(user.getUserId()), request, response);
 
-			Logger.debug(this, "Login result by LoginService: " + doCookieLogin);
+			Logger.debug(this, "Cookie Login by LoginService = " + doCookieLogin);
 
 			if (doCookieLogin) {
 				if (null != session && null != user.getUserId()) {
 					// this is what the PortalRequestProcessor needs to check
 					// the login.
-					Logger.debug(this, "Setting the user id on the session: " + user.getUserId());
+					Logger.debug(this, "Adding user ID '" + user.getUserId() + "' to the session");
 
 					final String uri = session.getAttribute(ORIGINAL_REQUEST) != null
 							? (String) session.getAttribute(ORIGINAL_REQUEST) : request.getRequestURI();
 					session.removeAttribute(ORIGINAL_REQUEST);
 
 					if (this.isBackEndAdmin(session, uri)) {
-						Logger.debug(this, "The uri: " + uri + ", is a backend setting the session backend stuff");
+						Logger.debug(this, "URI '" + uri + "' belongs to the back-end. Setting the user session data");
 						session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
 						PrincipalThreadLocal.setName(user.getUserId());
 					}
 
 					renewSession = this.renewSession(request, session);
-
-					// depending if it is a redirection or not, continue.
-					// continueFilter = this.checkRedirection( request,
-					// response, renewSession );
 
 					this.doAuthenticationLoginSecurityLog(request, idpConfig, user);
 				}
@@ -440,25 +428,25 @@ public class SamlFilter implements Filter {
 		final Map<String, Object> sessionAttributes = new HashMap<>();
 
 		if (null != currentSession && !currentSession.isNew()) {
-			Logger.debug(this, "Starting the Renew of the current session");
+			Logger.debug(this, "Renewing the HTTP session");
 
 			attributesNames = currentSession.getAttributeNames();
 
 			while (attributesNames.hasMoreElements()) {
 				attributeName = attributesNames.nextElement();
 				attributeValue = currentSession.getAttribute(attributeName);
-				Logger.debug(this, "Copying the attribute: " + attributeName);
+				Logger.debug(this, "Copying attribute '" + attributeName + "' to the new session.");
 				sessionAttributes.put(attributeName, attributeValue);
 			}
 
 			Logger.debug(this, "Killing the current session");
 			currentSession.invalidate(); // kill the previous session
 
-			Logger.debug(this, "Creating a new session");
+			Logger.debug(this, "Creating a new one");
 			renewSession = request.getSession(true);
 
 			for (Map.Entry<String, Object> sessionEntry : sessionAttributes.entrySet()) {
-				Logger.debug(this, "Setting the attribute to the new session: " + sessionEntry.getKey());
+				Logger.debug(this, "Adding attribute '" + sessionEntry.getKey() + "' to the new session.");
 				renewSession.setAttribute(sessionEntry.getKey(), sessionEntry.getValue());
 			}
 
@@ -467,13 +455,28 @@ public class SamlFilter implements Filter {
 		return renewSession;
 	}
 
+	/**
+	 * Determines whether the user in the {@link HttpSession} object or the incoming URI belong to the
+	 * dotCMS back-end login mechanism or not.
+	 *
+	 * @param session The {@link HttpSession} object containing user information.
+	 * @param uri     The incoming URI for login.
+	 *
+	 * @return If the user or its URI can be associated to the dotCMS back-end login, returns {@code true}. Otherwise,
+	 * returns {@code false}.
+	 */
 	protected boolean isBackEndAdmin(final HttpSession session, final String uri) {
-		return (session.getAttribute(com.dotmarketing.util.WebKeys.ADMIN_MODE_SESSION) != null) ||
-		// todo: on higher versions this hack should be checked for a better
-		// criteria
-				this.isBackEndLoginPage(uri);
+		return PageMode.get(session).isAdmin || this.isBackEndLoginPage(uri);
 	}
 
+	/**
+	 * Analyzes the incoming URI and determines whether it belongs to dotCMS back-end login or logout URIs or not.
+	 *
+	 * @param uri The incoming URI.
+	 *
+	 * @return If the URI can be associated to the dotCMS back-end login or logout, returns {@code true}. Otherwise,
+	 * returns {@code false}.
+	 */
 	protected boolean isBackEndLoginPage(final String uri) {
 		return uri.startsWith("/dotAdmin") || uri.startsWith("/html/portal/login") || uri.startsWith("/c/public/login")
 				|| uri.startsWith("/c/portal_public/login") || uri.startsWith("/c/portal/logout");
@@ -487,4 +490,5 @@ public class SamlFilter implements Filter {
 	public void destroy() {
 
 	}
+
 }

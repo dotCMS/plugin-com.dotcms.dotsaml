@@ -2,7 +2,7 @@ package com.dotcms.plugin.saml.v3.config;
 
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 
-import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import com.dotmarketing.util.Logger;
 

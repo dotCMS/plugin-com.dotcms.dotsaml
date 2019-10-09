@@ -3,7 +3,7 @@ package com.dotcms.plugin.saml.v3.init;
 import com.dotcms.plugin.saml.v3.config.IdpConfigHelper;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlDefaultPropertiesService;
 import com.dotcms.plugin.saml.v3.rest.DotSamlRestService;
-import com.dotcms.repackage.org.tuckey.web.filters.urlrewrite.NormalRule;
+import org.tuckey.web.filters.urlrewrite.NormalRule;
 import com.dotmarketing.filters.DotUrlRewriteFilter;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.json.JSONException;
@@ -72,7 +72,7 @@ public class SamlInitializer implements Initializer
 
 		try
 		{
-			Logger.info( this, "Initializing" );
+			Logger.info( this, "Initializing..." );
 			InitializationService.initialize();
 			
 			if (XMLObjectProviderRegistrySupport.getParserPool() == null ) {
@@ -105,7 +105,8 @@ public class SamlInitializer implements Initializer
 				throw new Exception();
             }
 		} catch (Exception e) {
-			Logger.error(this, "Could not add Dotsaml REST Service Redirect.  Reqeusts to /dotsaml/login/{UUID} will fail!");
+			Logger.error(this, "Could not add the Dotsaml REST Service Redirect Rule. Requests to " +
+					"/dotsaml/login/{UUID} will fail!");
 		}
 	}
 

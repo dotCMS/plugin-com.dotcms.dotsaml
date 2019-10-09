@@ -64,7 +64,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 		MessageContext<SAMLObject> messageContext = null;
 		Response samlResponse = null;
 
-		Logger.debug(this, "Resolving the Artifact with the implementation: " + this.getClass());
+		Logger.debug(this, "Resolving SAML Artifact with AssertionResolverHandler implementation: " + this.getClass());
 
 		try {
 			Logger.debug(this, "Decoding the Post message: " + request.getParameter(SAML_RESPONSE_KEY));
@@ -78,10 +78,11 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 			messageContext = decoder.getMessageContext();
 			samlResponse = (Response) messageContext.getMessage();
 
-			Logger.debug(this, "Post message context decoded: " + toXMLObjectString(samlResponse));
+			Logger.debug(this, "Post message context decoded:");
+			Logger.debug(this, "\n\n" + toXMLObjectString(samlResponse));
 
 		} catch (ComponentInitializationException | MessageDecodingException e) {
-			Logger.error(this, "Error decoding inbound message context", e);
+			Logger.error(this, "Error decoding inbound message context for IdP '" + idpConfig.getIdpName() + "'", e);
 			throw new DotSamlException(e.getMessage(), e);
 		} finally {
 			decoder.destroy();
@@ -91,7 +92,8 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 
 		assertion = getAssertion(samlResponse, idpConfig);
 
-		Logger.debug(this, "Decrypted Assertion: " + toXMLObjectString(assertion));
+		Logger.debug(this, "Decrypted Assertion:");
+		Logger.debug(this, "\n\n" + toXMLObjectString(assertion));
 
 		// Verify Signatures.
 		verifyResponseSignature(samlResponse, idpConfig);
@@ -108,8 +110,8 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 		final String statusCodeURI = statusCode.getValue();
 
 		if (!statusCodeURI.equals(StatusCode.SUCCESS)) {
-			Logger.error(this, "Incorrect SAML message code : " + statusCode.getStatusCode().getValue());
-			throw new DotSamlException("Incorrect SAML message code : " + statusCode.getValue());
+			Logger.error(this, "SAML status code was NOT successful: " + statusCode.getStatusCode().getValue());
+			throw new DotSamlException("SAML status code was NOT successful: " + statusCode.getValue());
 		}
 	}
 
@@ -131,7 +133,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 		} catch (Exception exception) {
 
 			Logger.info(this,
-					"Optional property not set: " + DotsamlPropertyName.DOT_SAML_CLOCK_SKEW + " Using default.");
+					"Optional property not set: " + DotsamlPropertyName.DOT_SAML_CLOCK_SKEW + ". Using default.");
 		}
 
 		try {
@@ -145,7 +147,7 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 		} catch (Exception exception) {
 
 			Logger.info(this, "Optional property not set: "
-					+ DotsamlPropertyName.DOT_SAML_MESSAGE_LIFE_TIME.getPropertyName() + " Using default.");
+					+ DotsamlPropertyName.DOT_SAML_MESSAGE_LIFE_TIME.getPropertyName() + ". Using default.");
 		}
 
 		final SAMLMessageInfoContext messageInfoContext = context.getSubcontext(SAMLMessageInfoContext.class, true);
@@ -167,4 +169,5 @@ public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHa
 
 		invokeMessageHandlerChain(handlerChain, context);
 	}
+
 }

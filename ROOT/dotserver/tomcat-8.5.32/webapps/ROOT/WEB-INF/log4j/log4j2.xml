@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+	
+	<!-- ============================================================================ -->
+	<!-- =================== Instructions for SAML Plugin Logging =================== -->
+	<!-- ============================================================================ -->
+	
+	<!-- This is the Log4j configuration file for a default dotCMS distribution. Find  -->
+	<!-- all the "CHANGE ME!" blocks, edit them as required, and carefully merge them -->
+	<!-- with your existing Log4j configuration. -->
+	
+	<Properties>
+		<!-- **v** CHANGE ME! **v** -->
+		<Property name="SAML_LOG_FILE">${sys:DOTCMS_LOGGING_HOME}/dotcms-saml.log</Property>
+		<Property name="SAML_FILENAME_PATTERN">${sys:DOTCMS_LOGGING_HOME}/archive/dotcms-saml-%i.log.gz</Property>
+		<!-- **^** CHANGE ME! **^** -->
+		<Property name="PATTERN">%-5level %d %c:%M(%L): %m%n</Property>
+		<Property name="CONSOLE_PATTERN">%-5level %d %c:%M(%L): %m%n</Property>
+		<Property name="MESSAGE_PATTERN">[%d{dd/MM/yy HH:mm:ss:SSS z}] %5p %c{2}: %m%n</Property>
+	</Properties>
+	
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS}  %-5level %logger{2} - %msg%n" />
+        </Console>
+        <!-- **v** CHANGE ME! **v** -->
+		<Async name="saml">
+			<AppenderRef ref="SAML-FILE"/>
+		</Async>
+		<RollingFile name="SAML-FILE" fileName="${SAML_LOG_FILE}" filePattern="${SAML_FILENAME_PATTERN}" immediateFlush="false">
+			<PatternLayout pattern="${MESSAGE_PATTERN}"/>
+			<Policies>
+				<SizeBasedTriggeringPolicy size="20MB"/>
+			</Policies>
+			<DefaultRolloverStrategy max="10"/>
+		</RollingFile>
+		<!-- **^** CHANGE ME! **^** -->
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console" />
+        </Root>
+        <!-- **v** CHANGE ME! **v** -->
+		<Logger name="com.dotcms.plugin.saml" level="info" additivity="false">
+			<AppenderRef ref="saml"/>
+		</Logger>
+		<!-- This is how you would divert core class logging to your custom log. -->
+		<!-- Useful if you have a static core override plugin in place. -->
+		<Logger name="com.dotcms.rest.config" level="info" additivity="false">
+			<AppenderRef ref="saml"/>
+		</Logger>
+		<!-- This is how you would divert core class logging to your custom log. -->
+		<!-- Useful if you have a static core override plugin in place. -->
+		<Logger name="com.dotcms.util.config" level="info" additivity="false">
+			<AppenderRef ref="saml"/>
+		</Logger>
+		<!-- **^** CHANGE ME! **^** -->
+    </Loggers>
+</Configuration>

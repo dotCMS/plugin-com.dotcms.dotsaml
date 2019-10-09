@@ -57,7 +57,7 @@ public class SiteIdpConfigResolver implements Serializable
 
 		// Does the ID have value
 		if (!UtilMethods.isSet(id)) {
-			throw new DotDataException("id is required.");
+			throw new DotDataException("Site id is required.");
 		}
 
 		List<Host> hosts = null;
@@ -66,17 +66,17 @@ public class SiteIdpConfigResolver implements Serializable
 
 		} catch (DotSecurityException e) {
 
-			throw new DotDataException("security exception while accessing getting host.");
+			throw new DotDataException("An error occurred when retrieving all dotCMS Sites");
 		}
 		
 		if ( hosts == null || hosts.isEmpty()){
-			throw new DotDataException("host data not found.");
+			throw new DotDataException("There are no Sites in this dotCMS instance.");
 		}
 
 		String hostId = findHostId(id, hosts);
 
 		if (hostId == null) {
-			throw new DotDataException("id not found as host or alias.");
+			throw new DotDataException("Site with ID '" + id + "' was not found.");
 		}
 
 		return hostId;
@@ -109,7 +109,7 @@ public class SiteIdpConfigResolver implements Serializable
 	 * 
 	 * @param serverName {@link String}
 	 * @return IdpConfig
-	 * @throws d 
+	 *
 	 * @throws JSONException 
 	 * @throws DotDataException 
 	 */
@@ -117,7 +117,8 @@ public class SiteIdpConfigResolver implements Serializable
 	{
 		final IdpConfig idpConfig = IdpConfigHelper.getInstance().findSiteIdpConfig( serverName );
 
-		Logger.debug( this, "Resolving the configuration: " + idpConfig + ", for the site: " + serverName + ", sites availables:" + IdpConfigHelper.getInstance().getSiteNames() );
+		Logger.debug(this, "Resolving the configuration '" + idpConfig.getIdpName() + "' for site '" + serverName + "'" +
+				". Available sites [" + IdpConfigHelper.getInstance().getSiteNames() + "]");
 
 		return idpConfig;
 	}
@@ -133,8 +134,10 @@ public class SiteIdpConfigResolver implements Serializable
 		final String serverName = request.getServerName();
 		final IdpConfig idpConfig = IdpConfigHelper.getInstance().findSiteIdpConfig( serverName );
 
-		Logger.debug( this, "Resolving the configuration: " + idpConfig + ", for the site: " + serverName + ", sites availables:" + IdpConfigHelper.getInstance().getSiteNames() );
+		Logger.debug(this, "Resolving the configuration '" + idpConfig.getIdpName() + "' for site '" + serverName + "'" +
+				". Available sites [" + IdpConfigHelper.getInstance().getSiteNames() + "]");
 
 		return idpConfig;
 	}
+
 }

@@ -77,17 +77,17 @@ public class DotsamlDefaultPropertiesService {
 	public static void updateDefaultParameter(DotsamlPropertyName property, String value) {
 
 		if (property == null) {
-			Logger.warn(DotsamlDefaultPropertiesService.class, "updateDefaultParameter: property is null!");
+			Logger.warn(DotsamlDefaultPropertiesService.class, "The 'updateDefaultParameter' property is null");
 			return;
 		}
 
 		if (value == null) {
-			Logger.warn(DotsamlDefaultPropertiesService.class, "updateDefaultParameter: value is null!");
+			Logger.warn(DotsamlDefaultPropertiesService.class, "The 'updateDefaultParameter' value is null");
 			return;
 		}
 
-		Logger.info(DotsamlDefaultPropertiesService.class, "Updating default property : "
-				+ property.getPropertyName() + " - " + value );
+		Logger.info(DotsamlDefaultPropertiesService.class, "Updating default property '"
+				+ property.getPropertyName() + "' to '" + value + "'");
 		
 		switch (property) {
 
@@ -225,7 +225,7 @@ public class DotsamlDefaultPropertiesService {
 	public static String getDefaultStringParameter(DotsamlPropertyName property) throws DotSamlException {
 
 		if (property == null) {
-			throw new DotSamlException("getDefaultStringParameter: property is null!");
+			throw new DotSamlException("The 'getDefaultStringParameter' property is null");
 		}
 
 		switch (property) {
@@ -292,7 +292,7 @@ public class DotsamlDefaultPropertiesService {
 	public static boolean getDefaultBooleanParameter(DotsamlPropertyName property) throws DotSamlException {
 
 		if (property == null) {
-			throw new DotSamlException("getDefaultBooleanParameter: property is null!");
+			throw new DotSamlException("The 'getDefaultBooleanParameter' property is null");
 		}
 
 		switch (property) {
@@ -327,7 +327,7 @@ public class DotsamlDefaultPropertiesService {
 	public static Integer getDefaultIntegerParameter(DotsamlPropertyName property) throws DotSamlException {
 
 		if (property == null) {
-			throw new DotSamlException("getDefaultIntegerParameter: property is null!");
+			throw new DotSamlException("The 'getDefaultIntegerParameter' property is null");
 		}
 
 		switch (property) {

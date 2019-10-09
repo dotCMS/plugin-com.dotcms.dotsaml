@@ -35,7 +35,7 @@ public class DotHTTPRedirectDeflateEncoder extends HTTPRedirectDeflateEncoder {
     @Override
     protected String buildRedirectURL(MessageContext<SAMLObject> messageContext, String endpoint, String message) throws MessageEncodingException {
 
-        Logger.debug(this, "Building URL to redirect client to");
+        Logger.debug(this, "Building URL to redirect client to: " + endpoint + "");
         URLBuilder urlBuilder = null;
 
         try {
@@ -53,7 +53,7 @@ public class DotHTTPRedirectDeflateEncoder extends HTTPRedirectDeflateEncoder {
             queryParams.add(new Pair("SAMLRequest", message));
         } else {
             if (!(outboundMessage instanceof StatusResponseType)) {
-                throw new MessageEncodingException("SAML message is neither a SAML RequestAbstractType or StatusResponseType");
+                throw new MessageEncodingException("SAML message is neither a SAML RequestAbstractType nor StatusResponseType");
             }
 
             queryParams.add(new Pair("SAMLResponse", message));

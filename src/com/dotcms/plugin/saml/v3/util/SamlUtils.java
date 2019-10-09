@@ -144,10 +144,10 @@ public class SamlUtils {
 		// IDP logout url
 		if (!isSet(idpSingleLogoutDestionation)) {
 			Logger.error(SamlUtils.class,
-					"The idpSingleLogoutDestionation is not set in the idp metadata, neither the configuration files");
+					"The idpSingleLogoutDestionation is not set in the IdP metadata or the configuration files");
 			throw new DotSamlException("The property: "
 					+ DotsamlPropertyName.DOTCMS_SAML_IDENTITY_PROVIDER_DESTINATION_SLO_URL.getPropertyName()
-					+ " must be set on the host");
+					+ " must be set on the Site");
 		}
 
 		if (!isSet(nameID) || !isSet(sessionIndexValue)) {
@@ -350,18 +350,6 @@ public class SamlUtils {
 	}
 
 	/**
-	 * if(Properties.getBoolean(Constants.ADD_AUTHN_POLICYNAME,true)){ final
-	 * NameIDPolicyBuilder nameIdPolicyBuilder = new NameIDPolicyBuilder();
-	 * NameIDPolicy nameIdPolicy = nameIdPolicyBuilder.buildObject();
-	 * nameIdPolicy.setFormat(Properties.getString(Constants.POLICYNAME_FORMAT,Constants.NAMEID_TRASIENT_FORMAT));
-	 * nameIdPolicy.setSPNameQualifier(Properties.getString(Constants.POLICYNAME_SPNAMEQUALIFIER,Constants.ISSUER));
-	 * nameIdPolicy.setAllowCreate(true);
-	 * authRequest.setNameIDPolicy(nameIdPolicy); }
-	 */
-
-	// todo: keep in mind more than one authentication can be defined
-
-	/**
 	 * Build the Authentication context, with the login and password strategies
 	 * 
 	 * @return RequestedAuthnContext
@@ -527,7 +515,8 @@ public class SamlUtils {
 
 				return;
 			} catch (SignatureException ignore) {
-				Logger.info(SamlUtils.class, "Validation failed with credential: " + ignore.getMessage());
+				Logger.info(SamlUtils.class, "Signature Validation failed with provided credential (ignore?): " +
+						ignore.getMessage());
 			}
 		}
 
@@ -537,17 +526,17 @@ public class SamlUtils {
 	private static void validateSignature(final Response response, final Collection<Credential> credentials)
 			throws SignatureException {
 		
-		Logger.debug(SamlUtils.class, "validateSignature : credentials : " + ((credentials != null)?"has value":"is null"));
-		Logger.debug(SamlUtils.class, "validateSignature : credentials : " + ((response != null)?"has value":"is null"));
+		Logger.debug(SamlUtils.class, "Validating Signature - Credentials " + ((credentials != null) ? "are present" : "are null"));
+		Logger.debug(SamlUtils.class, "Validating Signature - Credentials " + ((response != null) ? "are present" : "are null"));
 		for (Credential credential : credentials) {
 			try {
-				Logger.debug(SamlUtils.class, "validateSignature : credential : " + ((credential != null)?"has value":"is null"));
-				Logger.debug(SamlUtils.class, "validateSignature : response.getSignature : " + ((response.getSignature() != null)?"has value":"is null"));
+				Logger.debug(SamlUtils.class, "Validating Signature - Credential " + ((credential != null) ? "is present" : "is null"));
+				Logger.debug(SamlUtils.class, "Validating Signature - response.getSignature " + ((response.getSignature() != null)?"is present" : "is null"));
 				SignatureValidator.validate(response.getSignature(), credential);
 
 				return;
 			} catch (SignatureException ignore) {
-				Logger.info(SamlUtils.class, "Validation failed with credential: " + ignore.getMessage());
+				Logger.info(SamlUtils.class, "Signature Validation failed with provided credential(s): " + ignore.getMessage());
 			}
 		}
 
@@ -564,23 +553,24 @@ public class SamlUtils {
 		final SAMLSignatureProfileValidator profileValidator;
 
 		if (CredentialHelper.isVerifyAssertionSignatureNeeded(idpConfig) != assertion.isSigned()) {
-			Logger.error(SamlUtils.class, "The assertion signatures do not match...");
-			throw new DotSamlException("The SAML Assertion does not match");
+			Logger.error(SamlUtils.class, "Assertion Signatures for IdP '" + idpConfig.getIdpName() + "' do not match.");
+			throw new DotSamlException("The SAML Assertion for IdP '" + idpConfig.getIdpName() + "' does not match");
 		}
 
 		// If unsigned, No need to go further.
 		if (!CredentialHelper.isVerifyAssertionSignatureNeeded(idpConfig)) {
-			Logger.debug(SamlUtils.class, "The verification assertion signature and status code was skipped.");
+			Logger.debug(SamlUtils.class, "The verification assertion signature and status code for IdP '" + idpConfig
+					+ "' was skipped.");
 			return; // Exit
 		}
 
 		// Here on out we are checking signature
 		try {
 			if (CredentialHelper.isVerifySignatureProfileNeeded(idpConfig)) {
-				Logger.debug(SamlUtils.class, "Doing Profile Validation");
+				Logger.debug(SamlUtils.class, "Executing Profile Validation...");
 				profileValidator = new SAMLSignatureProfileValidator();
 				profileValidator.validate(assertion.getSignature());
-				Logger.debug(SamlUtils.class, "Done Profile Validation");
+				Logger.debug(SamlUtils.class, "Profile Validation finished");
 			} else {
 				Logger.debug(SamlUtils.class, "Skipping the Verify Signature Profile check");
 			}
@@ -591,11 +581,11 @@ public class SamlUtils {
 					Logger.debug(SamlUtils.class,
 							"Validating the signatures: " + MetaDataHelper.getSigningCredentials(idpConfig));
 					validateSignature(assertion, MetaDataHelper.getSigningCredentials(idpConfig));
-					Logger.debug(SamlUtils.class, "Doing signatures validation");
+					Logger.debug(SamlUtils.class, "Executing signatures validation...");
 				} else {
-					Logger.debug(SamlUtils.class, "Validating the signature with a IdP Credentials ");
+					Logger.debug(SamlUtils.class, "Validating the signature with a IdP Credentials...");
 					SignatureValidator.validate(assertion.getSignature(), getIdPCredentials(idpConfig));
-					Logger.debug(SamlUtils.class, "Done validation of the signature with a IdP Credentials ");
+					Logger.debug(SamlUtils.class, "Validation of the signature with a IdP Credentials finished");
 				}
 			} else {
 				Logger.debug(SamlUtils.class, "Skipping the Verify Signature Profile check");
@@ -620,25 +610,26 @@ public class SamlUtils {
 
 		// The check signature in dotCMS and IdP must match
 		if (CredentialHelper.isVerifyResponseSignatureNeeded(idpConfig) != response.isSigned()) {
-			Logger.error(SamlUtils.class, "The response signatures do not match...");
-			throw new DotSamlException("The SAML Response does not match");
+			Logger.error(SamlUtils.class, "The response signatures for IdP '" + idpConfig.getIdpName() + "' do not match.");
+			throw new DotSamlException("The SAML Response for IdP '" + idpConfig.getIdpName() + "' does not match");
 		}
 
 		// If unsigned, No need to go further.
 		if (!CredentialHelper.isVerifyResponseSignatureNeeded(idpConfig)) {
-			Logger.debug(SamlUtils.class, "The verification response signature and status code was skipped.");
+			Logger.debug(SamlUtils.class, "The verification response signature and status code for IdP '" + idpConfig.getIdpName()
+					+ "' was skipped.");
 			return; // Exit
 		}
 
 		// Here on out we are checking signature
 		try {
 			if (CredentialHelper.isVerifySignatureProfileNeeded(idpConfig)) {
-				Logger.debug(SamlUtils.class, "Doing Profile Validation");
+				Logger.debug(SamlUtils.class, "Executing Profile Validation...");
 				profileValidator = new SAMLSignatureProfileValidator();
 				profileValidator.validate(response.getSignature());
-				Logger.debug(SamlUtils.class, "Done Profile Validation");
+				Logger.debug(SamlUtils.class, "Profile Validation finished");
 			} else {
-				Logger.debug(SamlUtils.class, "Skipping the Verify Signature Profile check");
+				Logger.debug(SamlUtils.class, "Skipping verification of Signature Profile");
 			}
 
 			// Ask on the config if the app wants signature validator
@@ -647,11 +638,11 @@ public class SamlUtils {
 					Logger.debug(SamlUtils.class,
 							"Validating the signatures: " + MetaDataHelper.getSigningCredentials(idpConfig));
 					validateSignature(response, MetaDataHelper.getSigningCredentials(idpConfig));
-					Logger.debug(SamlUtils.class, "Doing signatures validation");
+					Logger.debug(SamlUtils.class, "Executing signature validation...");
 				} else {
-					Logger.debug(SamlUtils.class, "Validating the signature with a IdP Credentials ");
+					Logger.debug(SamlUtils.class, "Validating the signature with a IdP Credentials...");
 					SignatureValidator.validate(response.getSignature(), getIdPCredentials(idpConfig));
-					Logger.debug(SamlUtils.class, "Done validation of the signature with a IdP Credentials ");
+					Logger.debug(SamlUtils.class, "Validation of the signature with a IdP Credentials finished");
 				}
 			} else {
 				Logger.debug(SamlUtils.class, "Skipping the Verify Signature Profile check");
@@ -677,7 +668,7 @@ public class SamlUtils {
 			if (null != customCredentialProvider) {
 				credential = customCredentialProvider.createCredential();
 			} else {
-				Logger.debug(SamlUtils.class, "Creating the credentials, using id: " + idpConfig.getId());
+				Logger.debug(SamlUtils.class, "Creating credentials for IdP: " + idpConfig.getIdpName());
 
 				resolver = new IdpConfigCredentialResolver();
 
@@ -686,11 +677,12 @@ public class SamlUtils {
 				criteriaSet.add(criterion);
 				credential = resolver.resolveSingle(criteriaSet);
 
-				Logger.debug(SamlUtils.class, "Created the credentials: " + credential);
+				Logger.debug(SamlUtils.class, "Credentials have been created: " + credential);
 			}
-		} catch (ResolverException resolverException) {
-			Logger.error(SamlUtils.class, resolverException.getMessage(), resolverException);
-			throw new DotSamlException("Something went wrong reading credentials", resolverException);
+		} catch (ResolverException e) {
+			final String errorMsg ="An error occurred when reading credentials: " + e.getMessage();
+			Logger.error(SamlUtils.class, errorMsg, e);
+			throw new DotSamlException(errorMsg, e);
 		}
 
 		return credential;
@@ -709,9 +701,9 @@ public class SamlUtils {
 				credentialMap.put(idpConfig.getSpEndpointHostname(), credential);
 			} else {
 				Logger.error(SamlUtils.class,
-						"The credential is null for the site: " + idpConfig.getSpEndpointHostname());
+						"Credential is null for site: " + idpConfig.getSpEndpointHostname());
 
-				throw new DotSamlException("The credential is null for the site: " + idpConfig.getSpEndpointHostname());
+				throw new DotSamlException("Credential is null for site: " + idpConfig.getSpEndpointHostname());
 			}
 
 		}
@@ -726,7 +718,7 @@ public class SamlUtils {
 		Credential idpCredential = null;
 
 		try {
-			Logger.debug(SamlUtils.class, "Creating Idp credential");
+			Logger.debug(SamlUtils.class, "Creating credential for IdP '" + idpConfig.getIdpName() + "'");
 
 			if (null != customCredentialProvider) {
 				Logger.debug(SamlUtils.class, "Using custom credential provider");
@@ -740,8 +732,10 @@ public class SamlUtils {
 			}
 
 		} catch (NoSuchAlgorithmException | NoSuchProviderException e) {
-			Logger.error(SamlUtils.class, e.getMessage(), e);
-			throw new DotSamlException(e.getMessage(), e);
+			final String erroMsg = "An error occurred when generating credential for IdP '" + idpConfig.getIdpName() +
+					"': " + e.getMessage();
+			Logger.error(SamlUtils.class, erroMsg, e);
+			throw new DotSamlException(erroMsg, e);
 		}
 
 		return idpCredential;
@@ -830,77 +824,4 @@ public class SamlUtils {
 		}
 	}
 
-	/**
-	 * Check if the File Path exists, can access and readIdpConfigs.
-	 *
-	 * @param properties
-	 *            {@link Properties} (Key, Value) = (PropertyName, FilePath).
-	 * @param filePathPropertyKeys
-	 *            keys name that have File path in the value.
-	 * @return
-	 */
-	public static Set<String> validateFiles(Properties properties, Set<String> filePathPropertyKeys) {
-		Set<String> missingFiles = new HashSet<>();
-
-		for (String fileField : filePathPropertyKeys) {
-			Logger.debug(SamlUtils.class, "Validating the field: " + fileField);
-
-			// If field is missing we don't need to validate.
-			if (properties.getProperty(fileField) == null) {
-				continue;
-			}
-
-			// Check if the file exists.
-			String filePath = properties.getProperty(fileField);
-			File file = new File(filePath);
-
-			if (!file.exists() && !file.canRead()) {
-				try {
-					// Let's try with the URI.
-					URI uri = new URI(filePath);
-					file = new File(uri);
-
-					if (!file.exists() && !file.canRead()) {
-						missingFiles.add(filePath);
-					}
-
-				} catch (URISyntaxException e) {
-					Logger.debug(SamlUtils.class, "Problem reading file from URI: " + filePath, e);
-					missingFiles.add(fileField + ": " + filePath);
-				} catch (Exception e) {
-					Logger.debug(SamlUtils.class, "Problem reading file from URI: " + filePath, e);
-					missingFiles.add(fileField + ": " + filePath + " (" + e.getMessage() + ")");
-				}
-			}
-		}
-
-		return missingFiles;
-	}
-
-	/**
-	 * Validates that properties contains the keys required.
-	 *
-	 * @param properties
-	 *            {@link Properties} (Key, Value) = (PropertyName, FilePath).
-	 * @param keys
-	 *            Required Property keys required to be in the samlProperties.
-	 * @return
-	 */
-	public static Set<String> getMissingProperties(final Properties properties, final Set<String> keysRequired) {
-		final Set<String> missingProperties = new HashSet<>(); // todo: make
-																// this
-																// immutable on
-																// 4.x
-
-		for (String keyRequired : keysRequired) {
-			Logger.debug(SamlUtils.class, "Validating missing prop: " + keyRequired);
-
-			if (properties.getProperty(keyRequired) == null || properties.getProperty(keyRequired).trim().equals("")) {
-				missingProperties.add(keyRequired);
-			}
-
-		}
-
-		return missingProperties;
-	}
 }

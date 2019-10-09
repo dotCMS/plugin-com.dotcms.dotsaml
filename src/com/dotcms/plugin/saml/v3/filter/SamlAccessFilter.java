@@ -24,7 +24,7 @@ import com.dotcms.plugin.saml.v3.util.InstanceUtil;
 import com.dotcms.plugin.saml.v3.util.MetaDataXMLPrinter;
 import com.dotcms.plugin.saml.v3.util.SiteIdpConfigResolver;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
-import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.IdentifierAPI;
 import com.dotmarketing.business.PermissionAPI;
@@ -116,7 +116,7 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 					// if the auto login couldn't logged the user, then send it
 					// to the IdP login page (if it is not already logged in).
 					if (null == session || super.isNotLogged(httpServletRequest, session)) {
-						Logger.debug(this, "User is not logged, processing saml request");
+						Logger.debug(this, "There's no logged-in user. Processing SAML request...");
 						super.doRequestLoginSecurityLog(httpServletRequest, idpConfig);
 
 						final String originalRequest = httpServletRequest.getRequestURI()
@@ -132,7 +132,7 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 										originalRequest;
 
 						Logger.debug(this.getClass(),
-								"Doing Saml Login Redirection when request: " + redirectAfterLogin);
+								"Executing SAML Login Redirection with request: " + redirectAfterLogin);
 
 						// if we don't have a redirect yet
 						if (null != session) {
@@ -145,8 +145,10 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 							// Page.
 							super.samlAuthenticationService.authentication(httpServletRequest, httpServletResponse);
 						} catch (DotSamlException | DotDataException exception) {
-							Logger.error(this, "Error on authentication: " + exception.getMessage(), exception);
-							Logger.debug(this, "Error on authentication, settings 500 response status.");
+							Logger.error(this, "An error occurred when redirecting to the IdP Login page: " +
+									exception.getMessage(), exception);
+							Logger.debug(this, "An error occurred when redirecting to the IdP Login page. Setting 500 " +
+									"response status.");
 							httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 						}
 
@@ -164,12 +166,13 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 				}
 
 			} else {
-				Logger.info(this, "No idpConfig for the site: " + httpServletRequest.getServerName()
-						+ ". Not any SAML filtering for this request: " + httpServletRequest.getRequestURI());
+				Logger.info(this, "No idpConfig for site '" + httpServletRequest.getServerName()
+						+ "'. No SAML filtering for this request: " + httpServletRequest.getRequestURI());
 			}
 
-		} catch (JSONException | DotDataException exception) {
-			Logger.info(this, "Error reading idpConfig for the site: " + httpServletRequest.getServerName());
+		} catch (final JSONException | DotDataException exception) {
+			Logger.debug(this, "Error [" + exception.getMessage() + "] Unable to get idpConfig for Site '" +
+					httpServletRequest.getServerName() + "'. Incoming URL: " + httpServletRequest.getRequestURL());
 		}
 
 		chain.doFilter(httpServletRequest, httpServletResponse);
@@ -179,4 +182,5 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 	public void destroy() {
 
 	}
+
 }

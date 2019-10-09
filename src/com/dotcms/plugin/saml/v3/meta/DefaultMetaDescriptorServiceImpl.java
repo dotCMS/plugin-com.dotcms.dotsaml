@@ -93,7 +93,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 				DotsamlPropertyName.DOT_SAML_IDP_METADATA_PROTOCOL);
 		final IDPSSODescriptor idpDescriptor = descriptor.getIDPSSODescriptor(protocol);
 
-		Logger.info(this, "Parsing the Id Provider, with the entityId: " + descriptor.getEntityID());
+		Logger.info(this, "Parsing metadata from IdP with entityID: " + descriptor.getEntityID());
 
 		return new MetadataBean(descriptor.getEntityID(), idpDescriptor.getErrorURL(),
 				this.getSingleSignOnMap(idpDescriptor), this.getSingleLogoutMap(idpDescriptor),

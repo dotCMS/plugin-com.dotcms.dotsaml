@@ -1,6 +1,6 @@
 package com.dotcms.plugin.saml.v3.util;
 
-import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.FileInputStream;
 import java.io.IOException;

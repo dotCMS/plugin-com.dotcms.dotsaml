@@ -2,7 +2,7 @@ package com.dotcms.plugin.saml.v3.parameters;
 
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
-import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import com.dotmarketing.util.Logger;
 
 /**
@@ -60,7 +60,6 @@ public class DotsamlPropertiesService {
 	 *            IdpConfig
 	 * @param propertyName
 	 *            String
-	 * @param defaultValue
 	 * @return String
 	 */
 	public static String getOptionString(IdpConfig idpConfig, DotsamlPropertyName propertyName) {
@@ -170,8 +169,7 @@ public class DotsamlPropertiesService {
 	 *            IdpConfig
 	 * @param propertyName
 	 *            String
-	 * @param defaultValue
-	 * 
+	 *
 	 * @return Integer
 	 */
 	public static Integer getOptionInteger(IdpConfig idpConfig, DotsamlPropertyName propertyName) {
@@ -199,4 +197,5 @@ public class DotsamlPropertiesService {
 
 		return value;
 	}
+
 }

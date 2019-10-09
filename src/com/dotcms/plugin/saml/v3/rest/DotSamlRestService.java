@@ -79,7 +79,7 @@ public class DotSamlRestService implements Serializable {
 
 			HttpSession session = httpServletRequest.getSession();
 			if (null == session) {
-				throw new DotSamlException("No session created.");
+				throw new DotSamlException("No session has been created.");
 			}
 
 			// Extracts data from the assertion - if it can't process a
@@ -103,10 +103,10 @@ public class DotSamlRestService implements Serializable {
 				// Session Attributes used to build logout request
 				session.setAttribute(idpConfig.getId() + SAML_SESSION_INDEX, samlSessionIndex);
 				session.setAttribute(idpConfig.getId() + SAML_NAME_ID, assertion.getSubject().getNameID());
-				Logger.debug(this, "Already set the session index with key:" + (idpConfig.getId() + SAML_SESSION_INDEX)
-						+ " and value" + session.getAttribute(idpConfig.getId() + SAML_SESSION_INDEX));
-				Logger.debug(this, "Already set the name id with key:" + (idpConfig.getId() + SAML_NAME_ID)
-						+ " and value" + session.getAttribute(idpConfig.getId() + SAML_NAME_ID));
+				Logger.debug(this, "Session index with key: " + (idpConfig.getId() + SAML_SESSION_INDEX)
+						+ " and value: " + session.getAttribute(idpConfig.getId() + SAML_SESSION_INDEX) + " is already set.");
+				Logger.debug(this, "NameID with key: " + (idpConfig.getId() + SAML_NAME_ID)
+						+ " and value: " + session.getAttribute(idpConfig.getId() + SAML_NAME_ID) + " is already set.");
 			}
 
 			// Add session based user ID to be used on the redirect.
@@ -136,7 +136,8 @@ public class DotSamlRestService implements Serializable {
 		} catch (Exception exception) {
 
 			// this is an unknown error, so we report as a 500.
-			Logger.error(this, "Error getting posting idp", exception);
+			Logger.error(this, "Error when logging into IdP with ID '" + idpConfigId + "': " + exception
+					.getMessage(), exception);
 		}
 
 	}
@@ -172,7 +173,8 @@ public class DotSamlRestService implements Serializable {
 		} catch (Exception exception) {
 
 			// this is an unknown error, so we report as a 500.
-			Logger.error(this, "Error getting posting idp", exception);
+			Logger.error(this, "Error when logging out from IdP with ID '" + idpConfigId + "': " + exception
+					.getMessage(), exception);
 		}
 	}
 
@@ -191,12 +193,12 @@ public class DotSamlRestService implements Serializable {
 			// If idpConfig is null, means this site does not need SAML
 			// processing
 			if (idpConfig != null) {
-				Logger.debug(this, "Processing saml login request for idpConfig id: " + idpConfigId);
+				Logger.debug(this, "Processing SAML login request for idpConfig id: " + idpConfigId);
 				SamlFilter samlFilter = new SamlFilter();
 				samlFilter.printMetaData(httpServletRequest, httpServletResponse, idpConfig);
 
 			} else {
-				String message = "No idpConfig for idpConfigId: " + idpConfigId + ". At "
+				String message = "No idpConfig for idpConfigId '" + idpConfigId + "' at "
 						+ httpServletRequest.getRequestURI();
 				Logger.debug(this, message);
 				throw new DotSamlException(message);
@@ -208,20 +210,22 @@ public class DotSamlRestService implements Serializable {
 
 		} catch (DotDataException dotDataException) {
 
-			Logger.error(this, "Idp not found (" + dotDataException.getMessage() + ")", dotDataException);
+			Logger.error(this, "IdP with ID '" + idpConfigId + "' not found: " + dotDataException.getMessage(), dotDataException);
 
 		} catch (IOException ioException) {
 
-			Logger.error(this, "Idp is not valid (" + ioException.getMessage() + ")", ioException);
+			Logger.error(this, "IdP with ID '" + idpConfigId + "' is not valid: " + ioException.getMessage(), ioException);
 
 		} catch (JSONException jsonException) {
 
-			Logger.error(this, "Error handling json (" + jsonException.getMessage() + ")", jsonException);
+			Logger.error(this, "Error when handling JSON configuration for IdP with ID '" + idpConfigId + "': " +
+					jsonException.getMessage(), jsonException);
 
 		} catch (Exception exception) {
 
 			// this is an unknown error, so we report as a 500.
-			Logger.error(this, "Error getting posting idp", exception);
+			Logger.error(this, "Error when returning metadata for IdP with ID '" + idpConfigId + "': " + exception
+					.getMessage(), exception);
 		}
 	}
 

@@ -6,7 +6,7 @@ import org.opensaml.saml.saml2.core.NameIDType;
 
 import com.dotcms.plugin.saml.v3.key.BindingType;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
-import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 public class DotsamlProperties {
 
@@ -40,8 +40,6 @@ public class DotsamlProperties {
 	private String dotcmsSamlNameIdPolicyFormat = NameIDType.PERSISTENT;
 	private String dotcmsSamlOptionalUserRole = null;
 	private Boolean dotcmsSamlPolicyAllowCreate = false;
-	// Changed by Gabby while com.dotcms.plugin.saml.v3.BindingType.java is introduced back in the latest code
-	// private String dotcmsSamlProtocolBinding = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
 	private String dotcmsSamlProtocolBinding = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
 	private String dotSamlRemoveRolesPrefix = StringUtils.EMPTY;
 	private String dotSamlServiceProviderCustomCredentialProviderClassname = null;

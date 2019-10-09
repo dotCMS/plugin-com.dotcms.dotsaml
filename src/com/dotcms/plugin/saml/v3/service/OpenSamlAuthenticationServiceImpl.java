@@ -53,7 +53,7 @@ import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
 import com.dotcms.plugin.saml.v3.util.SiteIdpConfigResolver;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
-import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.DotStateException;
 import com.dotmarketing.business.NoSuchUserException;
@@ -111,20 +111,20 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
 		// create the role, in case it does not exist
 		if (role == null && createRole) {
-			Logger.info(this, "Role not found. Creating Role with key: " + roleKey);
+			Logger.info(this, "Role with key '" + roleKey + "' was not found. Creating it...");
 			role = createNewRole(roleKey, isSystem);
 		}
 
 		if (null != role) {
 			if (!this.roleAPI.doesUserHaveRole(user, role)) {
 				this.roleAPI.addRoleToUser(role, user);
-				Logger.debug(this, "Added role: " + role.getName() + " to user:" + user.getEmailAddress());
+				Logger.debug(this, "Role named '" + role.getName() + "' has been added to user: " + user.getEmailAddress());
 			} else {
 				Logger.debug(this,
-						"The user: " + user.getEmailAddress() + " already has the role: " + role + ", so not added");
+						"User '" + user.getEmailAddress() + "' already has the role '" + role + "'. Skipping assignment...");
 			}
 		} else {
-			Logger.debug(this, "The role: " + roleKey + ", does not exists on dotCMS, not added to the user.");
+			Logger.debug(this, "Role named '" + roleKey + "' does NOT exists in dotCMS. Ignoring it...");
 		}
 	}
 
@@ -147,20 +147,20 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 			try {
 				// remove previous roles
 				if (!DOTCMS_SAML_BUILD_ROLES_STATIC_ADD_VALUE.equalsIgnoreCase(buildRolesStrategy)) {
-					Logger.debug(this, "Removing user previous roles");
+					Logger.debug(this, "Removing ALL existing roles from user '" + user.getUserId() + "'...");
 					this.roleAPI.removeAllRolesFromUser(user);
 				} else {
 					Logger.debug(this,
-							"The buildRoles Strategy is: 'staticadd', so didn't remove any dotCMS existing role");
+							"The buildRoles strategy is: 'staticadd'. It won't remove any existing dotCMS role");
 				}
 
 				this.handleRoles(user, attributesBean, idpConfig, buildRolesStrategy);
 			} catch (DotDataException e) {
-				Logger.error(this, "Error creating user:" + e.getMessage(), e);
+				Logger.error(this, "Error adding roles to user '" + user.getUserId() + "': " + e.getMessage(), e);
 				throw new DotSamlException(e.getMessage());
 			}
 		} else {
-			Logger.info(this, "The build roles strategy is 'none', so not alter any user role");
+			Logger.info(this, "The build roles strategy is 'none'. No user roles were added/changed.");
 		}
 	}
 
@@ -170,7 +170,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 		final boolean includeIDPRoles = DOTCMS_SAML_BUILD_ROLES_ALL_VALUE.equalsIgnoreCase(buildRolesStrategy)
 				|| DOTCMS_SAML_BUILD_ROLES_IDP_VALUE.equalsIgnoreCase(buildRolesStrategy);
 
-		Logger.debug(this, "Including roles from IDP: " + includeIDPRoles + ", for the build roles Strategy: "
+		Logger.debug(this, "Including roles from IdP '" + includeIDPRoles + "' for the build roles Strategy: "
 				+ buildRolesStrategy);
 
 		if (includeIDPRoles && attributesBean.isAddRoles() && null != attributesBean.getRoles()
@@ -196,7 +196,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 						// not
 						// a valid role, we have to filter it.
 
-						Logger.debug(this, "Skipping the role: " + role);
+						Logger.debug(this, "Skipping role: " + role);
 						continue;
 					} else {
 						Logger.debug(this, "Role Patterns: " + this.toString(rolePatterns) + ", remove role prefix: "
@@ -208,7 +208,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 			}
 		} else {
 			Logger.info(this, "Roles have been ignore by the build roles strategy: " + buildRolesStrategy
-					+ ", or roles have been not set from the idp!");
+					+ ", or roles have been not set from the IdP");
 		}
 	}
 
@@ -350,9 +350,9 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 		try {
 			role = roleAPI.save(role, role.getId());
 		} catch (DotDataException | DotStateException e) {
-			ActivityLogger.logInfo(ActivityLogger.class, getClass() + " - Error Adding Role",
+			ActivityLogger.logInfo(ActivityLogger.class, getClass() + " - Error adding Role",
 					"Date: " + date + ";  " + "Role:" + roleKey);
-			AdminLogger.log(AdminLogger.class, getClass() + " - Error Adding Role",
+			AdminLogger.log(AdminLogger.class, getClass() + " - Error adding Role",
 					"Date: " + date + ";  " + "Role:" + roleKey);
 			throw e;
 		}
@@ -370,27 +370,27 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 				final String companyDomain =
 						DotsamlPropertiesService.getOptionString(idpConfig, DotsamlPropertyName.DOTCMS_SAML_COMPANY_EMAIL_DOMAIN, "fakedomain.com");
 
-				Logger.warn(this, "The NameId " + attributesBean.getNameID().getValue()
-						+ " or The email: " + attributesBean.getEmail() +
-						", are duplicated, could not create the user, trying a new email strategy");
+				Logger.warn(this, "NameId " + attributesBean.getNameID().getValue()
+						+ " or email: " + attributesBean.getEmail() +
+						", are duplicated. User could not be created, trying the new email strategy");
 
 				final String newEmail = attributesBean.getNameID().getValue() + "@" + companyDomain;
 
 				try{
 					user = this.userAPI.createUser(attributesBean.getNameID().getValue(), newEmail);
-					Logger.info(this, "Userid: "+ attributesBean.getNameID().getValue() +
-							"created with email: " + newEmail);
+					Logger.info(this, "UserID: "+ attributesBean.getNameID().getValue() +
+							" has been created with email: " + newEmail);
 
 				} catch (DuplicateUserException dueAgain) {
-					Logger.warn(this, "The NameId " + attributesBean.getNameID().getValue()
-							+ " or The email: " + attributesBean.getEmail() +
-							", are duplicated, could not create the user, trying a UUID strategy");
+					Logger.warn(this, "NameId " + attributesBean.getNameID().getValue()
+							+ " or email: " + attributesBean.getEmail() +
+							", are duplicated. User could not be created, trying the UUID strategy");
 
 					final String newUUIDEmail = UUIDGenerator.generateUuid() + "@" + companyDomain;
 
 					user = this.userAPI.createUser(attributesBean.getNameID().getValue(), newUUIDEmail);
-					Logger.info(this, "Userid: "+ attributesBean.getNameID().getValue() +
-							"created with email: " + newUUIDEmail);
+					Logger.info(this, "UserID: "+ attributesBean.getNameID().getValue() +
+							" has been created created with email: " + newUUIDEmail);
 				}
 			}
 
@@ -404,11 +404,14 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 			user.setPasswordEncrypted(true);
 
 			this.userAPI.save(user, systemUser, false);
-			Logger.debug(this, "new user created. email: " + attributesBean.getEmail());
+			Logger.debug(this, "User with NameID '" + attributesBean.getNameID().getValue() + "' and email '" +
+					attributesBean.getEmail() + "' has been created.");
 
 		} catch (Exception e) {
-			Logger.error(this, "Error creating user:" + e.getMessage(), e);
-			throw new DotSamlException(e.getMessage());
+			final String errorMsg = "Error creating user with NameID '" + attributesBean.getNameID().getValue() + "': " +
+					"" + e.getMessage();
+			Logger.error(this, errorMsg, e);
+			throw new DotSamlException(errorMsg);
 		}
 
 		return user;
@@ -416,15 +419,15 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
 	private String createNoReplyEmail(final String nameId, final boolean allowNullEmail) {
 		if (!allowNullEmail) {
-			throw new NotNullEmailAllowedException("The email is null and it is not allowed");
+			throw new NotNullEmailAllowedException("Email attribute is null, which is not allowed");
 		}
 
-		Logger.info(this, "The userid : " + nameId + " has the email attribute null, creating a new one");
+		Logger.info(this, "UserID '" + nameId + "' has a null email attribute. Generating one...");
 
 		final String emailValue = new StringBuilder(NO_REPLY).append(sanitizeNameId(nameId)).append(NO_REPLY_DOTCMS_COM)
 				.toString();
 
-		Logger.debug(this, "For the userid : " + nameId + " the generated email is: " + emailValue);
+		Logger.debug(this, "UserID '" + nameId + "' has been assigned email '" + emailValue + "'");
 
 		return emailValue;
 	}
@@ -445,13 +448,16 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
 			encoder.initialize();
 
-			Logger.debug(this, "XMLObject: " + toXMLObjectString(xmlObject));
-			Logger.debug(this, "Redirecting to IDP");
+			Logger.debug(this, "Printing XMLObject:");
+			Logger.debug(this, "\n\n" + toXMLObjectString(xmlObject));
+			Logger.debug(this, "Redirecting to IdP '" + idpConfig.getIdpName() + "'");
 
 			encoder.encode();
 		} catch (ComponentInitializationException | MessageEncodingException e) {
-			Logger.error(this, e.getMessage(), e);
-			throw new DotSamlException(e.getMessage(), e);
+			final String errorMsg = "An error occurred when executing redirect to IdP '" + idpConfig.getIdpName() +
+					"': " + e.getMessage();
+			Logger.error(this, errorMsg, e);
+			throw new DotSamlException(errorMsg, e);
 		}
 
 	}
@@ -473,8 +479,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 	}
 
 	private String getDefaultBuildRoles(final String invalidBuildRolesStrategy) {
-		Logger.info(this, "The build.roles: " + invalidBuildRolesStrategy + ", is invalid; using as default: "
-				+ DOTCMS_SAML_BUILD_ROLES_ALL_VALUE);
+		Logger.info(this, "The build.roles: " + invalidBuildRolesStrategy + ", property is invalid. Using the default " +
+				"strategy: " + DOTCMS_SAML_BUILD_ROLES_ALL_VALUE);
 
 		return DOTCMS_SAML_BUILD_ROLES_ALL_VALUE;
 	}
@@ -498,7 +504,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
 		HttpSession session = request.getSession();
 		if (session == null) {
-			Logger.error(this, "Session does not exist!");
+			Logger.error(this, "Could not retrieve user from session as the session doesn't exist!");
 			return null;
 		}
 
@@ -515,10 +521,10 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 			user = this.userAPI.loadUserById(samlUserId, systemUser, false);
 
 		} catch (NoSuchUserException e) {
-			Logger.error(this, "No matching user, creating");
+			Logger.error(this, "No user matches ID '" + samlUserId + "'. Creating one...");
 			user = null;
 		} catch (Exception e) {
-			Logger.error(this, "Unknown exception", e);
+			Logger.error(this, "An error occurred when loading user with ID '" + samlUserId + "'", e);
 			user = null;
 		}
 
@@ -545,7 +551,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 						DotsamlPropertyName.DOTCMS_SAML_OPTIONAL_USER_ROLE) + " has been assigned");
 			}
 		} else {
-			Logger.info(this, "The build roles strategy is 'idp' so not any saml_user_role added");
+			Logger.info(this, "The build roles strategy is 'idp'. No saml_user_role has been added");
 		}
 
 	}
@@ -555,7 +561,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
 		if (null != rolePatterns) {
 			for (String rolePattern : rolePatterns) {
-				Logger.debug(this, "Is Valid Role, role: " + role + ", pattern: " + rolePattern);
+				Logger.debug(this, "Valid Role: " + role + ", pattern: " + rolePattern);
 				isValidRole |= this.match(role, rolePattern);
 			}
 		} else {
@@ -708,7 +714,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 					Logger.debug(this, "Resolving attributes - roles : " + attribute);
 				} else {
 					final String attributeName = attribute.getName();
-					Logger.warn(this, attributeName + " attribute did not match any user property on the idpConfig: "
+					Logger.warn(this, attributeName + " attribute did not match any user property in the idpConfig: "
 							+ customConfiguration);
 				}
 			});
@@ -753,10 +759,11 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 			Logger.error(this, e.getMessage());
 			return null;
 		} catch (NoSuchUserException e) {
-			Logger.error(this, "No matching user, creating");
+			Logger.error(this, "No user matches ID '" + attributesBean.getNameID().getValue() + "'. Creating one...");
 			user = null;
 		} catch (Exception e) {
-			Logger.error(this, "Unknown exception", e);
+			Logger.error(this, "An error occurred when loading user with ID '" + attributesBean.getNameID().getValue()
+					+ "'", e);
 			user = null;
 		}
 
@@ -771,7 +778,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 		if (user.isActive()) {
 			this.addRoles(user, attributesBean, idpConfig);
 		} else {
-			Logger.info(this, "The user " + user.getEmailAddress() + " is not active, not roles added");
+			Logger.info(this, "User with ID '" + attributesBean.getNameID().getValue() + "' is not active. No roles " +
+					"were added.");
 		}
 
 		return user;
@@ -809,21 +817,29 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 			user.setLastName(attributesBean.getLastName());
 
 			this.userAPI.save(user, systemUser, false);
-			Logger.debug(this, "User updated. email: " + attributesBean.getEmail());
+			Logger.debug(this, "User with email '" + attributesBean.getEmail() + "' has been updated");
 		} catch (Exception e) {
-			Logger.error(this, "Error creating user:" + e.getMessage(), e);
+			Logger.error(this, "Error updating user with email '" + attributesBean.getEmail() + "': " + e.getMessage()
+					, e);
 			throw new DotSamlException(e.getMessage());
 		}
 
 		return user;
 	}
 
-	protected void validateAttributes(Assertion assertion) throws AttributesNotFoundException {
-		if (assertion == null || assertion.getAttributeStatements() == null
-				|| assertion.getAttributeStatements().isEmpty() || assertion.getSubject() == null
-				|| assertion.getSubject().getNameID() == null
-				|| assertion.getSubject().getNameID().getValue().isEmpty()) {
-			throw new AttributesNotFoundException("No attributes found");
+	protected void validateAttributes(final Assertion assertion) throws AttributesNotFoundException {
+		if (null == assertion) {
+			throw new AttributesNotFoundException("SAML Assertion is null");
+		}
+		if (null == assertion.getAttributeStatements() || assertion.getAttributeStatements().isEmpty()) {
+			throw new AttributesNotFoundException("Attribute list in SAML Assertion is null or empty");
+		}
+		if (null == assertion.getSubject()) {
+			throw new AttributesNotFoundException("Subject in SAML Assertion is null");
+		}
+		if (null == assertion.getSubject().getNameID() || assertion.getSubject().getNameID().getValue().isEmpty()) {
+			throw new AttributesNotFoundException("NameID in SAML Assertion is null or empty");
 		}
 	}
+
 }
