@@ -14,22 +14,16 @@ Terminology:
 | SP Issuer URL			| dotCMS URL where SAML will be authenticating								|
 | SP Endpoint Hostname	| Hostname where dotCMS will publishes the Services without **htpps://**	|
 
-**IMPORTANT:** Please notice this plugin only works on *dotCMS 4.3.3* and *Tomcat 8.0.18* release 
+**IMPORTANT:** Please notice this plugin works on *dotCMS 5.1.6* and *Tomcat 8.5.32*
 
 ## Installing the plugin
 For dotCMS cloud clients this part is done by dotCMS support team.
 #### 1. Get the right version
-Download the required version of the plugin from [the repo](https://github.com/dotCMS/plugin-com.dotcms.dotsaml). This plugin is currently available for dotCMS 4.3.2+, but not for the 5.x series. Checkout the latest [tag](https://github.com/dotCMS/plugin-com.dotcms.dotsaml/tree/4.0-4.3.x-beta) and the latest [branch](https://github.com/dotCMS/plugin-com.dotcms.dotsaml/tree/4.0-4.3.x). The latest branch is a work in progress but has the latest **hotfixes**.
+Download the required version of the plugin from [the repo](https://github.com/dotCMS/plugin-com.dotcms.dotsaml). Checkout the latest [tag](https://github.com/dotCMS/plugin-com.dotcms.dotsaml/tree/5.x).
 
 #### 2. Deploy plugin
 * Copy the **plugin** tarball to `/plugins` in the dotCMS installation
 * Uncompress the file (no need to change plugin’s folder name)
-* There's a known-issue with a jar that needs to be placed into tomcat's lib directory:
-
-```bash
-mv ${DOTCMS_HOME}/dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/lib/slf4j-api-1.7.25.jar ${DOTCMS_HOME}/dotserver/tomcat-8.0.18/lib/
-```
-
 * Re-deploy the plugins (stop, deploy plugins and start dotCMS)
 
 #### 3. Add the SAML Configuration portlet
@@ -68,7 +62,7 @@ Here is the information required by the configuration and the ownership on Step 
 	- Value: This is going to be the hostname for the URLs where our SP publishes services available on dotCMS side for the IdP to communicate with dotCMS. The hostname does not need to be a site hosted in dotCMS, but it needs to point to the dotCMS instance, do not add the **“https://”** it will be added automatically. 
 
 + ###### Private Key and Public Cert
-	- Value: Generate the cert and ley running the following commna on Linux like OS: 
+	- Value: Generate the cert and ley running the following command on Linux like OS: 
 
 		`openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout <key file name> -out <certificate file name> -days 3650`
 
@@ -76,7 +70,12 @@ Here is the information required by the configuration and the ownership on Step 
 	- Value: Use **Response and Assertion** or change according idP Admin.
 
 + ###### Override the properties
-	- Value: let empty or change as idP Admin requires, check the [Properties List](https://github.com/dotCMS/plugin-com.dotcms.dotsaml/tree/4.0-4.3.x#configuration)
+	- Value: left empty or change as idP Admin requires. For example, default properties can be:
+```
+nameidpolicy.format=urn:oasis:names:tc:SAML:2.0:nameid-format:transient
+protocol.binding=urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST
+verify.assertion.signature=false
+```
 
 + ###### Sites
 	- Value: Don't associate any Site for now.
