@@ -102,7 +102,7 @@ Once that the idP admin has provided the idP Metadata, proceed to following step
 ## Test
 * From a different browser session, try to log into the backend via hostname of one of the sites you associated to the SAML (did this previously)
 * Instead of being redirected to the dotCMS default login page, you should hit the IdP login page
-* Monitor `dotcms-saml.log` (inside dotCMS’s log directory) for specific messages related to SAML authentication
+* Monitor `dotcms-saml.log` (inside dotCMS’s log directory) for specific messages related to SAML authentication. Check out the `/ROOT/dotserver/tomcat-8.5.32/webapps/ROOT/WEB-INF/log4j/log4j2.xml` file for details on how to configure this log file.
 
 ---
 
