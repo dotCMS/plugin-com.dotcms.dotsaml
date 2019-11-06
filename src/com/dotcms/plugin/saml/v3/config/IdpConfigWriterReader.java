@@ -16,9 +16,9 @@ import java.util.Map;
 
 public class IdpConfigWriterReader
 {
-	public static final String IDP_CONFIGS = "samlConfigs";
-	public static final String DEFAULT_SAML_CONFIG = "defaultSamlConfig";
-	public static final String DISABLE_SAML_SITES = "disabledSamlSites";
+	public static volatile String IDP_CONFIGS = "samlConfigs";
+	public static volatile String DEFAULT_SAML_CONFIG = "defaultSamlConfig";
+	public static volatile String DISABLE_SAML_SITES = "disabledSamlSites";
 
 	public static String readDefaultIdpConfigId( final File idpConfigFile ) throws IOException, JSONException
 	{

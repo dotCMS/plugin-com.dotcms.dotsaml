@@ -22,6 +22,7 @@ public abstract class SamlCache implements Cachable
 	protected static final String INDEX = "index";
 	protected static final String DISABLED_SITES = "disabled-sites";
 	protected static final String COUNT = "count";
+	protected static final String FLAG = "flag";
 
 	protected static final String DEFAULT_IDP_CONFIG_GROUP = "Default-Ipd-Config";
 	protected static final String IDP_CONFIG_GROUP = "Ipd-Config";
@@ -30,6 +31,7 @@ public abstract class SamlCache implements Cachable
 	protected static final String DISABLED_SITES_GROUP = "Disabled-Sites";
 	protected static final String IDP_INDEX_GROUP = "Idp-Index";
 	protected static final String DISABLED_SITES_INDEX_GROUP = "Disabled-Sites-Index";
+	protected static final String DISK_HAS_BEEN_READ_GROUP = "Disk-Has-Been-Read";
 
 	/**
 	 * Adds a {@link IdpConfig} to the caching structure. Null objects or with empty
@@ -224,4 +226,8 @@ public abstract class SamlCache implements Cachable
 	 * @param idpConfigId - The ID of the {@link IdpConfig} object to cache.
 	 */
 	protected abstract void removeSitesIdpConfigId( Map<String, String> sites, String idpConfigId );
+
+	public abstract void setIdpConfigRead(Boolean value);
+
+	public abstract boolean hasDiskBeenRead();
 }

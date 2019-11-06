@@ -31,8 +31,7 @@ import java.util.Map;
  * @version 4.3.2
  * @since 03-27-2018
  */
-public class SamlCacheImpl extends SamlCache
-{
+public class SamlCacheImpl extends SamlCache {
 	protected DotCacheAdministrator cache = null;
 
 	private final String assetsPath;
@@ -42,609 +41,578 @@ public class SamlCacheImpl extends SamlCache
 	 * Default constructor. Instantiates the {@link DotCacheAdministrator}
 	 * object used to store all the configuration information.
 	 */
-	public SamlCacheImpl()
-	{
+	public SamlCacheImpl() {
 		cache = CacheLocator.getCacheAdministrator();
 
-		this.assetsPath = Config.getStringProperty( "ASSET_REAL_PATH", FileUtil.getRealPath( Config.getStringProperty( "ASSET_PATH", "/assets" ) ) );
+		this.assetsPath = Config.getStringProperty("ASSET_REAL_PATH",
+				FileUtil.getRealPath(Config.getStringProperty("ASSET_PATH", "/assets")));
 		this.idpFilePath = assetsPath + File.separator + "saml" + File.separator + "config.json";
 
-		//Logger.info( this, "this.assetsPath = " + this.assetsPath );
-		//Logger.info( this, "this.idpFilePath = " + this.idpFilePath );
+		// Logger.info( this, "this.assetsPath = " + this.assetsPath );
+		// Logger.info( this, "this.idpFilePath = " + this.idpFilePath );
 	}
 
 	@Override
-	public void addDefaultIdpConfig( IdpConfig idpConfig ) throws DotCacheException
-	{
+	public void addDefaultIdpConfig(IdpConfig idpConfig) throws DotCacheException {
 		String tag = "addDefaultIdpConfig( IdpConfig ) ";
 
-		idpConfig = checkNotNull( idpConfig, tag + "idpConfig is required." );
+		idpConfig = checkNotNull(idpConfig, tag + "idpConfig is required.");
 
-		if ( Strings.isNullOrEmpty( idpConfig.getId() ) )
-		{
-			throw new IllegalArgumentException( tag + "idpConfig must have an id." );
+		if (Strings.isNullOrEmpty(idpConfig.getId())) {
+			throw new IllegalArgumentException(tag + "idpConfig must have an id.");
 		}
 
-		//Logger.info( this, "Adding default idpConfig to cache id = " + idpConfig.getId() );
+		// Logger.info( this, "Adding default idpConfig to cache id = " +
+		// idpConfig.getId() );
 
-		this.cache.put( DEFAULT, idpConfig.getId(), DEFAULT_IDP_CONFIG_GROUP );
-		this.addIdpConfig( idpConfig );
+		this.cache.put(DEFAULT, idpConfig.getId(), DEFAULT_IDP_CONFIG_GROUP);
+		this.addIdpConfig(idpConfig);
 	}
 
 	@Override
-	protected void addDisabledSiteId( String site )
-	{
+	protected void addDisabledSiteId(String site) {
 		String tag = "addDisabledSiteId( String ) ";
 
-		site = checkNotNull( site.trim(), tag + "site is required." ).trim();
+		site = checkNotNull(site.trim(), tag + "site is required.").trim();
 
-		//Logger.info( this, "Adding disabled site to cache = " + site.trim() );
+		// Logger.info( this, "Adding disabled site to cache = " + site.trim()
+		// );
 
-		this.cache.put( site, site, DISABLED_SITES_INDEX_GROUP );
+		this.cache.put(site, site, DISABLED_SITES_INDEX_GROUP);
 	}
 
 	@Override
-	public void addDisabledSitesMap( Map<String, String> sites )
-	{
+	public void addDisabledSitesMap(Map<String, String> sites) {
 		String tag = "addDisabledSitesMap( Map<String, String> ) ";
 
-		try
-		{
-			sites = checkNotNull( sites, tag + "sites is required." );
+		try {
+			sites = checkNotNull(sites, tag + "sites is required.");
 
-			//Logger.info( this, "Flushing DISABLED_SITES_GROUP cache." );
-			//Logger.info( this, "Flushing DISABLED_SITES_INDEX_GROUP cache." );
+			// Logger.info( this, "Flushing DISABLED_SITES_GROUP cache." );
+			// Logger.info( this, "Flushing DISABLED_SITES_INDEX_GROUP cache."
+			// );
 
-			cache.flushGroup( DISABLED_SITES_GROUP );
-			cache.flushGroup( DISABLED_SITES_INDEX_GROUP );
+			cache.flushGroup(DISABLED_SITES_GROUP);
+			cache.flushGroup(DISABLED_SITES_INDEX_GROUP);
 
-			this.cache.put( DISABLED_SITES, sites, DISABLED_SITES_GROUP );
+			this.cache.put(DISABLED_SITES, sites, DISABLED_SITES_GROUP);
 
-			sites.forEach( ( identifier, hostname )->{
-				this.addDisabledSiteId( identifier.trim() );
-				this.addDisabledSiteId( hostname.trim() );
+			sites.forEach((identifier, hostname) -> {
+				this.addDisabledSiteId(identifier.trim());
+				this.addDisabledSiteId(hostname.trim());
 			});
 
-		}
-		catch ( Exception exception )
-		{
-			Logger.error( this, tag + "Error adding disabled sites to cache.", exception );
+		} catch (Exception exception) {
+			Logger.error(this, tag + "Error adding disabled sites to cache.", exception);
 		}
 
 	}
 
 	@Override
-	public void addIdpConfig( IdpConfig idpConfig ) throws DotCacheException
-	{
+	public void addIdpConfig(IdpConfig idpConfig) throws DotCacheException {
 		String tag = "addIdpConfig( IdpConfig ) ";
 
-		idpConfig = checkNotNull( idpConfig, tag + "idpConfig is required." );
+		idpConfig = checkNotNull(idpConfig, tag + "idpConfig is required.");
 
-		if ( Strings.isNullOrEmpty( idpConfig.getId() ) )
-		{
-			throw new IllegalArgumentException( tag + "idpConfig must have an id and cannot be default." );
+		if (Strings.isNullOrEmpty(idpConfig.getId())) {
+			throw new IllegalArgumentException(tag + "idpConfig must have an id and cannot be default.");
 		}
 
 		String idpConfigId = idpConfig.getId();
 
-		//Logger.info( this, "Adding idpConfig to cache id = " + idpConfig.getId() );
+		// Logger.info( this, "Adding idpConfig to cache id = " +
+		// idpConfig.getId() );
 
-		this.cache.put( idpConfigId, idpConfig, IDP_CONFIG_GROUP );
-		incrementIdpCount();
-		this.addIdpConfigIdToIndex( idpConfigId );
+		this.cache.put(idpConfigId, idpConfig, IDP_CONFIG_GROUP);
+		setIdpCount();
+		this.addIdpConfigIdToIndex(idpConfigId);
 
 		Map<String, String> sites = idpConfig.getSites();
 
-		if ( sites != null && sites.size() > 0 )
-		{
-			this.addSitesIdpConfigId( sites, idpConfigId );
+		if (sites != null && sites.size() > 0) {
+			this.addSitesIdpConfigId(sites, idpConfigId);
 		}
 
 	}
 
-	@SuppressWarnings( "unchecked" )
+	@SuppressWarnings("unchecked")
 	@Override
-	protected void addIdpConfigIdToIndex( String idpConfigId )
-	{
+	protected void addIdpConfigIdToIndex(String idpConfigId) {
 		String tag = "addIdpConfigToIndex( String ) ";
 		List<String> idpIndex = null;
 
-		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." ).trim();
+		idpConfigId = checkNotNull(idpConfigId, tag + "idpConfigId is required.").trim();
 
-		try
-		{
-			idpIndex = (List<String>) this.cache.get( INDEX, IDP_INDEX_GROUP );
-		}
-		catch ( DotCacheException dotCacheException )
-		{
-			//Logger.info( this, tag + "idpIndex not found in [" + IDP_INDEX_GROUP + "] cache group: [" + INDEX + "]. Creating new entry." );
+		try {
+			idpIndex = (List<String>) this.cache.get(INDEX, IDP_INDEX_GROUP);
+		} catch (DotCacheException dotCacheException) {
+			// Logger.info( this, tag + "idpIndex not found in [" +
+			// IDP_INDEX_GROUP + "] cache group: [" + INDEX + "]. Creating new
+			// entry." );
 		}
 
-		if ( idpIndex == null )
-		{
+		if (idpIndex == null) {
 			idpIndex = new ArrayList<String>();
 		}
 
-		idpIndex.remove( idpConfigId );
-		idpIndex.add( idpConfigId );
+		idpIndex.remove(idpConfigId);
+		idpIndex.add(idpConfigId);
 
-		//Logger.info( this, "Adding idpConfig id to index cache id = " + idpConfigId );
+		// Logger.info( this, "Adding idpConfig id to index cache id = " +
+		// idpConfigId );
 
-		this.cache.put( INDEX, idpIndex, IDP_INDEX_GROUP );
+		this.cache.put(INDEX, idpIndex, IDP_INDEX_GROUP);
 	}
 
 	@Override
-	public void addIdpConfigs( List<IdpConfig> idpConfigs )
-	{
+	public void addIdpConfigs(List<IdpConfig> idpConfigs) {
 		String tag = "addIdpConfigs( List<IdpConfig> ) ";
 
-		//Logger.info( this, "Clearing idpConfig cache." );
+		// Logger.info( this, "Clearing idpConfig cache." );
 
 		this.clearCache();
 
-		idpConfigs.forEach( idpConfig ->{
-			try
-			{
-				this.addIdpConfig( idpConfig );
+		idpConfigs.forEach(idpConfig -> {
+			try {
+				this.addIdpConfig(idpConfig);
 
 				Map<String, String> sites = idpConfig.getSites();
 
-				if ( sites != null && sites.size() > 0 )
-				{
-					this.addSitesIdpConfigId( sites, idpConfig.getId() );
+				if (sites != null && sites.size() > 0) {
+					this.addSitesIdpConfigId(sites, idpConfig.getId());
 				}
 
-			}
-			catch ( Exception exception )
-			{
-				Logger.error( this, tag + "Error adding idpConfig to cache.", exception );
+			} catch (Exception exception) {
+				Logger.error(this, tag + "Error adding idpConfig to cache.", exception);
 			}
 		});
 	}
 
 	@Override
-	public void addSiteIdpConfig( String site, IdpConfig idpConfig ) throws DotCacheException
-	{
+	public void addSiteIdpConfig(String site, IdpConfig idpConfig) throws DotCacheException {
 		String tag = "addSiteIdpConfig( String, IdpConfig ) ";
 
-		site = checkNotNull( site, tag + "site is required." ).trim();
-		idpConfig = checkNotNull( idpConfig, tag + "idpConfig is required." );
+		site = checkNotNull(site, tag + "site is required.").trim();
+		idpConfig = checkNotNull(idpConfig, tag + "idpConfig is required.");
 
-		if ( Strings.isNullOrEmpty( idpConfig.getId() ) )
-		{
-			throw new IllegalArgumentException( tag + "IdpConfig must have an id." );
+		if (Strings.isNullOrEmpty(idpConfig.getId())) {
+			throw new IllegalArgumentException(tag + "IdpConfig must have an id.");
 		}
 
-		//Logger.info( this, "Adding site to idpConfig id cache site = " + site + " idpConfig id = " + idpConfig.getId() );
+		// Logger.info( this, "Adding site to idpConfig id cache site = " + site
+		// + " idpConfig id = " + idpConfig.getId() );
 
-		this.cache.put( site, idpConfig.getId(), SITES_TO_IDP_GROUP );
-		this.addIdpConfig( idpConfig );
+		this.cache.put(site, idpConfig.getId(), SITES_TO_IDP_GROUP);
+		this.addIdpConfig(idpConfig);
 	}
 
 	@Override
-	protected void addSiteIdpConfigId( String site, String idpConfigId )
-	{
+	protected void addSiteIdpConfigId(String site, String idpConfigId) {
 		String tag = "addSiteIdpConfigId( String, String ) ";
 
-		site = checkNotNull( site, tag + "site is required." ).trim();
-		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." ).trim();
+		site = checkNotNull(site, tag + "site is required.").trim();
+		idpConfigId = checkNotNull(idpConfigId, tag + "idpConfigId is required.").trim();
 
-		//Logger.info( this, "Adding site to idpConfig id cache site = " + site + " idpConfig id = " + idpConfigId );
+		// Logger.info( this, "Adding site to idpConfig id cache site = " + site
+		// + " idpConfig id = " + idpConfigId );
 
-		this.cache.put( site, idpConfigId, SITES_TO_IDP_GROUP );
+		this.cache.put(site, idpConfigId, SITES_TO_IDP_GROUP);
 	}
 
 	@Override
-	protected void addSitesIdpConfigId( Map<String, String> sites, String idpConfigId )
-	{
+	protected void addSitesIdpConfigId(Map<String, String> sites, String idpConfigId) {
 		String tag = "addSitesIdpConfigId( Map<String, String>, String ) ";
 
 		// It's ok for sites to be null,
 		// but we need to check before processing
-		try
-		{
-			sites = checkNotNull( sites, tag + "sites is required." );
+		try {
+			sites = checkNotNull(sites, tag + "sites is required.");
 
-			sites.forEach( ( identifier, hostname )->{
-				this.addSiteIdpConfigId( identifier.trim(), idpConfigId.trim() );
-				this.addSiteIdpConfigId( hostname.trim(), idpConfigId.trim() );
+			sites.forEach((identifier, hostname) -> {
+				this.addSiteIdpConfigId(identifier.trim(), idpConfigId.trim());
+				this.addSiteIdpConfigId(hostname.trim(), idpConfigId.trim());
 			});
 
-		}
-		catch ( Exception exception )
-		{
-			Logger.error( this, tag + "Error adding sites to cache.", exception );
+		} catch (Exception exception) {
+			Logger.error(this, tag + "Error adding sites to cache.", exception);
 		}
 
 	}
 
 	@Override
-	public void clearCache()
-	{
-		//Logger.info( this, "Flushing Saml cache." );
+	public void clearCache() {
+		// Logger.info( this, "Flushing Saml cache." );
 
-		for ( String cacheGroup : getGroups() )
-		{
-			cache.flushGroup( cacheGroup );
+		for (String cacheGroup : getGroups()) {
+			cache.flushGroup(cacheGroup);
 		}
 	}
 
 	@Override
-	public IdpConfig getDefaultIdpConfig()
-	{
+	public IdpConfig getDefaultIdpConfig() {
 		String tag = "getDefaultIdpConfig() ";
 		IdpConfig idpConfig = null;
 
-		try
-		{
-			String idpConfigId = (String) this.cache.get( DEFAULT, DEFAULT_IDP_CONFIG_GROUP );
-			idpConfig = this.getIdpConfig( idpConfigId );
+		try {
+			String idpConfigId = (String) this.cache.get(DEFAULT, DEFAULT_IDP_CONFIG_GROUP);
+			idpConfig = this.getIdpConfig(idpConfigId);
 
-			//Logger.info( this, "Getting default idpConfig from cache id = " + idpConfigId );
-		}
-		catch ( DotCacheException dotCacheException )
-		{
-			//Logger.info( this, tag + "SamlCache entry not found in [" + DEFAULT_IDP_CONFIG_GROUP + "] cache group." );
+			// Logger.info( this, "Getting default idpConfig from cache id = " +
+			// idpConfigId );
+		} catch (DotCacheException dotCacheException) {
+			// Logger.info( this, tag + "SamlCache entry not found in [" +
+			// DEFAULT_IDP_CONFIG_GROUP + "] cache group." );
 		}
 
 		return idpConfig;
 	}
 
 	@Override
-	public String getDefaultIdpConfigId()
-	{
+	public String getDefaultIdpConfigId() {
 		String tag = "getDefaultIdpConfigId() ";
 		String idpConfigId = null;
 
-		try
-		{
-			idpConfigId = (String) this.cache.get( DEFAULT, DEFAULT_IDP_CONFIG_GROUP );
+		try {
+			idpConfigId = (String) this.cache.get(DEFAULT, DEFAULT_IDP_CONFIG_GROUP);
 
-			//Logger.info( this, "Getting default idpConfig from cache id = " + idpConfigId );
-		}
-		catch ( DotCacheException dotCacheException )
-		{
-			//Logger.info( this, tag + "SamlCache entry not found in [" + DEFAULT_IDP_CONFIG_GROUP + "] cache group." );
+			// Logger.info( this, "Getting default idpConfig from cache id = " +
+			// idpConfigId );
+		} catch (DotCacheException dotCacheException) {
+			// Logger.info( this, tag + "SamlCache entry not found in [" +
+			// DEFAULT_IDP_CONFIG_GROUP + "] cache group." );
 		}
 
 		return idpConfigId;
 	}
 
-	@SuppressWarnings( "unchecked" )
+	@SuppressWarnings("unchecked")
 	@Override
-	public Map<String, String> getDisabledSitesMap()
-	{
+	public Map<String, String> getDisabledSitesMap() {
 		String tag = "getDisabledSites() ";
 		Map<String, String> disabledSitesMap = new HashMap<String, String>();
 
-		try
-		{
-			disabledSitesMap = (Map<String, String>) this.cache.get( DISABLED_SITES, DISABLED_SITES_INDEX_GROUP );
+		try {
+			disabledSitesMap = (Map<String, String>) this.cache.get(DISABLED_SITES, DISABLED_SITES_INDEX_GROUP);
 
-			//Logger.info( this, "Getting disabled sites map from cache disabledSitesMap = " + disabledSitesMap );
-		}
-		catch ( DotCacheException dotCacheException )
-		{
-			//Logger.info( this, tag + "SamlCache entry not found in [" + DISABLED_SITES_INDEX_GROUP + "] cache group." );
+			// Logger.info( this, "Getting disabled sites map from cache
+			// disabledSitesMap = " + disabledSitesMap );
+		} catch (DotCacheException dotCacheException) {
+			// Logger.info( this, tag + "SamlCache entry not found in [" +
+			// DISABLED_SITES_INDEX_GROUP + "] cache group." );
 		}
 
 		return disabledSitesMap;
 	}
 
 	@Override
-	public IdpConfig getIdpConfig( String idpConfigId )
-	{
+	public IdpConfig getIdpConfig(String idpConfigId) {
 		String tag = "getIdpConfig( String ) ";
 		IdpConfig idpConfig = null;
 
-		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." ).trim();
+		idpConfigId = checkNotNull(idpConfigId, tag + "idpConfigId is required.").trim();
 
-		try
-		{
-			idpConfig = (IdpConfig) this.cache.get( idpConfigId, IDP_CONFIG_GROUP );
+		try {
+			idpConfig = (IdpConfig) this.cache.get(idpConfigId, IDP_CONFIG_GROUP);
 
-			//Logger.info( this, "Getting idpConfig from cache id = " + idpConfigId );
-		}
-		catch ( DotCacheException dotCacheException )
-		{
-			//Logger.info( this, tag + "SamlCache entry not found in [" + IDP_CONFIG_GROUP + "] cache group: " + idpConfigId );
+			// Logger.info( this, "Getting idpConfig from cache id = " +
+			// idpConfigId );
+		} catch (DotCacheException dotCacheException) {
+			// Logger.info( this, tag + "SamlCache entry not found in [" +
+			// IDP_CONFIG_GROUP + "] cache group: " + idpConfigId );
 		}
 
 		return idpConfig;
 	}
 
-	@SuppressWarnings( "unchecked" )
+	@SuppressWarnings("unchecked")
 	@Override
-	public List<IdpConfig> getIdpConfigs()
-	{
+	public List<IdpConfig> getIdpConfigs() {
 		String tag = "getIdpConfigs() ";
 		List<IdpConfig> idpConfigs = new ArrayList<IdpConfig>();
 
-		try
-		{
-			List<String> idpConfigIds = (List<String>) this.cache.get( INDEX, IDP_INDEX_GROUP );
+		try {
+			List<String> idpConfigIds = (List<String>) this.cache.get(INDEX, IDP_INDEX_GROUP);
 
-			if ( idpConfigIds != null && !idpConfigIds.isEmpty() )
-			{
-				idpConfigIds.forEach( idpConfigId -> {
+			if (idpConfigIds != null && !idpConfigIds.isEmpty()) {
+				idpConfigIds.forEach(idpConfigId -> {
 
-					IdpConfig idpConfig = this.getIdpConfig( idpConfigId );
+					IdpConfig idpConfig = this.getIdpConfig(idpConfigId);
 
-					if ( idpConfig != null )
-					{
-						idpConfigs.add( idpConfig );
+					if (idpConfig != null) {
+						idpConfigs.add(idpConfig);
 					}
 
 				});
 			}
 
-			//Logger.info( this, "Getting idpConfigs from cache idpConfigIds.size() = " + idpConfigIds.size() );
-			//Logger.info( this, "Getting idpConfigs from cache idpConfigs.size() = " + idpConfigs.size() );
+			// Logger.info( this, "Getting idpConfigs from cache
+			// idpConfigIds.size() = " + idpConfigIds.size() );
+			// Logger.info( this, "Getting idpConfigs from cache
+			// idpConfigs.size() = " + idpConfigs.size() );
 
 			Integer idpCount = getIdpCount();
 
-			//Logger.info( this, "Checking if idpCount == idpConfigs.size()." );
-			//Logger.info( this, idpCount + " == " + idpConfigs.size() + " ?" );
+			// Logger.info( this, "Checking if idpCount == idpConfigs.size()."
+			// );
+			// Logger.info( this, idpCount + " == " + idpConfigs.size() + " ?"
+			// );
 
-			if ( idpCount != idpConfigs.size() )
-			{
+			if (idpCount != idpConfigs.size()) {
 				// Return an empty list.
 				// This tells the IdpConfigHelper class to
 				// try the file system and invalidate the cache.
 				return new ArrayList<IdpConfig>();
+			} else {
+				// Logger.info( this, "Counts match." );
 			}
-			else
-			{
-				//Logger.info( this, "Counts match." );
-			}
-		}
-		catch ( DotCacheException dotCacheException )
-		{
-			//Logger.info( this, tag + "SamlCache read error." );
+		} catch (DotCacheException dotCacheException) {
+			// Logger.info( this, tag + "SamlCache read error." );
 		}
 
 		return idpConfigs;
 	}
 
 	@Override
-	public IdpConfig getSiteIdpConfig( String site )
-	{
+	public IdpConfig getSiteIdpConfig(String site) {
 		String tag = "getSiteIdpConfig( String ) ";
 		IdpConfig idpConfig = null;
 
-		site = checkNotNull( site, tag + "site is required." ).trim();
+		site = checkNotNull(site, tag + "site is required.").trim();
 
-		try
-		{
-			String idpConfigId = (String) this.cache.get( site, SITES_TO_IDP_GROUP );
-			idpConfig = this.getIdpConfig( idpConfigId );
+		try {
+			String idpConfigId = (String) this.cache.get(site, SITES_TO_IDP_GROUP);
+			idpConfig = this.getIdpConfig(idpConfigId);
 
-			//Logger.info( this, "Getting site idpConfig from cache site = " + site + " idpConfig id = " + idpConfigId );
-		}
-		catch ( DotCacheException dotCacheException )
-		{
-			//Logger.info( this, tag + "SamlCache entry not found in [" + SITES_TO_IDP_GROUP + "] cache group: " + site );
+			// Logger.info( this, "Getting site idpConfig from cache site = " +
+			// site + " idpConfig id = " + idpConfigId );
+		} catch (DotCacheException dotCacheException) {
+			// Logger.info( this, tag + "SamlCache entry not found in [" +
+			// SITES_TO_IDP_GROUP + "] cache group: " + site );
 		}
 
 		return idpConfig;
 	}
 
-	@SuppressWarnings( "unchecked" )
+	@SuppressWarnings("unchecked")
 	@Override
-	public List<String> getSites()
-	{
+	public List<String> getSites() {
 		String tag = "getSites() ";
 		List<String> sites = new ArrayList<String>();
 
-		try
-		{
-			List<String> idpConfigIds = (List<String>) this.cache.get( INDEX, IDP_INDEX_GROUP );
+		try {
+			List<String> idpConfigIds = (List<String>) this.cache.get(INDEX, IDP_INDEX_GROUP);
 
-			if ( idpConfigIds != null && !idpConfigIds.isEmpty() )
-			{
-				idpConfigIds.forEach( idpConfigId -> {
+			if (idpConfigIds != null && !idpConfigIds.isEmpty()) {
+				idpConfigIds.forEach(idpConfigId -> {
 
-					IdpConfig idpConfig = this.getIdpConfig( idpConfigId );
+					IdpConfig idpConfig = this.getIdpConfig(idpConfigId);
 
-					if ( idpConfig != null )
-					{
+					if (idpConfig != null) {
 						Map<String, String> configSiteMap = idpConfig.getSites();
 						Collection<String> configSites = configSiteMap.values();
-						sites.addAll( configSites );
+						sites.addAll(configSites);
 					}
 
 				});
 			}
 
-			//Logger.info( this, "Getting all sites from all idpConfigs from cache idpConfigIds.size() = " + idpConfigIds.size() + " sites.size() = " + sites.size() );
+			// Logger.info( this, "Getting all sites from all idpConfigs from
+			// cache idpConfigIds.size() = " + idpConfigIds.size() + "
+			// sites.size() = " + sites.size() );
 
-		}
-		catch ( DotCacheException dotCacheException )
-		{
-			//Logger.info( this, tag + "SamlCache read error." );
+		} catch (DotCacheException dotCacheException) {
+			// Logger.info( this, tag + "SamlCache read error." );
 		}
 
 		return sites;
 	}
 
-	private void incrementIdpCount() throws DotCacheException
-	{
-		Integer count = getIdpCount();
-		count++;
-		this.cache.put( COUNT, "" + count, IDP_CONFIG_COUNT_GROUP );
+	private void setIdpCount() throws DotCacheException {
+		Integer count = new Integer(0);
+		List<String> idpConfigIds = (List<String>) this.cache.get(INDEX, IDP_INDEX_GROUP);
+
+		if (idpConfigIds != null && !idpConfigIds.isEmpty()) {
+			count = idpConfigIds.size();
+		}
+		
+		this.cache.put(COUNT, "" + count, IDP_CONFIG_COUNT_GROUP);
 	}
 
-	private void decrementIdpCount() throws DotCacheException
-	{
-		Integer count = getIdpCount();
-		count--;
-		this.cache.put( COUNT, "" + count, IDP_CONFIG_COUNT_GROUP );
-	}
+//	private void decrementIdpCount() throws DotCacheException {
+//		Integer count = getIdpCount();
+//		count--;
+//		this.cache.put(COUNT, "" + count, IDP_CONFIG_COUNT_GROUP);
+//	}
 
-	private Integer getIdpCount() throws DotCacheException
-	{
-		Integer count =  0;
+	private Integer getIdpCount() throws DotCacheException {
+		Integer count = 0;
 
-		try
-		{
-			count =  Integer.parseInt( (String) this.cache.get( COUNT, IDP_CONFIG_COUNT_GROUP ) );
-		}
-		catch ( Exception exception )
-		{
-			//Logger.info( this, "IdpConfig count not set in cache. Setting to 0." );
+		try {
+			count = Integer.parseInt((String) this.cache.get(COUNT, IDP_CONFIG_COUNT_GROUP));
+		} catch (Exception exception) {
+			// Logger.info( this, "IdpConfig count not set in cache. Setting to
+			// 0." );
 
-			cache.flushGroup( IDP_CONFIG_COUNT_GROUP );
-			this.cache.put( COUNT, "" + 0, IDP_CONFIG_COUNT_GROUP );
+			cache.flushGroup(IDP_CONFIG_COUNT_GROUP);
+			this.cache.put(COUNT, "" + 0, IDP_CONFIG_COUNT_GROUP);
 		}
 
-		return ( count != null ? count : 0 );
+		return (count != null ? count : 0);
 	}
 
 	@Override
-	public void refresh()
-	{
+	public void refresh() {
 		String tag = "refresh() ";
 
-		//Logger.info( this, "Start: Clearing cache and loading all configs." );
+		// Logger.info( this, "Start: Clearing cache and loading all configs."
+		// );
 
 		this.clearCache();
 
-		try
-		{
-			this.cache.put( COUNT, "" + 0, IDP_CONFIG_COUNT_GROUP );
+		try {
+			this.cache.put(COUNT, "" + 0, IDP_CONFIG_COUNT_GROUP);
 
 			// Read file system
-			List<IdpConfig> idpConfigs = IdpConfigWriterReader.readIdpConfigs( new File( idpFilePath ) );
+			List<IdpConfig> idpConfigs = IdpConfigWriterReader.readIdpConfigs(new File(idpFilePath));
 
 			// Update cache
-			this.addIdpConfigs( idpConfigs );
+			this.addIdpConfigs(idpConfigs);
 
-			//Logger.info( this, "End: Clearing cache and loading all configs." );
-		}
-		catch ( IOException | JSONException exception )
-		{
-			Logger.error( this, tag + "Error refreshing cache from file system.", exception );
+			// Logger.info( this, "End: Clearing cache and loading all configs."
+			// );
+		} catch (IOException | JSONException exception) {
+			Logger.error(this, tag + "Error refreshing cache from file system.", exception);
 		}
 
 	}
 
 	@Override
-	public void removeDefaultIdpConfig() throws DotCacheException
-	{
+	public void removeDefaultIdpConfig() throws DotCacheException {
 		IdpConfig idpConfig = this.getDefaultIdpConfig();
 
 		Map<String, String> sites = idpConfig.getSites();
 
-		if ( sites != null && sites.size() > 0 )
-		{
-			this.removeSitesIdpConfigId( sites, idpConfig.getId() );
+		if (sites != null && sites.size() > 0) {
+			this.removeSitesIdpConfigId(sites, idpConfig.getId());
 		}
 
-		this.removeIdpConfig( idpConfig.getId() );
-		this.cache.remove( DEFAULT, IDP_CONFIG_GROUP );
+		this.removeIdpConfig(idpConfig.getId());
+		this.cache.remove(DEFAULT, IDP_CONFIG_GROUP);
 
-		//Logger.info( this, "Removing default idpConfig from cache id = " + idpConfig.getId() );
+		// Logger.info( this, "Removing default idpConfig from cache id = " +
+		// idpConfig.getId() );
 	}
 
 	@Override
-	public void removeIdpConfig( IdpConfig idpConfig ) throws DotCacheException
-	{
+	public void removeIdpConfig(IdpConfig idpConfig) throws DotCacheException {
 		String tag = "removeIdpConfig( IdpConfig ) ";
 
-		idpConfig = checkNotNull( idpConfig, tag + "idpConfig is required." );
+		idpConfig = checkNotNull(idpConfig, tag + "idpConfig is required.");
 
-		if ( Strings.isNullOrEmpty( idpConfig.getId() ) )
-		{
-			throw new IllegalArgumentException( tag + "idpConfig must have an id." );
+		if (Strings.isNullOrEmpty(idpConfig.getId())) {
+			throw new IllegalArgumentException(tag + "idpConfig must have an id.");
 		}
 
 		Map<String, String> sites = idpConfig.getSites();
 
-		if ( sites != null && sites.size() > 0 )
-		{
-			this.removeSitesIdpConfigId( sites, idpConfig.getId() );
+		if (sites != null && sites.size() > 0) {
+			this.removeSitesIdpConfigId(sites, idpConfig.getId());
 		}
 
-		this.removeIdpConfig( idpConfig.getId() );
+		this.removeIdpConfig(idpConfig.getId());
 	}
 
 	@Override
-	protected void removeIdpConfig( String idpConfigId ) throws DotCacheException
-	{
+	protected void removeIdpConfig(String idpConfigId) throws DotCacheException {
 		String tag = "removeIdpConfig( String ) ";
 
-		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." ).trim();
+		idpConfigId = checkNotNull(idpConfigId, tag + "idpConfigId is required.").trim();
 
-		this.cache.remove( idpConfigId, IDP_CONFIG_GROUP );
-		decrementIdpCount();
-		this.removeIdpConfigIdFromIndex( idpConfigId );
+		this.cache.remove(idpConfigId, IDP_CONFIG_GROUP);
+		setIdpCount();
+		this.removeIdpConfigIdFromIndex(idpConfigId);
 
-		//Logger.info( this, "Removing idpConfig from cache id = " + idpConfigId );
+		// Logger.info( this, "Removing idpConfig from cache id = " +
+		// idpConfigId );
 	}
 
-	@SuppressWarnings( "unchecked" )
+	@SuppressWarnings("unchecked")
 	@Override
-	protected void removeIdpConfigIdFromIndex( String idpConfigId )
-	{
+	protected void removeIdpConfigIdFromIndex(String idpConfigId) {
 		String tag = "removeIdpConfigFromIndex( String ) ";
 		List<String> idpIndex = null;
 
-		idpConfigId = checkNotNull( idpConfigId, tag + "idpConfigId is required." ).trim();
+		idpConfigId = checkNotNull(idpConfigId, tag + "idpConfigId is required.").trim();
 
-		try
-		{
-			idpIndex = (List<String>) this.cache.get( INDEX, IDP_INDEX_GROUP );
-		}
-		catch ( DotCacheException dotCacheException )
-		{
-			//Logger.info( this, tag + "idpIndex not found in [" + IDP_INDEX_GROUP + "] cache group: [" + INDEX + "]. Creating new entry." );
+		try {
+			idpIndex = (List<String>) this.cache.get(INDEX, IDP_INDEX_GROUP);
+		} catch (DotCacheException dotCacheException) {
+			// Logger.info( this, tag + "idpIndex not found in [" +
+			// IDP_INDEX_GROUP + "] cache group: [" + INDEX + "]. Creating new
+			// entry." );
 		}
 
-		if ( idpIndex == null )
-		{
+		if (idpIndex == null) {
 			idpIndex = new ArrayList<String>();
 		}
 
-		idpIndex.remove( idpConfigId );
+		idpIndex.remove(idpConfigId);
 
-		this.cache.put( INDEX, idpIndex, IDP_INDEX_GROUP );
+		this.cache.put(INDEX, idpIndex, IDP_INDEX_GROUP);
 
-		//Logger.info( this, "Removing idpConfig from cache index id = " + idpConfigId );
+		// Logger.info( this, "Removing idpConfig from cache index id = " +
+		// idpConfigId );
 	}
 
 	@Override
-	protected void removeSiteIdpConfigId( String site )
-	{
+	protected void removeSiteIdpConfigId(String site) {
 		String tag = "removeSiteIdpConfigId( String ) ";
 
-		site = checkNotNull( site, tag + "site is required." ).trim();
+		site = checkNotNull(site, tag + "site is required.").trim();
 
-		this.cache.remove( site, SITES_TO_IDP_GROUP );
+		this.cache.remove(site, SITES_TO_IDP_GROUP);
 
-		//Logger.info( this, "Removing site from cache site = " + site );
+		// Logger.info( this, "Removing site from cache site = " + site );
 	}
 
 	@Override
-	protected void removeSitesIdpConfigId( Map<String, String> sites, String idpConfigId )
-	{
+	protected void removeSitesIdpConfigId(Map<String, String> sites, String idpConfigId) {
 		String tag = "removeSitesIdpConfigId( Map<String, String>, String ) ";
 
 		// It's ok for sites to be null,
 		// but we need to check before processing
-		try
-		{
-			sites = checkNotNull( sites, tag + "sites is required." );
+		try {
+			sites = checkNotNull(sites, tag + "sites is required.");
 
-			sites.forEach( ( identifier, hostname )->{
-				this.removeSiteIdpConfigId( identifier.trim() );
-				this.removeSiteIdpConfigId( hostname.trim() );
+			sites.forEach((identifier, hostname) -> {
+				this.removeSiteIdpConfigId(identifier.trim());
+				this.removeSiteIdpConfigId(hostname.trim());
 			});
 
-		}
-		catch ( Exception exception )
-		{
-			Logger.info( this, tag + "Error removing sites from cache." );
+		} catch (Exception exception) {
+			Logger.info(this, tag + "Error removing sites from cache.");
 		}
 
+	}
+
+	@Override
+	public void setIdpConfigRead(Boolean value) {
+
+		this.cache.put(FLAG, value.toString(), DISK_HAS_BEEN_READ_GROUP);
+	}
+
+	@Override
+	public boolean hasDiskBeenRead() {
+		boolean isDiskRead = false;
+
+		try {
+			isDiskRead = Boolean.parseBoolean((String) this.cache.get(FLAG, DISK_HAS_BEEN_READ_GROUP));
+		} catch (Exception exception) {
+
+			cache.flushGroup(DISK_HAS_BEEN_READ_GROUP);
+			this.cache.put(FLAG, "false", DISK_HAS_BEEN_READ_GROUP);
+		}
+
+		return isDiskRead;
 	}
 }

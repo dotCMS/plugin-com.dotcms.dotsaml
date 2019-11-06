@@ -1,14 +1,5 @@
 package com.dotcms.plugin.saml.v3.config;
 
-import com.dotcms.plugin.saml.v3.cache.SamlCache;
-
-import com.dotmarketing.business.CacheLocator;
-import com.dotmarketing.exception.DotDataException;
-import com.dotmarketing.util.Logger;
-import com.dotmarketing.util.UUIDGenerator;
-import com.dotmarketing.util.UtilMethods;
-import com.dotmarketing.util.json.JSONException;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -16,6 +7,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import com.dotcms.plugin.saml.v3.cache.SamlCache;
+import com.dotcms.plugin.saml.v3.exception.DotSamlByPassException;
+import com.dotmarketing.business.CacheLocator;
+import com.dotmarketing.exception.DotDataException;
+import com.dotmarketing.util.UUIDGenerator;
+import com.dotmarketing.util.UtilMethods;
+import com.dotmarketing.util.json.JSONException;
 
 public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 {
@@ -87,14 +86,14 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		}
 	}
 
-	public IdpConfig findIdpConfig( String id ) throws IOException, JSONException, DotDataException
+	public IdpConfig findIdpConfig( String id ) throws IOException, JSONException, DotDataException, DotSamlByPassException
 	{
 		if ( UtilMethods.isSet( id ) )
 		{
 			// Try cache
 			IdpConfig idpConfig = this.findIdpConfigCache( id );
 
-			if ( idpConfig == null )
+			if ( idpConfig == null)
 			{
 				// Try file system
 				idpConfig = this.findIdpConfigFileSystem( id );
@@ -126,7 +125,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		return idpConfig;
 	}
 
-	private IdpConfig findIdpConfigFileSystem( String id ) throws IOException, JSONException, DotDataException
+	private IdpConfig findIdpConfigFileSystem( String id ) throws IOException, JSONException, DotDataException, DotSamlByPassException
 	{
 		IdpConfig idpConfig = null;
 		List<IdpConfig> idpConfigList = this.getIdpConfigsFileSystem();
@@ -157,7 +156,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		return idpConfig;
 	}
 
-	public IdpConfig findSiteIdpConfig( String site ) throws DotDataException, IOException, JSONException
+	public IdpConfig findSiteIdpConfig( String site ) throws DotDataException, IOException, JSONException, DotSamlByPassException
 	{
 		if ( UtilMethods.isSet( site ) )
 		{
@@ -196,7 +195,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		return idpConfig;
 	}
 
-	private IdpConfig findSiteIdpConfigFileSystem( String site ) throws DotDataException, IOException, JSONException
+	private IdpConfig findSiteIdpConfigFileSystem( String site ) throws DotDataException, IOException, JSONException, DotSamlByPassException
 	{
 		IdpConfig idpConfig = null;
 		List<IdpConfig> idpConfigList = this.getIdpConfigsFileSystem();
@@ -331,7 +330,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		return disabledSitesMap;
 	}
 
-	public List<IdpConfig> getIdpConfigs() throws IOException, JSONException
+	public List<IdpConfig> getIdpConfigs() throws IOException, JSONException, DotSamlByPassException
 	{
 		// Try cache
 		List<IdpConfig> idpConfigs = this.getIdpConfigsCache();
@@ -361,8 +360,12 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		return idpConfigs;
 	}
 
-	private List<IdpConfig> getIdpConfigsFileSystem() throws IOException, JSONException
+	private List<IdpConfig> getIdpConfigsFileSystem() throws IOException, JSONException, DotSamlByPassException
 	{
+		if ( samlCache.hasDiskBeenRead() ) {
+			throw new DotSamlByPassException("Disk Has Been Read.");
+		}
+		
 		List<IdpConfig> idpConfigs = IdpConfigWriterReader.readIdpConfigs( new File( IDP_FILE_PATH ) );
 
 		// Update cache
@@ -375,7 +378,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		{
 			//Logger.info( this, "Error writing to SamlCache" );
 		}
-
+		samlCache.setIdpConfigRead(Boolean.TRUE);
 		return idpConfigs;
 	}
 

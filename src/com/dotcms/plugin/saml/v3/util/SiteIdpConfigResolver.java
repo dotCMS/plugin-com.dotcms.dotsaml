@@ -34,6 +34,7 @@ public class SiteIdpConfigResolver implements Serializable
 	{
 		return SiteIdpConfigResolver.SingletonHolder.INSTANCE;
 	}
+	
 
 	/**
 	 * Returns the Configuration associate to the current site, if it is not

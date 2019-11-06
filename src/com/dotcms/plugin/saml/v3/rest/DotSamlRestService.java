@@ -19,6 +19,7 @@ import org.opensaml.saml.saml2.core.Assertion;
 
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
 import com.dotcms.plugin.saml.v3.config.IdpConfigHelper;
+import com.dotcms.plugin.saml.v3.exception.DotSamlByPassException;
 import com.dotcms.plugin.saml.v3.exception.DotSamlException;
 import com.dotcms.plugin.saml.v3.filter.SamlFilter;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
@@ -133,6 +134,10 @@ public class DotSamlRestService implements Serializable {
 
 			Logger.error(this, dotSamlException.getMessage(), dotSamlException);
 
+		} catch (DotSamlByPassException exception) {
+
+			Logger.error(this, exception.getMessage(), exception);
+
 		} catch (Exception exception) {
 
 			// this is an unknown error, so we report as a 500.
@@ -168,6 +173,10 @@ public class DotSamlRestService implements Serializable {
 		} catch (DotSamlException dotSamlException) {
 
 			Logger.error(this, dotSamlException.getMessage(), dotSamlException);
+
+		} catch (DotSamlByPassException exception) {
+
+			Logger.error(this, exception.getMessage(), exception);
 
 		} catch (Exception exception) {
 
@@ -205,6 +214,10 @@ public class DotSamlRestService implements Serializable {
 		} catch (DotSamlException dotSamlException) {
 
 			Logger.error(this, dotSamlException.getMessage(), dotSamlException);
+
+		} catch (DotSamlByPassException exception) {
+
+			Logger.error(this, exception.getMessage(), exception);
 
 		} catch (DotDataException dotDataException) {
 
