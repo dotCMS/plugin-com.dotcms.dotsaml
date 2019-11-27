@@ -62,9 +62,16 @@ Here is the information required by the configuration and the ownership on Step 
 	- Value: This is going to be the hostname for the URLs where our SP publishes services available on dotCMS side for the IdP to communicate with dotCMS. The hostname does not need to be a site hosted in dotCMS, but it needs to point to the dotCMS instance, do not add the **“https://”** it will be added automatically. 
 
 + ###### Private Key and Public Cert
-	- Value: Generate the cert and ley running the following command on Linux like OS: 
+	- Value: Generate the cert and key running the following command on Linux like OS: 
 
 		`openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout <key file name> -out <certificate file name> -days 3650`
+	- Note: if you're importing the private key, please keep in mind that the format **have to be** PKCS8, you can check by running:
+		
+		`openssl rsa -check -in private.key`
+		
+		If you need to convert the key, for example from PKCS1:
+	
+		`openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in pkcs1.key -out pkcs8.key`
 
 + ###### Validation Type
 	- Value: Use **Response and Assertion** or change according idP Admin.
