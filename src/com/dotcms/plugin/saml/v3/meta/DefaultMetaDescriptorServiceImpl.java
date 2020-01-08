@@ -128,8 +128,8 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 	 * {@link DotSamlConstants}.DOTCMS_SAML_NAME_ID_FORMATS on the
 	 * dotmarketing-config.properties (comma separated)
 	 * 
-	 * @param configuration
-	 *            {@link Configuration}
+	 * @param idpConfig
+	 *            {@link IdpConfig}
 	 * @return EntityDescriptor
 	 */
 	@SuppressWarnings("unchecked")
@@ -253,8 +253,8 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 	/**
 	 * Sets the format's supported for the messages.
 	 *
-	 * @param configuration
-	 *            {@link Configuration}
+	 * @param idpConfig
+	 *            {@link IdpConfig}
 	 * @param spssoDescriptor
 	 *            {@link SPSSODescriptor}
 	 */
@@ -454,11 +454,13 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 			// Unmarshall using the document root element, an EntitiesDescriptor
 			// in this case
 			descriptor = EntityDescriptor.class.cast(unmarshaller.unmarshall(metadata));
-		} catch (Exception e) {
-			Logger.error(this, e.getMessage(), e);
-			throw new DotSamlException(e.getMessage(), e);
+		} catch (final Exception e) {
+			final String errorMsg = "An error occurred when parsing the IdP Metadata file: " + e.getMessage();
+			Logger.error(this, errorMsg, e);
+			Logger.error(this, IOUtils.toString(is), e);
+			throw new DotSamlException(errorMsg, e);
 		}
-
 		return descriptor;
 	}
+
 }
