@@ -104,7 +104,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 		final Map<String, String> singleLogoutBindingLocationMap = new LinkedHashMap<>();
 
 		idpDescriptor.getSingleLogoutServices().stream().forEach(sso -> {
-			Logger.debug(this, "Add SLO binding " + sso.getBinding() + "(" + sso.getLocation() + ")");
+			Logger.debug(this, "Add SLO binding " + sso.getBinding() + " (" + sso.getLocation() + ")");
 			singleLogoutBindingLocationMap.put(sso.getBinding(), sso.getLocation());
 		});
 
@@ -197,7 +197,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 		spssoDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
 		descriptor.getRoleDescriptors().add(spssoDescriptor);
 
-		Logger.debug(this, "Descriptor DONE");
+		Logger.debug(this, "Getting SP Entity Descriptor: DONE!");
 
 		return descriptor;
 	}
@@ -217,7 +217,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 	 */
 	protected AssertionConsumerService createAssertionConsumerService(final int index, final String binding,
 			final String location, final SAMLObjectBuilder<AssertionConsumerService> assertionConsumerServiceBuilder) {
-		Logger.debug(this, "Assertion consumer service, location: " + location);
+		Logger.debug(this, "Assertion consumer service Location: " + location);
 
 		final AssertionConsumerService assertionConsumerServiceArtifact = assertionConsumerServiceBuilder.buildObject();
 		assertionConsumerServiceArtifact.setIndex(index);
@@ -240,7 +240,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 	 */
 	protected SingleLogoutService createSingleLogoutService(final String binding, final String location,
 			final SAMLObjectBuilder<SingleLogoutService> singleLogoutServiceBuilder) {
-		Logger.debug(this, "Assertion consumer service, location: " + location);
+		Logger.debug(this, "Assertion consumer service. Location: " + location);
 
 		final SingleLogoutService assertionConsumerService = singleLogoutServiceBuilder.buildObject();
 
@@ -328,16 +328,20 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 					encryptedKeyDescriptor.setKeyInfo(getKeyInfo(credential));
 					spssoDescriptor.getKeyDescriptors().add(encryptedKeyDescriptor);
 				}
-			} catch (Exception e) {
-
-				Logger.error(this, "Error generating credentials", e);
-				throw new DotSamlException(e.getMessage(), e);
+			} catch (final Exception e) {
+				final String errorMsg = String.format("An error occurred when generating credentials for IdP Config " +
+						"'%s' [%s]: %s", idpConfig.getIdpName(), idpConfig.getId(), e.getMessage());
+				Logger.error(this, errorMsg, e);
+				throw new DotSamlException(errorMsg, e);
 			}
-		} catch (DotSamlException e) {
+		} catch (final DotSamlException e) {
+			Logger.warn(this, "An error occurred when setting Key Descriptors. Continue...");
 			throw e;
-		} catch (Exception e) {
-			Logger.error(this, "Error retrieving credentials", e);
-			throw new DotSamlException(e.getMessage(), e);
+		} catch (final Exception e) {
+			final String errorMsg = String.format("An error occurred when retrieving credentials for IdP Config " +
+					"'%s' [%s]: %s", idpConfig.getIdpName(), idpConfig.getId(), e.getMessage());
+			Logger.error(this, errorMsg, e);
+			throw new DotSamlException(errorMsg, e);
 		}
 	}
 
@@ -355,7 +359,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 		keyInfoGeneratorFactory.setEmitEntityCertificate(true);
 		final KeyInfoGenerator keyInfoGenerator = keyInfoGeneratorFactory.newInstance();
 
-		Logger.debug(this, "Meta Data Credential: " + credential);
+		Logger.debug(this, "Getting Key Info from Metadata Credential: " + credential);
 
 		return keyInfoGenerator.generate(credential);
 	}
@@ -432,7 +436,7 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 		final Map<String, String> singleSignOnBindingLocationMap = new LinkedHashMap<>();
 
 		idpDescriptor.getSingleSignOnServices().stream().forEach(sso -> {
-			Logger.debug(this, "Add SSO binding " + sso.getBinding() + "(" + sso.getLocation() + ")");
+			Logger.debug(this, "Add SSO binding " + sso.getBinding() + " (" + sso.getLocation() + ")");
 			singleSignOnBindingLocationMap.put(sso.getBinding(), sso.getLocation());
 		});
 
@@ -440,24 +444,21 @@ public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 	}
 
 	protected EntityDescriptor unmarshall(final InputStream is) throws Exception {
-		EntityDescriptor descriptor = null;
-
+		EntityDescriptor descriptor;
 		try {
 			// Parse metadata file
 			final Element metadata = this.parserPool.parse(is).getDocumentElement();
-			Logger.info(DefaultMetaDescriptorServiceImpl.class,
-					"unmarshall( final InputStream is ) metadata = " + ((metadata == null) ? "null" : "has value"));
-			// Get apropriate unmarshaller
+			Logger.info(DefaultMetaDescriptorServiceImpl.class, "The metadata element from the IdP Metadata " + (
+					(metadata == null) ? "is empty!" : "has a value!"));
+			// Get appropriate unmarshaller
 			final Unmarshaller unmarshaller = this.unmarshallerFactory.getUnmarshaller(metadata);
-			Logger.info(DefaultMetaDescriptorServiceImpl.class, "unmarshall( final InputStream is ) unmarshaller = "
-					+ ((unmarshaller == null) ? "null" : "has value"));
-			// Unmarshall using the document root element, an EntitiesDescriptor
-			// in this case
+			Logger.info(DefaultMetaDescriptorServiceImpl.class, "The unmarshaller from the metadata element " + (
+					(unmarshaller == null) ? "is null!" : "has a value!"));
+			// Unmarshall using the document root element, an EntitiesDescriptor in this case
 			descriptor = EntityDescriptor.class.cast(unmarshaller.unmarshall(metadata));
 		} catch (final Exception e) {
 			final String errorMsg = "An error occurred when parsing the IdP Metadata file: " + e.getMessage();
 			Logger.error(this, errorMsg, e);
-			Logger.error(this, IOUtils.toString(is), e);
 			throw new DotSamlException(errorMsg, e);
 		}
 		return descriptor;
