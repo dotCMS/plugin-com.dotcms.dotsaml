@@ -14,6 +14,10 @@ Terminology:
 | SP Issuer URL			| dotCMS URL where SAML will be authenticating								|
 | SP Endpoint Hostname	| Hostname where dotCMS will publishes the Services without **htpps://**	|
 
+dotCMS requirements:
+- There needs to be a default site, if there are none the plugin won't work.
+- A healthy index is required so the plugin can be configured and work properly.
+
 **IMPORTANT:** Please notice this plugin works on *dotCMS 5.1.6* and *Tomcat 8.5.32*
 
 ## Installing the plugin
@@ -95,7 +99,8 @@ verify.assertion.signature=false
 Once that the idP admin has provided the idP Metadata, proceed to following steps by click on **Edit** on the SAML Configuration added before
 
 + ###### idP Metadata File
-	- Value: Get the IdP metadata link or file from the IdP administrator (This may not be available until after you have shared the SP metadata file with the IdP administrator, in previous step) and upload to **IdP metadata file**, .
+	- Value: Get the IdP metadata link or file from the IdP administrator (This may not be available until after you have shared the SP metadata file with the IdP administrator, in previous step) and upload to **IdP metadata file**.
+	URLs in the IdP Metadata containing query String parameters must not have ampersand `&` characters. They must be replaced with `&amp;`. For example, replace: https://idp-example.com/logout.aspx?expires=yes&Site=idp-server.com with  https://idp-example.com/logout.aspx?expires=yes&amp;Site=idp-example
 
 + ###### Sites
 	- Value: Add the dotCMS sites that will be using this SAML Configuration to authenticate users
