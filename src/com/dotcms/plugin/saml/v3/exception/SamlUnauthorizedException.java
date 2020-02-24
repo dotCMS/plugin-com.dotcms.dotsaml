@@ -1,6 +1,6 @@
 package com.dotcms.plugin.saml.v3.exception;
 
-import com.dotcms.repackage.javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * To report unauthorized issues.
