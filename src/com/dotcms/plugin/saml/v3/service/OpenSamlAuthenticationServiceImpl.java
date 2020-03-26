@@ -719,9 +719,12 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 				}
 			});
 		});
-
-		return this.doubleCheckAttributes(attrBuilder.build(), firstNameField, firstNameForNullValue, lastNameField,
+		AttributesBean attributesBean = attrBuilder.build();
+		Logger.debug(this, "-> Value of attributesBean = " + attributesBean.toString());
+		attributesBean = this.doubleCheckAttributes(attributesBean, firstNameField, firstNameForNullValue, lastNameField,
 				lastNameForNullValue, allowNullEmail);
+		Logger.debug(this, "-> Double Checked attributes = " + attributesBean);
+		return attributesBean;
 	}
 
 	private void resolveEmail(final String emailField, final AttributesBean.Builder attributesBuilder,
