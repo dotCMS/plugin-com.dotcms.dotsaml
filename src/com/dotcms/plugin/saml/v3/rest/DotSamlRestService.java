@@ -112,7 +112,7 @@ public class DotSamlRestService implements Serializable {
 			// Add session based user ID to be used on the redirect.
 			session.setAttribute(idpConfig.getId() + SAML_USER_ID, user.getUserId());
 			session.setAttribute(WebKeys.CMS_USER, user);
-
+			session.setAttribute(com.liferay.portal.util.WebKeys.USER, user);
 			String loginPath = (String) session.getAttribute(WebKeys.REDIRECT_AFTER_LOGIN);
 			if (null == loginPath) {
 				// At this stage we cannot determine whether this was a front

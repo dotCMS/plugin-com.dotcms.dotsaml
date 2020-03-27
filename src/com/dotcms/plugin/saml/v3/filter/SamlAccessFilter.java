@@ -158,6 +158,9 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 
 				// Starting the logout
 				// if it is logout
+                Logger.debug(this, "----------------------------- doFilter --------------------------------");
+				Logger.debug(this, "- isLogoutNeed = " + isLogoutNeed);
+                Logger.debug(this, "- httpServletRequest.getRequestURI() = " + httpServletRequest.getRequestURI());
 				if (isLogoutNeed && session != null && super.isLogoutRequest(httpServletRequest.getRequestURI(),
 						EndpointHelper.getLogoutPathArray(idpConfig))) {
 					if (super.doLogout(httpServletResponse, httpServletRequest, session, idpConfig)) {
