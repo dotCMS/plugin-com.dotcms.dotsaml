@@ -208,6 +208,7 @@ public class SamlFilter implements Filter {
 		final NameID nameID = (NameID) session.getAttribute(idpConfig.getId() + SamlUtils.SAML_NAME_ID);
 		final String samlSessionIndex = (String) session.getAttribute(idpConfig.getId() + SamlUtils.SAML_SESSION_INDEX);
 		boolean doLogoutDone = false;
+		Logger.debug(this, "- idpConfig = " + idpConfig);
         Logger.debug(this, "- NameID = " + nameID);
         Logger.debug(this, "- samlSessionIndex = " + samlSessionIndex);
 		try {

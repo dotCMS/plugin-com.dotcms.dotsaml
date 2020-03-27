@@ -198,4 +198,22 @@ public class IdpConfig
 	{
 		this.sPIssuerURL = sPIssuerURL;
 	}
+
+    @Override
+    public String toString() {
+        return "IdpConfig{" +
+                "id='" + id + '\'' +
+                ", idpName='" + idpName + '\'' +
+                ", enabled=" + enabled +
+                ", sPIssuerURL='" + sPIssuerURL + '\'' +
+                ", sPEndpointHostname='" + sPEndpointHostname + '\'' +
+                ", privateKey=" + privateKey +
+                ", publicCert=" + publicCert +
+                ", idPMetadataFile=" + idPMetadataFile +
+                ", signatureValidationType='" + signatureValidationType + '\'' +
+                ", optionalProperties=" + optionalProperties +
+                ", sites=" + sites +
+                '}';
+    }
+
 }
