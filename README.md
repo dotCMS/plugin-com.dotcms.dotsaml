@@ -1,3 +1,4 @@
+
 # plugin-dotcms-openSAML3
 
 This plugin allows to modify the authentication process in DOTCMS
@@ -5,7 +6,7 @@ using the Open SAML 3 (Security Assertion Markup Language) protocols for
 frontend, backend or both.
 
 The plugin will add the user in dotcms if the user doesn't exist
-and for every user logging from SAML the ROLEs will be reassigned if the roles 
+and for every user logging from SAML the ROLEs will be reassigned if the roles
 are sent by the SAML response message. In addition, a system role will be assigned to the user (*SAML User* role), as well as any other role defined in the configuration (for further information, refer to *role.extra* usage in the [Configuration](#configuration) section)
 
 The SAML Response should always send the user email, firstname and
@@ -15,35 +16,17 @@ lastname. The roles are optional.
 
 **Before installation:** Be sure your DB schema was previously initialized (dotCMS' DB tables were created). Having started the application at least once without the plugin is enough.
 
-To use the plugin run the ./bin/deploy-plugins.sh command and restart your 
+To use the plugin run the ./bin/deploy-plugins.sh command and restart your
 dotCMS instance.
 
-Once the plugin is deployed, the SAML configuration can be set for each host through the application, using the SAML field created for this purpose (Go to System --> Sites --> Edit Host)
 
-![Edit Host](https://github.com/dotCMS/plugin-dotcms-openSAML3/blob/master/images/edit-saml-host.png)
-
-SAML properties must be configured using key=value pairs, for example:
-
-~~~
-service.provider.issuer=https://saml.test.dotcms.com
-keystore.path=file:///Users/dotcms/dotcms_3.5/plugins/plugin-dotcms-openSAML3/conf/SPKeystore.jks
-keystore.password=password
-keystore.entry.id=SPKey
-keystore.entry.password=password
-assertion.customer.endpoint.url=https://saml.test.dotcms.com/dotsaml/login
-idp.metadata.path=file:///Users/dotcms/dotcms_3.5/plugins/plugin-dotcms-openSAML3/conf/idp1-metadata.xml
-want.assertions.signed=false
-authn.requests.signed=true
-assertion.resolver.handler.classname=com.dotcms.plugin.saml.v3.handler.HttpPostAssertionResolverHandlerImpl
-protocol.binding=urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST
-~~~
-
+**For installation and configuration instructions, check the [INSTALL](INSTALL.md) document**
 
 For more details about properties configuration, please refer to the [Configuration](#configuration) section
- 
-**Important Considerations:** 
 
-1. The plugin needs several libraries to run, all of them have been renamed with a prefix called: "opensaml". In case you need to undeploy the plugin you have to manually remove these libraries from */dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/lib*.
+**Important Considerations:**
+
+1. The plugin needs several libraries to run, all of them have been renamed with a prefix called: "opensaml". In case you need to undeploy the plugin you have to manually remove these libraries from */dotserver/tomcat-8.5.32/webapps/ROOT/WEB-INF/lib*.
 2. Any request from dotCMS will be redirected to the IdP Login Page, if the user is not already logged in. An exception to this rule can be set with this property *access.filter.values*.
 3. A fallback host can be defined in order to use its configuration by default. It will only apply for those hosts whose SAML configuration field is empty. This can be set in the DOTCMS_plugin_path/conf/dotmarketing-config-ext.properties file, using the *saml.fallback.site* property, like this:
 
@@ -55,14 +38,6 @@ For more details about properties configuration, please refer to the [Configurat
 ##  <a name="configuration">CONFIGURATION</a>
 
 ###  <a name="basic-configuration">BASIC CONFIGURATION</a>
-
-The basic and most common configuration for SAML will be such as
-
-~~~
-idp.metadata.path=
-keystore.path=
-keystore.password=
-~~~
 
 In most of the cases you will need to configure just these three properties:
 
@@ -85,15 +60,15 @@ Password to access the keystore.
 
 In this section we describe all the advance properties that can be set in your SAML configuration:
 
-**Important Considerations:** 
+**Important Considerations:**
 1. We ship with default values for some of the properties below. You can find, add or remove those default values in the file ROOT/dotserver/tomcat-8.0.18/webapps/ROOT/WEB-INF/classes/dotcms-saml-default.properties.
-2. The default values will be used for each of the Sites (Hosts) SAML Field (if configured). 
+2. The default values will be used for each of the Sites (Hosts) SAML Field (if configured).
 3. You can override those values by setting key=value pairs on the SAML Field. (See [How to use](#how-to-use))
 
 **protocol.binding**
 
 By default, dotCMS uses *org.opensaml.saml.common.xml.SAMLConstants.SAML2_ARTIFACT_BINDING_URI*. The binding tells to the Idp how the SP is expecting the response.
-The default one just wait for SAMLArt parameter with the Artifact Id to resolve the artifact via Artifact Resolver. We also have support for 
+The default one just wait for SAMLArt parameter with the Artifact Id to resolve the artifact via Artifact Resolver. We also have support for
 *urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST*, this one expects a SAMLResponse as part of a post-back with the Assertion response.
 
 **identity.provider.destinationsso.url**
@@ -112,7 +87,7 @@ If this value is unset, a default endpoint will be created using the *service.pr
 
 **logout.service.endpoint.url**
 
-URL used by the Idp (the Shibboleth server) to redirect to dotCMS when the logout is made. 
+URL used by the Idp (the Shibboleth server) to redirect to dotCMS when the logout is made.
 If this value is unset, a default endpoint will be created using the *service.provider.issuer*/dotsaml/logout
 
 
@@ -157,8 +132,6 @@ Authentication context, which could be Kerberos, Internet protocol, password, et
 
 By default we use: *org.opensaml.saml.saml2.core.AuthnContext.PASSWORD_AUTHN_CTX*
 
-
-
 **keystore.entry.id**
 
 Key entry for the keystore. By default we use SPKey, you can overwrite it if needed.
@@ -197,6 +170,11 @@ Valid values (default "all"):
 
 By default, "mail" is the field used to fetch the user email from the Idp response.
 
+**attribute.email.allownull**
+
+Boolean value to allows to build a dummy email based on the NameID from the Idp when the email attribute from the IDP is not present.
+True will apply the email generation, false will throw 401 error.
+
 **attribute.firstname.name**
 
 By default "givenName" is the field used to fetch the user name from the Idp response, however if you are using another one you can overwrite it.
@@ -226,11 +204,9 @@ By default, dotCMS uses: *DefaultInitializer*. It inits the Java Crypto, Saml Se
 Used to manipulate the SAML plugin configuration
 Default implementation: *com.dotcms.plugin.saml.v3.config.DefaultDotCMSConfiguration*.
 
-
-
 **idp.metadata.protocol**
 
-Attribute name used to find the Idp Information on the *idp-metadata.xml* (the file provided from the Shibboleth server). 
+Attribute name used to find the Idp Information on the *idp-metadata.xml* (the file provided from the Shibboleth server).
 
 Default value: *"urn:oasis:names:tc:SAML:2.0:protocol"*
 
@@ -280,8 +256,7 @@ For instance:
 "include.roles.pattern":"^www_,^xxx_"
 ~~~
 
-The previous example will include only the roles from SAML that start with *www_* or *xxx_*. 
-
+The previous example will include only the roles from SAML that start with *www_* or *xxx_*.
 
 **include.path.values**
 
@@ -290,7 +265,7 @@ Comma separated values with the regex paths to be considered by the SAML plugin.
 By default we include:
 
 ~~~
- ^/dotsaml3sp*$, ^/dotCMS/login.*$, ^/html/portal/login.*$, ^/c/public/login.*$,^/c/portal_public/login.*$,^/c/portal/logout.*$", 
+ ^/dotsaml3sp*$, ^/dotCMS/login.*$, ^/html/portal/login.*$, ^/c/public/login.*$,^/c/portal_public/login.*$,^/c/portal/logout.*$",
 ~~~
 
 Use this property in case you need to filter additional paths. For instance:
@@ -306,7 +281,7 @@ Comma separated values with the regex paths to be considered by the SAML plugin.
 By default we include:
 
 ~~~
- ^/dotsaml3sp*$, ^/dotCMS/login.*$, ^/html/portal/login.*$, ^/c/public/login.*$,^/c/portal_public/login.*$,^/c/portal/logout.*$", 
+ ^/dotsaml3sp*$, ^/dotCMS/login.*$, ^/html/portal/login.*$, ^/c/public/login.*$,^/c/portal_public/login.*$,^/c/portal/logout.*$",
 ~~~
 
 Use this property in case you need to add additional logout paths. For instance:
@@ -315,14 +290,11 @@ Use this property in case you need to add additional logout paths. For instance:
 "include.path.values":"^/html/portal/logout.*$,^/dotCMS/logout.*$,^/c/"
 ~~~
 
-
 **identity.provider.destinationslo.url**
 
 This is url for the logout page on the SAML Server, by default it gets url from the idp-metadata (the file provided from the SAML server), but if it is not any idp-metadata you can
 edit this property and include the SLO url. (Note, if you set this property and set the idp-metadata, the idp-metada will be get by default)
 
-
 **verify.assertion.signature, verify.signature.profile and verify.signature.credentials**
-
 
 For signature verification purpose. Default value: true.

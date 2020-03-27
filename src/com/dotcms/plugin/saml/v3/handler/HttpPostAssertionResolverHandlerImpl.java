@@ -1,12 +1,19 @@
 package com.dotcms.plugin.saml.v3.handler;
 
-import com.dotcms.plugin.saml.v3.DotSamlConstants;
-import com.dotcms.plugin.saml.v3.exception.DotSamlException;
-import com.dotcms.plugin.saml.v3.SiteConfigurationResolver;
-import com.dotcms.plugin.saml.v3.config.Configuration;
-import com.dotmarketing.util.Logger;
-import com.liferay.util.InstancePool;
-import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.getAssertion;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.invokeMessageHandlerChain;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.toXMLObjectString;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.verifyAssertionSignature;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.verifyResponseSignature;
+import static com.dotmarketing.util.UtilMethods.isSet;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.messaging.decoder.MessageDecodingException;
@@ -16,140 +23,151 @@ import org.opensaml.saml.common.SAMLObject;
 import org.opensaml.saml.common.binding.security.impl.MessageLifetimeSecurityHandler;
 import org.opensaml.saml.common.messaging.context.SAMLMessageInfoContext;
 import org.opensaml.saml.saml2.binding.decoding.impl.HTTPPostDecoder;
-import org.opensaml.saml.saml2.core.*;
+import org.opensaml.saml.saml2.core.Assertion;
+import org.opensaml.saml.saml2.core.Response;
+import org.opensaml.saml.saml2.core.Status;
+import org.opensaml.saml.saml2.core.StatusCode;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.List;
+import com.dotcms.plugin.saml.v3.config.IdpConfig;
+import com.dotcms.plugin.saml.v3.exception.DotSamlException;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
+import com.dotmarketing.exception.DotDataException;
+import com.dotmarketing.util.Logger;
+import com.dotmarketing.util.json.JSONException;
 
-import static com.dotcms.plugin.saml.v3.SamlUtils.*;
-import static com.dotmarketing.util.UtilMethods.isSet;
+import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 
 /**
  * Handles the http post
  *
  * @author jsanca
  */
+
 public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHandler {
+	private static final long serialVersionUID = 3479922364325870009L;
 
+	// This is the key to get the saml response from the request.
+	private static final String SAML_RESPONSE_KEY = "SAMLResponse";
 
-    private final HTTPPostDecoder decoder = new HTTPPostDecoder();
-    // this is the key to get the saml response from the request.
-    private static final String SAML_RESPONSE_KEY = "SAMLResponse";
+	@Override
+	public boolean isValidSamlRequest(final HttpServletRequest request, final HttpServletResponse response,
+			final IdpConfig idpConfig) {
+		return isSet(request.getParameter(SAML_RESPONSE_KEY));
+	}
 
-    @Override
-    public boolean isValidSamlRequest(final HttpServletRequest request,
-                                      final HttpServletResponse response,
-                                      final String siteName) {
+	@Override
+	public Assertion resolveAssertion(final HttpServletRequest request, final HttpServletResponse response,
+			IdpConfig idpConfig) throws DotDataException, IOException, JSONException {
+		Assertion assertion = null;
+		HTTPPostDecoder decoder = new HTTPPostDecoder();
+		MessageContext<SAMLObject> messageContext = null;
+		Response samlResponse = null;
 
-        return isSet(request.getParameter(SAML_RESPONSE_KEY));
-    }
+		Logger.debug(this, "Resolving SAML Artifact with AssertionResolverHandler implementation: " + this.getClass());
 
-    @Override
-    public Assertion resolveAssertion(final HttpServletRequest request,
-                                      final HttpServletResponse response,
-                                      final String siteName) {
+		try {
+			Logger.debug(this, "Decoding the Post message: " + request.getParameter(SAML_RESPONSE_KEY));
 
-        final SiteConfigurationResolver resolver       = (SiteConfigurationResolver) InstancePool.get(SiteConfigurationResolver.class.getName());
-        final Configuration             configuration  = resolver.resolveConfiguration(request);
-        Assertion                       assertion      = null;
-        HTTPPostDecoder                 decoder        = new HTTPPostDecoder();
-        MessageContext<SAMLObject>      messageContext = null;
-        Response                        samlResponse   = null;
+			decoder.setHttpServletRequest(request);
+			decoder.setParserPool(XMLObjectProviderRegistrySupport.getParserPool());
 
-        Logger.debug(this, "Resolving the Artifact with the implementation: " + this.getClass());
+			decoder.initialize();
+			decoder.decode();
 
-        try {
+			messageContext = decoder.getMessageContext();
+			samlResponse = (Response) messageContext.getMessage();
 
-            Logger.debug(this, "Decoding the Post message: " + request.getParameter(SAML_RESPONSE_KEY));
+			Logger.debug(this, "Post message context decoded:");
+			Logger.debug(this, "\n\n" + toXMLObjectString(samlResponse));
 
-            decoder.setHttpServletRequest(request);
-            decoder.setParserPool(XMLObjectProviderRegistrySupport.getParserPool());
+		} catch (ComponentInitializationException | MessageDecodingException e) {
+			Logger.error(this, "Error decoding inbound message context for IdP '" + idpConfig.getIdpName() + "'", e);
+			throw new DotSamlException(e.getMessage(), e);
+		} finally {
+			decoder.destroy();
+		}
 
-            decoder.initialize();
-            decoder.decode();
+		this.validateDestinationAndLifetime(messageContext, request, idpConfig);
 
-            messageContext = decoder.getMessageContext();
-            samlResponse   = (Response)messageContext.getMessage();
+		assertion = getAssertion(samlResponse, idpConfig);
 
-            Logger.debug(this, "Post message context decoded: " +
-                    toXMLObjectString(samlResponse));
+		Logger.debug(this, "Decrypted Assertion:");
+		Logger.debug(this, "\n\n" + toXMLObjectString(assertion));
 
-        } catch (ComponentInitializationException | MessageDecodingException e) {
+		// Verify Signatures.
+		verifyResponseSignature(samlResponse, idpConfig);
+		verifyAssertionSignature(assertion, idpConfig);
 
-            Logger.error(this, "Error decoding inbound message context", e);
-            throw new DotSamlException(e.getMessage(), e);
-        } finally {
+		this.verifyStatus(samlResponse);
 
-            decoder.destroy();
-        }
+		return assertion;
+	}
 
-        this.validateDestinationAndLifetime(messageContext, request, configuration);
+	private void verifyStatus(final Response response) {
+		final Status status = response.getStatus();
+		final StatusCode statusCode = status.getStatusCode();
+		final String statusCodeURI = statusCode.getValue();
 
-        assertion = getAssertion(samlResponse, configuration);
+		if (!statusCodeURI.equals(StatusCode.SUCCESS)) {
+			Logger.error(this, "SAML status code was NOT successful: " + statusCode.getStatusCode().getValue());
+			throw new DotSamlException("SAML status code was NOT successful: " + statusCode.getValue());
+		}
+	}
 
-        Logger.debug(this, "Decrypted Assertion: " + toXMLObjectString(assertion));
+	@SuppressWarnings("unchecked")
+	private void validateDestinationAndLifetime(final MessageContext<SAMLObject> context,
+			final HttpServletRequest request, final IdpConfig idpConfig) {
 
-        if (configuration.isVerifyAssertionSignatureNeeded()) {
+		// Just setting it to a value in case of exception.
+		long clockSkew = DOT_SAML_CLOCK_SKEW_DEFAULT_VALUE;
+		long lifeTime = DOT_SAML_MESSAGE_LIFE_DEFAULT_VALUE;
 
-            Logger.debug(this, "Doing the verification assertion signature.");
+		try {
+			Integer intClockSkew = DotsamlPropertiesService.getOptionInteger(idpConfig,
+					DotsamlPropertyName.DOT_SAML_CLOCK_SKEW);
+			if (intClockSkew != null) {
+				clockSkew = new Long(intClockSkew).longValue();
+			}
 
-            verifyAssertionSignature(assertion, configuration);
+		} catch (Exception exception) {
 
-            this.verifyStatus (samlResponse);
-        } else {
+			Logger.info(this,
+					"Optional property not set: " + DotsamlPropertyName.DOT_SAML_CLOCK_SKEW + ". Using default.");
+		}
 
-            Logger.debug(this, "The verification assertion signature and status code was skipped.");
-        }
+		try {
 
-        Logger.debug(this, "Decrypted Assertion: " + toXMLObjectString(assertion));
+			Integer intLifeTime = DotsamlPropertiesService.getOptionInteger(idpConfig,
+					DotsamlPropertyName.DOT_SAML_MESSAGE_LIFE_TIME);
+			if (intLifeTime != null) {
+				lifeTime = new Long(intLifeTime).longValue();
+			}
 
-        return assertion;
-    } // resolveAssertion.
+		} catch (Exception exception) {
 
-    private void verifyStatus(final Response response) {
+			Logger.info(this, "Optional property not set: "
+					+ DotsamlPropertyName.DOT_SAML_MESSAGE_LIFE_TIME.getPropertyName() + ". Using default.");
+		}
 
-        final Status     status     = response.getStatus();
-        final StatusCode statusCode = status.getStatusCode();
-        final String statusCodeURI  = statusCode.getValue();
+		final SAMLMessageInfoContext messageInfoContext = context.getSubcontext(SAMLMessageInfoContext.class, true);
+		final MessageLifetimeSecurityHandler lifetimeSecurityHandler = new MessageLifetimeSecurityHandler();
+		final BasicMessageHandlerChain<SAMLObject> handlerChain = new BasicMessageHandlerChain<SAMLObject>();
+		final List<MessageHandler<SAMLObject>> handlers = new ArrayList<MessageHandler<SAMLObject>>();
+		final Response response = (Response) context.getMessage();
+		
+		messageInfoContext.setMessageIssueInstant(response.getIssueInstant());
 
-        if (!statusCodeURI.equals(StatusCode.SUCCESS)) {
+		// message lifetime validation.
+		lifetimeSecurityHandler.setClockSkew(clockSkew);
+		lifetimeSecurityHandler.setMessageLifetime(lifeTime);
+		lifetimeSecurityHandler.setRequiredRule(true);
 
-            Logger.error(this, "Incorrect SAML message code : "+ statusCode.getStatusCode().getValue());
-            throw new DotSamlException("Incorrect SAML message code : " + statusCode.getValue());
-        }
-    } // verifyStatus.
+		// validation of message destination.
+		handlers.add(lifetimeSecurityHandler);
+		handlerChain.setHandlers(handlers);
 
-    private void validateDestinationAndLifetime(final MessageContext<SAMLObject> context,
-                                                final HttpServletRequest request,
-                                                final Configuration configuration) {
+		invokeMessageHandlerChain(handlerChain, context);
+	}
 
-        final long clockSkew = configuration.getIntProperty
-                (DotSamlConstants.DOT_SAML_CLOCK_SKEW, DOT_SAML_CLOCK_SKEW_DEFAULT_VALUE);
-        final long lifeTime  = configuration.getIntProperty
-                (DotSamlConstants.DOT_SAML_MESSAGE_LIFE_TIME, DOT_SAML_MESSAGE_LIFE_DEFAULT_VALUE);
-        final SAMLMessageInfoContext messageInfoContext =
-                context.getSubcontext(SAMLMessageInfoContext.class, true);
-        final MessageLifetimeSecurityHandler lifetimeSecurityHandler =
-                new MessageLifetimeSecurityHandler();
-        final BasicMessageHandlerChain<SAMLObject> handlerChain =
-                new BasicMessageHandlerChain<SAMLObject>();
-        final List handlers = new ArrayList<MessageHandler>();
-        final Response response = (Response)context.getMessage();
-
-        messageInfoContext.setMessageIssueInstant
-                (response.getIssueInstant());
-
-        // message lifetime validation.
-        lifetimeSecurityHandler.setClockSkew(clockSkew);
-        lifetimeSecurityHandler.setMessageLifetime(lifeTime);
-        lifetimeSecurityHandler.setRequiredRule(true);
-
-        // validation of message destination.
-        handlers.add(lifetimeSecurityHandler);
-        handlerChain.setHandlers(handlers);
-
-        invokeMessageHandlerChain(handlerChain, context);
-    } // validateDestinationAndLifetime.
-} // E:O:F:HttpPostAssertionResolverHandlerImpl.
+}
