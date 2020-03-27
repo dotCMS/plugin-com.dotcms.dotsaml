@@ -413,7 +413,7 @@ public class SamlFilter implements Filter {
 							? (String) session.getAttribute(ORIGINAL_REQUEST) : request.getRequestURI();
 					session.removeAttribute(ORIGINAL_REQUEST);
 
-					if (this.isBackEndAdmin(session, uri)) {
+					if (this.isBackEndAdmin(request, uri)) {
 						Logger.debug(this, "URI '" + uri + "' belongs to the back-end. Setting the user session data");
 						session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
 						PrincipalThreadLocal.setName(user.getUserId());
@@ -476,6 +476,10 @@ public class SamlFilter implements Filter {
 	 */
 	protected boolean isBackEndAdmin(final HttpSession session, final String uri) {
 		return PageMode.get(session).isAdmin || this.isBackEndLoginPage(uri);
+	}
+
+	protected boolean isBackEndAdmin(final HttpServletRequest request, final String uri) {
+		return PageMode.get(request).isAdmin || this.isBackEndLoginPage(uri);
 	}
 
 	/**
