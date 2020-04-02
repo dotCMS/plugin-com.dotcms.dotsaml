@@ -2,6 +2,7 @@ package com.dotcms.plugin.saml.v3.filter;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
@@ -203,10 +204,13 @@ public class SamlFilter implements Filter {
 
 	public boolean doLogout(final HttpServletResponse response, final HttpServletRequest request,
 			final HttpSession session, final IdpConfig idpConfig) throws IOException, ServletException {
+        Logger.debug(this, "------------------------------ IdP doLogout ---------------------------------");
 		final NameID nameID = (NameID) session.getAttribute(idpConfig.getId() + SamlUtils.SAML_NAME_ID);
 		final String samlSessionIndex = (String) session.getAttribute(idpConfig.getId() + SamlUtils.SAML_SESSION_INDEX);
 		boolean doLogoutDone = false;
-
+		Logger.debug(this, "- idpConfig = " + idpConfig);
+        Logger.debug(this, "- NameID = " + nameID);
+        Logger.debug(this, "- samlSessionIndex = " + samlSessionIndex);
 		try {
 			if (null != nameID && null != samlSessionIndex) {
 				Logger.debug(this,
@@ -226,7 +230,7 @@ public class SamlFilter implements Filter {
 		} catch (Throwable e) {
 			Logger.error(this, "Error on Logout: " + e.getMessage(), e);
 		}
-
+        Logger.debug(this, "- doLogoutDone = " + doLogoutDone);
 		return doLogoutDone;
 	}
 
@@ -237,6 +241,7 @@ public class SamlFilter implements Filter {
 	 * @param request
 	 */
 	protected void doLogout(final HttpServletResponse response, final HttpServletRequest request) {
+        Logger.debug(this, "---------------------------- Generic doLogout -------------------------------");
 		final Cookie[] cookies = request.getCookies();
 
 		if (cookies != null) {
@@ -246,10 +251,11 @@ public class SamlFilter implements Filter {
 				response.addCookie(cookie);
 			}
 		}
-
+        Logger.debug(this, "- Removing cookies...");
 		HttpSession session = request.getSession(false);
-
+        Logger.debug(this, "- Invalidating session...");
 		if (session != null) {
+            Logger.debug(this, "- Session IS NOT null. Invalidating session maps...");
 			final Map sessions = PortletSessionPool.remove(session.getId());
 
 			if (sessions != null) {
@@ -266,12 +272,16 @@ public class SamlFilter implements Filter {
 			}
 
 			if (!session.isNew()) {
+                Logger.debug(this, "- Logging out through the dotCMS Login Service...");
 				this.loginService.doLogout(request, response);
 			}
 		}
 	}
 
 	public boolean isLogoutRequest(final String requestURI, final String[] logoutPathArray) {
+		Logger.debug(this, "----------------------------- isLogoutRequest --------------------------------");
+		Logger.debug(this, "- requestURI = " + requestURI);
+        Logger.debug(this, "- logoutPathArray = " + Arrays.asList(logoutPathArray));
 		boolean isLogoutRequest = false;
 
 		if (null != logoutPathArray) {
@@ -281,7 +291,7 @@ public class SamlFilter implements Filter {
 				}
 			}
 		}
-
+        Logger.debug(this, "- isLogoutRequest = " + isLogoutRequest);
 		return isLogoutRequest;
 	}
 
@@ -404,11 +414,11 @@ public class SamlFilter implements Filter {
 							? (String) session.getAttribute(ORIGINAL_REQUEST) : request.getRequestURI();
 					session.removeAttribute(ORIGINAL_REQUEST);
 
+           Logger.debug(this, "URI '" + uri + "' belongs to the back-end. Setting the user session data");
+           session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
+           session.setAttribute(com.liferay.portal.util.WebKeys.USER, user);
+           PrincipalThreadLocal.setName(user.getUserId());
 
-               Logger.debug(this, "URI '" + uri + "' belongs to the back-end. Setting the user session data");
-               session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
-               session.setAttribute(com.liferay.portal.util.WebKeys.USER, user);
-               PrincipalThreadLocal.setName(user.getUserId());
 
 
 					renewSession = this.renewSession(request, session);
@@ -468,6 +478,10 @@ public class SamlFilter implements Filter {
 	 */
 	protected boolean isBackEndAdmin(final HttpSession session, final String uri) {
 		return PageMode.get(session).isAdmin || this.isBackEndLoginPage(uri);
+	}
+
+	protected boolean isBackEndAdmin(final HttpServletRequest request, final String uri) {
+		return PageMode.get(request).isAdmin || this.isBackEndLoginPage(uri);
 	}
 
 	/**

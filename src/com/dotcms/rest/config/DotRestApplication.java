@@ -3,7 +3,10 @@ package com.dotcms.rest.config;
 import com.dotcms.contenttype.model.field.FieldTypeResource;
 import com.dotcms.plugin.saml.v3.rest.DotSamlRestService;
 import com.dotcms.plugin.saml.v3.rest.api.v1.DotSamlResource;
-import com.dotcms.repackage.org.glassfish.jersey.media.multipart.MultiPartFeature;
+import com.dotcms.rest.api.v1.personalization.PersonalizationResource;
+import com.dotcms.rest.api.v1.system.UpgradeTaskResource;
+import com.dotcms.rest.api.v1.temp.TempFileResource;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import com.dotcms.rest.RulesEnginePortlet;
 import com.dotcms.rest.TagResource;
 import com.dotcms.rest.api.v1.authentication.ApiTokenResource;
@@ -61,7 +64,7 @@ import java.util.Set;
  * @since Dec 5, 2013
  *
  */
-public class DotRestApplication extends com.dotcms.repackage.javax.ws.rs.core.Application {
+public class DotRestApplication extends javax.ws.rs.core.Application {
 
 	protected volatile static Set<Class<?>> REST_CLASSES = null;
 
@@ -127,6 +130,7 @@ public class DotRestApplication extends com.dotcms.repackage.javax.ws.rs.core.Ap
 					REST_CLASSES.add(ContentTypeResource.class);
 					REST_CLASSES.add(FieldResource.class);
 					REST_CLASSES.add(com.dotcms.rest.api.v2.contenttype.FieldResource.class);
+					REST_CLASSES.add(com.dotcms.rest.api.v3.contenttype.FieldResource.class);
 					REST_CLASSES.add(FieldTypeResource.class);
 					REST_CLASSES.add(FieldVariableResource.class);
 					REST_CLASSES.add(ResetPasswordResource.class);
@@ -153,6 +157,11 @@ public class DotRestApplication extends com.dotcms.repackage.javax.ws.rs.core.Ap
 					REST_CLASSES.add(VTLResource.class);
 					REST_CLASSES.add(ContentVersionResource.class);
 					REST_CLASSES.add(FileAssetsResource.class);
+
+					REST_CLASSES.add(PersonalizationResource.class);
+					REST_CLASSES.add(TempFileResource.class);
+
+					REST_CLASSES.add(UpgradeTaskResource.class);
 
 					// SAML RESOURCES
 					REST_CLASSES.add(DotSamlResource.class);
