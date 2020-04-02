@@ -414,11 +414,12 @@ public class SamlFilter implements Filter {
 							? (String) session.getAttribute(ORIGINAL_REQUEST) : request.getRequestURI();
 					session.removeAttribute(ORIGINAL_REQUEST);
 
-					if (this.isBackEndAdmin(request, uri)) {
-						Logger.debug(this, "URI '" + uri + "' belongs to the back-end. Setting the user session data");
-						session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
-						PrincipalThreadLocal.setName(user.getUserId());
-					}
+           Logger.debug(this, "URI '" + uri + "' belongs to the back-end. Setting the user session data");
+           session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
+           session.setAttribute(com.liferay.portal.util.WebKeys.USER, user);
+           PrincipalThreadLocal.setName(user.getUserId());
+
+
 
 					renewSession = this.renewSession(request, session);
 
