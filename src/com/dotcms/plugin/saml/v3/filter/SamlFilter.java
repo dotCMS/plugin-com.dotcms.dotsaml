@@ -383,7 +383,7 @@ public class SamlFilter implements Filter {
 	}
 
 	protected AutoLoginResult autoLogin(final HttpServletRequest request, final HttpServletResponse response,
-			final HttpSession session, final IdpConfig idpConfig) throws DotDataException, IOException, JSONException {
+			HttpSession session, final IdpConfig idpConfig) throws DotDataException, IOException, JSONException {
 		User user = this.samlAuthenticationService.getUser(request, idpConfig);
 		boolean continueFilter = true; // by default continue with the filter
 		HttpSession renewSession = session;
@@ -405,6 +405,8 @@ public class SamlFilter implements Filter {
 			Logger.debug(this, "Cookie Login by LoginService = " + doCookieLogin);
 
 			if (doCookieLogin) {
+
+				session = request.getSession(false);
 				if (null != session && null != user.getUserId()) {
 					// this is what the PortalRequestProcessor needs to check
 					// the login.
@@ -414,12 +416,10 @@ public class SamlFilter implements Filter {
 							? (String) session.getAttribute(ORIGINAL_REQUEST) : request.getRequestURI();
 					session.removeAttribute(ORIGINAL_REQUEST);
 
-           Logger.debug(this, "URI '" + uri + "' belongs to the back-end. Setting the user session data");
-           session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
-           session.setAttribute(com.liferay.portal.util.WebKeys.USER, user);
-           PrincipalThreadLocal.setName(user.getUserId());
-
-
+				    Logger.debug(this, "URI '" + uri + "' belongs to the back-end. Setting the user session data");
+				    session.setAttribute(com.liferay.portal.util.WebKeys.USER_ID, user.getUserId());
+				    session.setAttribute(com.liferay.portal.util.WebKeys.USER, user);
+   				    PrincipalThreadLocal.setName(user.getUserId());
 
 					renewSession = this.renewSession(request, session);
 

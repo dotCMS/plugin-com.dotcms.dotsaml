@@ -502,8 +502,8 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 		User systemUser = null;
 		User user = null;
 
-		HttpSession session = request.getSession();
-		if (session == null) {
+		HttpSession session = request.getSession(false);
+		if (session == null || request.isRequestedSessionIdValid()) {
 			Logger.error(this, "Could not retrieve user from session as the session doesn't exist!");
 			return null;
 		}
