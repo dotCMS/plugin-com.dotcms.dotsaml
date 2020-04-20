@@ -69,12 +69,18 @@ public class SamlAccessFilter extends SamlFilter implements Filter {
 				contentletAPI, userWebAPI, loginService);
 	}
 
+	private HttpSession getSession (final HttpServletRequest httpServletRequest) {
+
+		HttpSession session = httpServletRequest.getSession(false);
+		return session != null? session: httpServletRequest.getSession(true);
+	}
+
 	@Override
 	public void doFilter(final ServletRequest servletRequest, final ServletResponse servletResponse,
 			final FilterChain chain) throws IOException, ServletException {
 		final HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
 		final HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
-		HttpSession session = httpServletRequest.getSession();
+		HttpSession session = this.getSession(httpServletRequest);
 		String redirectAfterLogin = null;
 		boolean isLogoutNeed = false;
 
