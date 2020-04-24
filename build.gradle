@@ -1,0 +1,112 @@
+plugins {
+    id 'biz.aQute.bnd.builder' version '3.3.0'
+}
+
+sourceCompatibility = '1.8'
+version = '0.2'
+
+repositories {
+    maven { url "http://repo.dotcms.com/artifactory/libs-release" }
+}
+
+dependencies {
+    compile fileTree(dir: 'ROOT/dotserver/tomcat-8.5.32/webapps/ROOT/WEB-INF/lib/', include: '*.jar')//As this example depends on the com.dotcms.simpleService example
+    compile('com.dotcms:dotcms:5.2.8') { transitive = true }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = [
+                    "$projectDir/src"
+            ]
+        }
+    }
+}
+
+import java.util.jar.*
+
+/////////////////////////
+//Plugin jar
+/////////////////////////
+jar {
+    manifest {
+        attributes (
+                'Bundle-Vendor': 'dotCMS',
+                'Bundle-Description': 'dotCMS - Osgi SMALL example',
+                'Bundle-DocURL': 'https://dotcms.com/',
+                'Import-Package': '*;version=0'
+        )
+    }
+}
+jar.finalizedBy 'fragmentJar'
+
+/////////////////////////
+//Fragment jar
+/////////////////////////
+
+ext {
+    bundleName = "Osgi Servlet SMALL fragment"
+    bundleDescription = "dotCMS - Osgi Servlet SMALL fragment"
+    fragmentHost = "system.bundle; extension:=framework"
+    bundleSymbolicName = "" //Auto generated based on the plugin jar
+    bundleVersion = "" //Auto generated based on the plugin jar
+    importPackage = "" //Auto generated based on the plugin jar
+    bundleManifestVersion = "" //Auto generated based on the plugin jar
+    bundleDocURL = "" //Auto generated based on the plugin jar
+    bundleVendor = "" //Auto generated based on the plugin jar
+}
+/**
+ * The import generates versions like this: version="[1.8,2)"
+ * That format does not work for the export, so we need to replace it
+ * to: version=0
+ */
+ext.fixVersionNumber = {importValue ->
+    return importValue.replaceAll("\"\\[[0-9.,]+\\)\"", "0")
+}
+
+/**
+ * Reads the Manifest file of the just created plugin jar in order to get the required info
+ * to automatically create the fragment jar.
+ */
+task readManifesttAttributes {
+    doFirst {
+        File file = configurations.baseline.singleFile
+        JarFile jar = new JarFile(file)
+        Attributes manifest = jar.getManifest().getMainAttributes()
+        bundleSymbolicName = "${manifest.getValue('Bundle-SymbolicName')}"
+        bundleVersion = "${manifest.getValue('Bundle-Version')}"
+        importPackage = "${manifest.getValue('Import-Package')}"
+        bundleManifestVersion = "${manifest.getValue('Bundle-ManifestVersion')}"
+        bundleDocURL = "${manifest.getValue('Bundle-DocURL')}"
+        bundleVendor = "${manifest.getValue('Bundle-Vendor')}"
+    }
+}
+task fragmentJar(type: Jar) {
+
+    doFirst {
+        //Setting the fragment jar name
+        baseName = project.name
+        archiveName = "${baseName}.fragment-${version}.jar"
+        importPackage = fixVersionNumber(importPackage)
+
+        manifest {
+            attributes (
+                    'Bundle-Name': "${bundleName}",
+                    'Bundle-Description': "${bundleDescription}",
+                    'Bundle-Vendor': "${bundleVendor}",
+                    'Bundle-Version': "${version}",
+                    'Bundle-SymbolicName': "${baseName}.fragment",
+                    'Bundle-ManifestVersion': "${bundleManifestVersion}",
+                    'Bundle-DocURL': "${bundleDocURL}",
+                    'Fragment-Host': "${fragmentHost}",
+                    'Export-Package': "${importPackage}"
+            )
+        }
+    }
+}
+fragmentJar.dependsOn 'readManifesttAttributes'
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.2'
+}
