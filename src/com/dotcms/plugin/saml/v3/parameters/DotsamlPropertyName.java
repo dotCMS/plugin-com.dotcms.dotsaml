@@ -219,7 +219,15 @@ public enum DotsamlPropertyName {
 	 * SAML User
 	 */
 	DOTCMS_SAML_OPTIONAL_USER_ROLE("role.extra"),
-	
+
+	/**
+	 * By default dotcms will allows the user synchronization, this means if the user does not exists on their database the user will be added to their storage, roles, etc.
+	 * In case you do not want any synchronization set this to false.
+	 *
+	 */
+	DOT_SAML_ALLOW_USER_SYNCHRONIZATION("allow.user.synchronization"),
+
+
 	/**
 	 * If you want to allow to create an user that does not exists on the IdP,
 	 * set this to true, otherwise false. By default it is false, so won't allow
