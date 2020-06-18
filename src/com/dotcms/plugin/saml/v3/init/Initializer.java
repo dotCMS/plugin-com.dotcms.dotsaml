@@ -7,6 +7,7 @@ import java.util.Map;
  * Defines a contract to initialize the plugin
  * @author jsanca
  */
+// migrated
 public interface Initializer extends Serializable {
 
 	

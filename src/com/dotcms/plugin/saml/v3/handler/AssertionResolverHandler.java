@@ -18,6 +18,7 @@ import org.opensaml.saml.saml2.core.Assertion;
  * 
  * @author jsanca
  */
+// migrated
 public interface AssertionResolverHandler extends Serializable
 {
 	public static final int DOT_SAML_CLOCK_SKEW_DEFAULT_VALUE = 1000;

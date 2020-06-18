@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+// TODO: partially migrated
 public class IdpConfig
 {
 	private String id;

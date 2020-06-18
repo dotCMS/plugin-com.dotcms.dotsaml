@@ -31,6 +31,7 @@ import java.util.Map;
  * @version 4.3.2
  * @since 03-27-2018
  */
+// Not-need
 public class SamlCacheImpl extends SamlCache
 {
 	protected DotCacheAdministrator cache = null;

@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
+// todo: not migrated
 public class IdpConfigFileHelper implements Serializable
 {
 	private static final long serialVersionUID = 2810853018482556705L;

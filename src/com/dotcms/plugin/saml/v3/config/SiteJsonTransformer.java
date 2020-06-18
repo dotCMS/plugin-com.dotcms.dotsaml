@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+// todo: not migrated
 public class SiteJsonTransformer
 {
 	public static JSONObject getJsonObjecFromtMap( Map<String, String> map ) throws JSONException

@@ -11,6 +11,7 @@ import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
 import com.liferay.util.FileUtil;
 
+// todo: should migrated
 public class DotsamlDefaultPropertiesService {
 
 	public static final String INTEGER_PARSE_ERROR = "Unable to parse Integer value: ";

@@ -13,6 +13,7 @@ import com.dotmarketing.util.Logger;
  * @version 4.3.2
  * @since 03-31-2018
  */
+// todo; not migrated
 public class OptionalPropertiesHelper
 {
 	/**

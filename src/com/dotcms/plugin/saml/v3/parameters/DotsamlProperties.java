@@ -8,6 +8,7 @@ import com.dotcms.plugin.saml.v3.key.BindingType;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 import org.apache.commons.lang.StringUtils;
 
+// todo: partially migrated
 public class DotsamlProperties {
 
 	private String dotSamlAccessFilterValues = null;

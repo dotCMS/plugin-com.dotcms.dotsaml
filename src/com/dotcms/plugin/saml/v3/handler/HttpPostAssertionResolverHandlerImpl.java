@@ -43,7 +43,7 @@ import net.shibboleth.utilities.java.support.component.ComponentInitializationEx
  *
  * @author jsanca
  */
-
+// migrated
 public class HttpPostAssertionResolverHandlerImpl implements AssertionResolverHandler {
 	private static final long serialVersionUID = 3479922364325870009L;
 

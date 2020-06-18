@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+// todo: partially migrated
 public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 {
 	private static class SingletonHolder

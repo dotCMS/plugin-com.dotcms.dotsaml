@@ -15,7 +15,7 @@ import com.liferay.util.InstancePool;
  * 
  * @author jsanca
  */
-
+// migrated
 public class AssertionResolverHandlerFactory implements Serializable {
 	private static final long serialVersionUID = 2434118681822205248L;
 

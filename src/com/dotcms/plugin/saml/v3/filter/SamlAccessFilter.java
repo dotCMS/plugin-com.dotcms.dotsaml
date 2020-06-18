@@ -46,6 +46,7 @@ import com.dotmarketing.util.json.JSONException;
  * 
  * @author jsanca
  */
+// todo: not migrated
 public class SamlAccessFilter extends SamlFilter implements Filter {
 	public SamlAccessFilter() {
 		super(InstanceUtil.newInstance(

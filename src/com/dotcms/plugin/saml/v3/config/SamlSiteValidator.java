@@ -8,6 +8,7 @@ import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.*;
  * 
  * @author jsanca
  */
+// todo: not migrated yet
 public class SamlSiteValidator
 {
 	public static boolean checkBuildRoles( final String buildRolesProperty )

@@ -12,6 +12,7 @@ import org.opensaml.saml.saml2.metadata.EntityDescriptor;
  *
  * @author jsanca
  */
+// migrated
 public interface MetaDescriptorService extends Serializable
 {
 	String X_509 = "X.509";

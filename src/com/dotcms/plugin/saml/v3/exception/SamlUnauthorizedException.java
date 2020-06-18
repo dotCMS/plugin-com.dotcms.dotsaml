@@ -7,6 +7,7 @@ import javax.ws.rs.core.Response.Status;
  * 
  * @author jsanca
  */
+// migrated
 public class SamlUnauthorizedException extends DotSamlException
 {
 	private static final long serialVersionUID = 2827175662161844965L;

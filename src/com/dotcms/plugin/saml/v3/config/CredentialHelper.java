@@ -5,6 +5,7 @@ import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
 import com.dotcms.plugin.saml.v3.util.InstanceUtil;
 
+// Migrated
 public class CredentialHelper
 {
 	/**

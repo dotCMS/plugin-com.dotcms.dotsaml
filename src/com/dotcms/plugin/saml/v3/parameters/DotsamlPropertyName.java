@@ -5,6 +5,7 @@ import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.meta.DefaultMetaDescriptorServiceImpl;
 import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
 
+// migrated
 public enum DotsamlPropertyName {
 
 	//@formatter:off

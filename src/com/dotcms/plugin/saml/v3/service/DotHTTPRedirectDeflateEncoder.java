@@ -19,7 +19,7 @@ import org.opensaml.core.xml.XMLObject;
 
 import java.net.MalformedURLException;
 import java.util.List;
-
+// migrated
 public class DotHTTPRedirectDeflateEncoder extends HTTPRedirectDeflateEncoder {
 
     private final boolean clearQueryParams;

@@ -63,6 +63,7 @@ import com.liferay.portal.auth.PrincipalThreadLocal;
 import com.liferay.portal.model.User;
 import com.liferay.portal.servlet.PortletSessionPool;
 
+// todo: not migrated
 public class SamlFilter implements Filter {
 	protected static final String BY_PASS_KEY = "native";
 	protected static final String BY_PASS_VALUE = "true";
