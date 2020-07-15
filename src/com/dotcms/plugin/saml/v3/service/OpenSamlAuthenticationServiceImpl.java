@@ -57,7 +57,6 @@ import com.dotcms.repackage.org.apache.commons.lang.StringUtils;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.DotStateException;
 import com.dotmarketing.business.NoSuchUserException;
-import com.dotmarketing.business.DuplicateUserException;
 import com.dotmarketing.business.Role;
 import com.dotmarketing.business.RoleAPI;
 import com.dotmarketing.business.UserAPI;
@@ -360,39 +359,11 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 		return role;
 	}
 
-	protected User createNewUser(final User systemUser, final AttributesBean attributesBean, final IdpConfig idpConfig) {
+	protected User createNewUser(final User systemUser, final AttributesBean attributesBean) {
 		User user = null;
 
 		try {
-			try{
-				user = this.userAPI.createUser(attributesBean.getNameID().getValue(), attributesBean.getEmail());
-			} catch (DuplicateUserException due) {
-				final String companyDomain =
-						DotsamlPropertiesService.getOptionString(idpConfig, DotsamlPropertyName.DOTCMS_SAML_COMPANY_EMAIL_DOMAIN, "fakedomain.com");
-
-				Logger.warn(this, "The NameId " + attributesBean.getNameID().getValue()
-						+ " or The email: " + attributesBean.getEmail() +
-						", are duplicated, could not create the user, trying a new email strategy");
-
-				final String newEmail = attributesBean.getNameID().getValue() + "@" + companyDomain;
-
-				try{
-					user = this.userAPI.createUser(attributesBean.getNameID().getValue(), newEmail);
-					Logger.info(this, "Userid: "+ attributesBean.getNameID().getValue() +
-							"created with email: " + newEmail);
-
-				} catch (DuplicateUserException dueAgain) {
-					Logger.warn(this, "The NameId " + attributesBean.getNameID().getValue()
-							+ " or The email: " + attributesBean.getEmail() +
-							", are duplicated, could not create the user, trying a UUID strategy");
-
-					final String newUUIDEmail = UUIDGenerator.generateUuid() + "@" + companyDomain;
-
-					user = this.userAPI.createUser(attributesBean.getNameID().getValue(), newUUIDEmail);
-					Logger.info(this, "Userid: "+ attributesBean.getNameID().getValue() +
-							"created with email: " + newUUIDEmail);
-				}
-			}
+			user = this.userAPI.createUser(attributesBean.getNameID().getValue(), attributesBean.getEmail());
 
 			user.setFirstName(attributesBean.getFirstName());
 			user.setLastName(attributesBean.getLastName());
@@ -762,10 +733,10 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 
 		if (null == user) {
 			// if user does not exists, create a new one.
-			user = this.createNewUser(systemUser, attributesBean, idpConfig);
+			user = this.createNewUser(systemUser, attributesBean);
 		} else {
 			// update it, since exists
-			user = this.updateUser(user, systemUser, attributesBean, idpConfig);
+			user = this.updateUser(user, systemUser, attributesBean);
 		}
 
 		if (user.isActive()) {
@@ -796,15 +767,9 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 		return null == rolePatterns ? NULL : Arrays.asList(rolePatterns).toString();
 	}
 
-	private User updateUser(final User user, final User systemUser,
-							final AttributesBean attributesBean, final IdpConfig idpConfig) {
+	private User updateUser(final User user, final User systemUser, final AttributesBean attributesBean) {
 		try {
-			if (DotsamlPropertiesService.getOptionBoolean(idpConfig,
-					DotsamlPropertyName.DOTCMS_SAML_LOGIN_UPDATE_EMAIL)){
-
-				user.setEmailAddress(attributesBean.getEmail());
-			}
-
+			user.setEmailAddress(attributesBean.getEmail());
 			user.setFirstName(attributesBean.getFirstName());
 			user.setLastName(attributesBean.getLastName());
 

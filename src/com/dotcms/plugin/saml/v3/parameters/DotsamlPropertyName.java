@@ -280,19 +280,7 @@ public enum DotsamlPropertyName {
 	 * By default any query string included on the endpoints Locations from the IDP metadata will be removed in the moment to redirect to the IDP endpoint.
 	 * However you can set this on false in order to keep any query string parameter on the IDP metadata
 	 */
-	DOTCMS_SAML_CLEAR_LOCATION_QUERY_PARAMS("location.cleanqueryparams"),
-
-	/**
-	 * By default if the creation of the user fails because a duplicated email, we will try to create a new email based on the name id or a UUID.
-	 * If you want the code to set a domain for the new email you can set up it here. For example: dotcms.com
-	 */
-	DOTCMS_SAML_COMPANY_EMAIL_DOMAIN("company.email.domain"),
-
-	/**
-	 * By default after each login, and if the user already exists, we will try to update the name, lastname and email with the values from the assertion
-	 * If you want the code to ignore the email you should set this value to false.
-	 */
-	DOTCMS_SAML_LOGIN_UPDATE_EMAIL("login.email.update");
+	DOTCMS_SAML_CLEAR_LOCATION_QUERY_PARAMS("location.cleanqueryparams");
 
 	private String propertyName;
 
