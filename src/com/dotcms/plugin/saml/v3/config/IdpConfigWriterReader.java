@@ -1,5 +1,6 @@
 package com.dotcms.plugin.saml.v3.config;
 
+import com.dotmarketing.business.CacheLocator;
 import com.dotmarketing.util.json.JSONArray;
 import com.dotmarketing.util.json.JSONException;
 import com.dotmarketing.util.json.JSONObject;
@@ -113,7 +114,7 @@ public class IdpConfigWriterReader
 			file.write( jsonObject.toString() );
 
 		}
-
+		CacheLocator.getSamlCache().clearCache();
 		return new File( idpConfigPath );
 	}
 

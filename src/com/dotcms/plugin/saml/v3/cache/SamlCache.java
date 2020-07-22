@@ -176,10 +176,6 @@ public abstract class SamlCache implements Cachable
 	 */
 	public abstract List<String> getSites();
 
-	/**
-	 * Clears and rebuilds the cache
-	 */
-	public abstract void refresh();
 
 	/**
 	 * Removes the default {@link IdpConfig} object from the caching structure.

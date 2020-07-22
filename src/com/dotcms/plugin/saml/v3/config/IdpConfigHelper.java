@@ -79,12 +79,16 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		// Update cache
 		try
 		{
-			samlCache.removeIdpConfig( idpConfig );
+			samlCache.clearCache();
 		}
 		catch ( Exception exception )
 		{
 			//Logger.info( this, "Error writing to SamlCache" );
 		}
+		
+		
+		
+		
 	}
 
 	public IdpConfig findIdpConfig( String id ) throws IOException, JSONException, DotDataException
@@ -459,7 +463,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		{
 			idpConfig.setIdPMetadataFile( super.writeMetadataFile( idpConfig.getIdPMetadataFile(), idpConfig.getId() + ".xml" ) );
 		}
-
+		samlCache.clearCache();
 		return idpConfig;
 	}
 

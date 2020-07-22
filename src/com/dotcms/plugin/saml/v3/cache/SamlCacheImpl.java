@@ -178,9 +178,6 @@ public class SamlCacheImpl extends SamlCache
 	{
 		String tag = "addIdpConfigs( List<IdpConfig> ) ";
 
-		//Logger.info( this, "Clearing idpConfig cache." );
-
-		this.clearCache();
 
 		idpConfigs.forEach( idpConfig ->{
 			try
@@ -500,33 +497,7 @@ public class SamlCacheImpl extends SamlCache
 		return ( count != null ? count : 0 );
 	}
 
-	@Override
-	public void refresh()
-	{
-		String tag = "refresh() ";
 
-		//Logger.info( this, "Start: Clearing cache and loading all configs." );
-
-		this.clearCache();
-
-		try
-		{
-			this.cache.put( COUNT, "" + 0, IDP_CONFIG_COUNT_GROUP );
-
-			// Read file system
-			List<IdpConfig> idpConfigs = IdpConfigWriterReader.readIdpConfigs( new File( idpFilePath ) );
-
-			// Update cache
-			this.addIdpConfigs( idpConfigs );
-
-			//Logger.info( this, "End: Clearing cache and loading all configs." );
-		}
-		catch ( IOException | JSONException exception )
-		{
-			Logger.error( this, tag + "Error refreshing cache from file system.", exception );
-		}
-
-	}
 
 	@Override
 	public void removeDefaultIdpConfig() throws DotCacheException
