@@ -4,6 +4,7 @@ import com.dotcms.plugin.saml.v3.config.IdpConfig;
 import com.dotcms.plugin.saml.v3.config.IdpConfigHelper;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.business.APILocator;
+import com.dotmarketing.business.web.WebAPILocator;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.util.Logger;
@@ -44,8 +45,8 @@ public class SiteIdpConfigResolver implements Serializable
 	 */
 	public IdpConfig resolveIdpConfig( final HttpServletRequest request ) throws DotDataException, IOException, JSONException
 	{
-		final String serverName = getHostId( request.getServerName() );
-		return this.resolveIdpConfig( serverName );
+		return this.resolveIdpConfig(WebAPILocator.getHostWebAPI()
+				.getCurrentHostNoThrow(request).getHostname());
 	}
 
 	/*
