@@ -46,7 +46,7 @@ public class SiteIdpConfigResolver implements Serializable
 	public IdpConfig resolveIdpConfig( final HttpServletRequest request ) throws DotDataException, IOException, JSONException
 	{
 		return this.resolveIdpConfig(WebAPILocator.getHostWebAPI()
-						.getCurrentHostNoThrow(request).getIdentifier());
+						.getCurrentHostNoThrow(request).getHostname());
 	}
 
 	/*
