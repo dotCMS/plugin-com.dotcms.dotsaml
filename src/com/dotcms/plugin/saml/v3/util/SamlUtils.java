@@ -339,10 +339,10 @@ public class SamlUtils {
 
 		// it supports several formats, such as Kerberos, email, Windows Domain
 		// Qualified Name, etc.
-		// “The transient identifier is a random identifier that does not have
+		// The transient identifier is a random identifier that does not have
 		// any connection to the user.
 		// A transient identifier will be different for every time the user
-		// signs in.”
+		// signs in.
 		nameIDPolicy.setFormat(DotsamlPropertiesService.getOptionString(idpConfig,
 				DotsamlPropertyName.DOTCMS_SAML_NAME_ID_POLICY_FORMAT));
 
