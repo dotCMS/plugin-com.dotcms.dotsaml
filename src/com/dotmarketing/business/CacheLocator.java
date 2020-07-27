@@ -4,8 +4,10 @@ import com.dotcms.auth.providers.jwt.factories.ApiTokenCache;
 import com.dotcms.business.SystemCache;
 import com.dotcms.cache.KeyValueCache;
 import com.dotcms.cache.KeyValueCacheImpl;
-import com.dotcms.cache.VanityUrlCache;
-import com.dotcms.cache.VanityUrlCacheImpl;
+
+import com.dotcms.vanityurl.cache.VanityUrlCache;
+import com.dotcms.vanityurl.cache.VanityUrlCacheImpl;
+import com.dotcms.content.elasticsearch.ESQueryCache;
 import com.dotcms.content.elasticsearch.business.IndiciesCache;
 import com.dotcms.content.elasticsearch.business.IndiciesCacheImpl;
 import com.dotcms.contenttype.business.ContentTypeCache2;
@@ -14,8 +16,6 @@ import com.dotcms.csspreproc.CSSCache;
 import com.dotcms.csspreproc.CSSCacheImpl;
 import com.dotcms.notifications.business.NewNotificationCache;
 import com.dotcms.notifications.business.NewNotificationCacheImpl;
-import com.dotcms.plugin.saml.v3.cache.SamlCache;
-import com.dotcms.plugin.saml.v3.cache.SamlCacheImpl;
 import com.dotcms.publisher.assets.business.PushedAssetsCache;
 import com.dotcms.publisher.assets.business.PushedAssetsCacheImpl;
 import com.dotcms.publisher.endpoint.business.PublishingEndPointCache;
@@ -23,6 +23,11 @@ import com.dotcms.publisher.endpoint.business.PublishingEndPointCacheImpl;
 import com.dotcms.rendering.velocity.services.DotResourceCache;
 import com.dotcms.rendering.velocity.viewtools.navigation.NavToolCache;
 import com.dotcms.rendering.velocity.viewtools.navigation.NavToolCacheImpl;
+
+import com.dotcms.security.apps.AppsCache;
+import com.dotcms.security.apps.AppsCacheImpl;
+
+
 import com.dotmarketing.business.cache.transport.CacheTransport;
 import com.dotmarketing.business.portal.PortletCache;
 import com.dotmarketing.cache.ContentTypeCache;
@@ -70,285 +75,6 @@ import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.WebKeys;
 
 
-
-/**
- * FactoryLocator is a factory method to get single(ton) service objects.
- * This is a kind of implementation, and there may be others.
- *
- * @author Carlos Rivas (crivas)
- * @author Jason Tesser
- * @author Nathan (Ethode)
- * @author Jose Castro
- * @version 1.6
- * @since 5.1.6
- */
-public class CacheLocator extends Locator<CacheIndex>{
-
-
-
-	private static CacheLocator instance;
-	private static DotCacheAdministrator adminCache;
-
-	private CacheLocator() {
-		super();
-	}
-
-	public synchronized static void init(){
-		long start = System.currentTimeMillis();
-		if(instance != null)
-			return;
-
-		String clazz = Config.getStringProperty("cache.locator.class", ChainableCacheAdministratorImpl.class.getCanonicalName());
-		Logger.info(CacheLocator.class, "loading cache administrator: "+clazz);
-		try{
-			adminCache = new CommitListenerCacheWrapper((DotCacheAdministrator) Class.forName(clazz).newInstance());
-
-			String cTransClass = Config.getStringProperty("CACHE_INVALIDATION_TRANSPORT_CLASS","com.dotmarketing.business.jgroups.JGroupsCacheTransport");
-			CacheTransport cTrans = (CacheTransport)Class.forName(cTransClass).newInstance();
-			adminCache.setTransport(cTrans);
-
-		}
-		catch(Exception e){
-			Logger.fatal(CacheLocator.class, "Unable to load Cache Admin:" + clazz, e);
-		}
-
-		instance = new CacheLocator();
-
-		/*
-		Initializing the Cache Providers:
-
-		 It needs to be initialized in a different call as the providers depend on the
-		 license level, and the license level needs an already created instance of the CacheLocator
-		 to work.
-		 */
-		adminCache.initProviders();
-		System.setProperty(WebKeys.DOTCMS_STARTUP_TIME_CACHE, String.valueOf(System.currentTimeMillis() - start));
-	}
-
-	public static SystemCache getSystemCache() {
-		return (SystemCache)getInstance(CacheIndex.System);
-	}
-
-	/**
-	 * Returns the caching mechanism for the SAML Authentication plugin.
-	 *
-	 * @return The {@link SamlCache} instance.
-	 */
-	public static SamlCache getSamlCache() {
-		return (SamlCache) getInstance( CacheIndex.Saml );
-	}
-
-	public static PermissionCache getPermissionCache() {
-		return (PermissionCache)getInstance(CacheIndex.Permission);
-	}
-
-	public static RoleCache getRoleCache() {
-		return (RoleCache)getInstance(CacheIndex.Role);
-	}
-
-	public static com.dotmarketing.business.RoleCache getCmsRoleCache() {
-		return (com.dotmarketing.business.RoleCache)getInstance(CacheIndex.CMSRole);
-	}
-
-	public static CategoryCache getCategoryCache() {
-		return (CategoryCache)getInstance(CacheIndex.Category);
-	}
-
-	public static TagCache getTagCache() {
-		return (TagCache)getInstance(CacheIndex.Tag);
-	}
-
-	public static TagInodeCache getTagInodeCache() {
-		return (TagInodeCache)getInstance(CacheIndex.TagInode);
-	}
-
-	public static ContentletCache getContentletCache() {
-		return (ContentletCache)getInstance(CacheIndex.Contentlet);
-	}
-
-
-	public static DotResourceCache getVeloctyResourceCache(){
-		return (DotResourceCache)getInstance(CacheIndex.Velocity2);
-	}
-	public static LogMapperCache getLogMapperCache () {
-		return ( LogMapperCache ) getInstance( CacheIndex.LogMapper );
-	}
-
-	public static RelationshipCache getRelationshipCache() {
-		return (RelationshipCache)getInstance(CacheIndex.Relationship);
-	}
-
-	public static PluginCache getPluginCache() {
-		return (PluginCache)getInstance(CacheIndex.Plugin);
-	}
-
-	public static LanguageCache getLanguageCache() {
-		return (LanguageCache)getInstance(CacheIndex.Language);
-	}
-
-	public static UserCache getUserCache() {
-		return (UserCache)getInstance(CacheIndex.User);
-	}
-
-	public static UserProxyCache getUserProxyCache() {
-		return (UserProxyCache)getInstance(CacheIndex.Userproxy);
-	}
-
-	public static LayoutCache getLayoutCache() {
-		return (LayoutCache)getInstance(CacheIndex.Layout);
-	}
-	public static PortletCache getPortletCache() {
-		return (PortletCache)getInstance(CacheIndex.PortletCache);
-	}
-	public static IdentifierCache getIdentifierCache() {
-		return (IdentifierCache)getInstance(CacheIndex.Identifier);
-	}
-
-	public static HTMLPageCache getHTMLPageCache() {
-		return (HTMLPageCache)getInstance(CacheIndex.HTMLPage);
-	}
-
-	public static MenuLinkCache getMenuLinkCache() {
-		return (MenuLinkCache)getInstance(CacheIndex.Menulink);
-	}
-
-	public static ContainerCache getContainerCache() {
-		return (ContainerCache)getInstance(CacheIndex.Container);
-	}
-
-	public static TemplateCache getTemplateCache() {
-		return (TemplateCache)getInstance(CacheIndex.Template);
-	}
-
-	public static HostCache getHostCache() {
-		return (HostCache)getInstance(CacheIndex.Host);
-	}
-
-	public static BlockDirectiveCache getBlockDirectiveCache() {
-		return (BlockDirectiveCache)getInstance(CacheIndex.Block_Directive);
-	}
-
-	public static BlockPageCache getBlockPageCache() {
-		return (BlockPageCache) getInstance(CacheIndex.Block_Page);
-	}
-
-	public static VersionableCache getVersionableCache() {
-		return (VersionableCache)getInstance(CacheIndex.Versionable);
-	}
-
-	public static FolderCache getFolderCache() {
-		return (FolderCache)getInstance(CacheIndex.FolderCache);
-	}
-	public static WorkflowCache getWorkFlowCache() {
-		return (WorkflowCache) getInstance(CacheIndex.WorkflowCache);
-	}
-
-	public static HostVariablesCache getHostVariablesCache() {
-		return (HostVariablesCache)getInstance(CacheIndex.HostVariables);
-	}
-
-	public static IndiciesCache getIndiciesCache() {
-		return (IndiciesCache)getInstance(CacheIndex.Indicies);
-	}
-
-
-	public static NavToolCache getNavToolCache() {
-		return (NavToolCache) getInstance(CacheIndex.NavTool);
-	}
-
-	public static PublishingEndPointCache getPublishingEndPointCache() {
-		return (PublishingEndPointCache)getInstance(CacheIndex.PublishingEndPoint);
-	}
-
-	public static PushedAssetsCache getPushedAssetsCache() {
-		return (PushedAssetsCache)getInstance(CacheIndex.PushedAssets);
-	}
-
-	public static CSSCache getCSSCache() {
-		return (CSSCache)getInstance(CacheIndex.CSSCache);
-	}
-
-	public static NewNotificationCache getNewNotificationCache() {
-		return (NewNotificationCache)getInstance(CacheIndex.NewNotification);
-	}
-
-	public static RulesCache getRulesCache() {
-		return (RulesCache) getInstance(CacheIndex.RulesCache);
-	}
-
-	public static SiteVisitCache getSiteVisitCache() {
-		return (SiteVisitCache) getInstance(CacheIndex.SiteVisitCache);
-	}
-	public static ContentTypeCache getContentTypeCache() {
-		return (ContentTypeCache) getInstance(CacheIndex.ContentTypeCache);
-	}
-
-	public static ContentTypeCache2 getContentTypeCache2() {
-		return (ContentTypeCache2) getInstance(CacheIndex.ContentTypeCache2);
-	}
-
-	public static VanityUrlCache getVanityURLCache() {
-		return (VanityUrlCache) getInstance(CacheIndex.VanityURLCache);
-	}
-
-	public static MultiTreeCache getMultiTreeCache() {
-		return (MultiTreeCache) getInstance(CacheIndex.MultiTreeCache);
-	}
-	/**
-	 *
-	 * @return
-	 */
-	public static KeyValueCache getKeyValueCache() {
-		return (KeyValueCache) getInstance(CacheIndex.KeyValueCache);
-	}
-	public static ApiTokenCache getApiTokenCache() {
-		return (ApiTokenCache) getInstance(CacheIndex.ApiTokenCache);
-	}
-	/**
-	 * The legacy cache administrator will invalidate cache entries within a cluster
-	 * on a put where the non legacy one will not.
-	 * @return
-	 */
-	public static DotCacheAdministrator getCacheAdministrator(){
-		return adminCache;
-	}
-
-	private static Object getInstance(CacheIndex index) {
-		if(instance == null){
-			init();
-			if(instance == null){
-				Logger.fatal(CacheLocator.class, "CACHE IS NOT INITIALIZED : THIS SHOULD NEVER HAPPEN");
-				throw new DotRuntimeException("CACHE IS NOT INITIALIZED : THIS SHOULD NEVER HAPPEN");
-			}
-		}
-
-		Object serviceRef = instance.getServiceInstance(index);
-
-		Logger.debug(CacheLocator.class, instance.audit(index));
-
-		return serviceRef;
-	}
-
-	@Override
-	protected Object createService(CacheIndex enumObj) {
-		return enumObj.create();
-	}
-
-	@Override
-	protected Locator<CacheIndex> getLocatorInstance() {
-		return instance;
-	}
-
-	public static CacheIndex[] getCacheIndexes(){
-		return CacheIndex.values();
-	}
-
-	public static Cachable getCache (String value) {
-		return (Cachable)getInstance(CacheIndex.getCacheIndex(value));
-	}
-
-}
-
 /**
  *
  * @author Carlos Rivas (crivas)
@@ -360,7 +86,6 @@ public class CacheLocator extends Locator<CacheIndex>{
 enum CacheIndex
 {
 	System("System"),
-	Saml( "Saml" ),
 	Permission("Permission"),
 	CMSRole("CMS Role"),
 	Role("Role"),
@@ -403,12 +128,13 @@ enum CacheIndex
 	MultiTreeCache("MultiTree Cache"),
 	ApiTokenCache("ApiTokenCache"),
 	PortletCache("PortletCache"),
-	KeyValueCache("Key/Value Cache");
+	ESQueryCache("ESQueryCache"),
+	KeyValueCache("Key/Value Cache"),
+	AppsCache("Apps");
 
 	Cachable create() {
 		switch(this) {
 			case System: return new SystemCache();
-			case Saml: return new SamlCacheImpl();
 			case Permission: return new PermissionCacheImpl();
 			case Category: return new CategoryCacheImpl();
 			case Tag: return new TagCacheImpl();
@@ -451,6 +177,8 @@ enum CacheIndex
 			case MultiTreeCache : return new MultiTreeCache();
 			case ApiTokenCache : return new ApiTokenCache();
 			case PortletCache : return new PortletCache();
+			case AppsCache: return new AppsCacheImpl();
+			case ESQueryCache : return new com.dotcms.content.elasticsearch.ESQueryCache();
 
 		}
 		throw new AssertionError("Unknown Cache index: " + this);

@@ -2,9 +2,8 @@ package com.dotcms.plugin.saml.v3.config;
 
 import com.dotcms.plugin.saml.v3.cache.SamlCache;
 
-import com.dotmarketing.business.CacheLocator;
+import com.dotcms.plugin.saml.v3.cache.SamlCacheImpl;
 import com.dotmarketing.exception.DotDataException;
-import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UUIDGenerator;
 import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.json.JSONException;
@@ -32,7 +31,7 @@ public class IdpConfigHelper extends IdpConfigFileHelper implements Serializable
 		return IdpConfigHelper.SingletonHolder.INSTANCE;
 	}
 
-	private SamlCache samlCache = CacheLocator.getSamlCache();
+	private SamlCache samlCache = new SamlCacheImpl();
 
 	public IdpConfigHelper()
 	{

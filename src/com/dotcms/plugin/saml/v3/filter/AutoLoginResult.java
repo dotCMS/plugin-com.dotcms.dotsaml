@@ -2,7 +2,7 @@ package com.dotcms.plugin.saml.v3.filter;
 
 import javax.servlet.http.HttpSession;
 
-// todo: no migrated
+// todo:  migrated
 public class AutoLoginResult
 {
 	private final HttpSession session;

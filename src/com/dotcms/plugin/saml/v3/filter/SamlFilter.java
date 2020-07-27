@@ -341,7 +341,7 @@ public class SamlFilter implements Filter {
 	 */
 	protected boolean isNotLogged(final HttpServletRequest request, final HttpSession session) {
 		boolean isNotLogged = true;
-		boolean isBackend = this.isBackEndAdmin(session, request.getRequestURI());
+		boolean isBackend = this.isBackEndAdmin(request, request.getRequestURI());
 		try {
 			isNotLogged = (isBackend) ? !this.userWebAPI.isLoggedToBackend(request)
 					: null == this.userWebAPI.getLoggedInFrontendUser(request);
@@ -477,10 +477,6 @@ public class SamlFilter implements Filter {
 	 * @return If the user or its URI can be associated to the dotCMS back-end login, returns {@code true}. Otherwise,
 	 * returns {@code false}.
 	 */
-	protected boolean isBackEndAdmin(final HttpSession session, final String uri) {
-		return PageMode.get(session).isAdmin || this.isBackEndLoginPage(uri);
-	}
-
 	protected boolean isBackEndAdmin(final HttpServletRequest request, final String uri) {
 		return PageMode.get(request).isAdmin || this.isBackEndLoginPage(uri);
 	}
