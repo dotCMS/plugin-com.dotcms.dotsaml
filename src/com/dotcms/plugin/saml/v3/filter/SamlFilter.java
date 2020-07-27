@@ -303,8 +303,6 @@ public class SamlFilter implements Filter {
 			final String log = new Date() + ": SAML login request for Site '" + host.getHostname() + "' with IdP ID: "
 					+ idpConfig.getId() + " (" + env + ") from " + request.getRemoteAddr();
 
-			// “$TIMEDATE: SAML login request for $host (frontend|backend)from
-			// $REQUEST_ADDR”
 			SecurityLogger.logInfo(SecurityLogger.class, SamlFilter.class + " - " + log);
 			Logger.debug(this, log);
 		} catch (Exception e) {
@@ -321,8 +319,6 @@ public class SamlFilter implements Filter {
 					"ID: " + idpConfig.getId() + " (" + env + ") from " + request.getRemoteAddr() + " for user: " +
 					user.getEmailAddress();
 
-			// “$TIMEDATE: SAML login success for $host (frontend|backend)from
-			// $REQUEST_ADDR for user $username”
 			SecurityLogger.logInfo(SecurityLogger.class, SamlFilter.class + " - " + log);
 			Logger.info(this, log);
 		} catch (Exception e) {
