@@ -9,6 +9,8 @@ import com.dotcms.plugin.saml.v3.exception.NotNullEmailAllowedException;
 import com.dotcms.plugin.saml.v3.exception.SamlUnauthorizedException;
 import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandler;
 import com.dotcms.plugin.saml.v3.handler.AssertionResolverHandlerFactory;
+import com.dotcms.plugin.saml.v3.handler.AuthenticationHandler;
+import com.dotcms.plugin.saml.v3.handler.AuthenticationResolverHandlerFactory;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
@@ -90,17 +92,22 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 	protected final UserAPI userAPI;
 	protected final RoleAPI roleAPI;
 	protected final AssertionResolverHandlerFactory assertionResolverHandlerFactory;
+	protected final AuthenticationResolverHandlerFactory authenticationResolverHandlerFactory;
 
 	public OpenSamlAuthenticationServiceImpl() {
-		this(APILocator.getUserAPI(), APILocator.getRoleAPI(), new AssertionResolverHandlerFactory());
+		this(APILocator.getUserAPI(), APILocator.getRoleAPI(),
+				new AssertionResolverHandlerFactory(), new AuthenticationResolverHandlerFactory());
 	}
 
 	@VisibleForTesting
 	protected OpenSamlAuthenticationServiceImpl(final UserAPI userAPI, final RoleAPI roleAPI,
-			final AssertionResolverHandlerFactory assertionResolverHandlerFactory) {
+			final AssertionResolverHandlerFactory assertionResolverHandlerFactory,
+			final AuthenticationResolverHandlerFactory authenticationResolverHandlerFactory) {
+
 		this.userAPI = userAPI;
 		this.roleAPI = roleAPI;
-		this.assertionResolverHandlerFactory = assertionResolverHandlerFactory;
+		this.assertionResolverHandlerFactory      = assertionResolverHandlerFactory;
+		this.authenticationResolverHandlerFactory = authenticationResolverHandlerFactory;
 	}
 
 	private void addRole(final User user, final String roleKey, final boolean createRole, final boolean isSystem)
@@ -233,20 +240,11 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 	public void authentication(final HttpServletRequest request, final HttpServletResponse response)
 			throws DotDataException, IOException, JSONException {
 		final IdpConfig idpConfig = SiteIdpConfigResolver.getInstance().resolveIdpConfig(request);
-		final MessageContext context = new MessageContext(); // main context
-		final AuthnRequest authnRequest = buildAuthnRequest(request, idpConfig);
 
-		context.setMessage(authnRequest);
+		final AuthenticationHandler authenticationHandler =
+				this.authenticationResolverHandlerFactory.getAuthenticationHandlerForSite(idpConfig);
 
-		// peer entity (Idp to SP and viceversa)
-		final SAMLPeerEntityContext peerEntityContext = context.getSubcontext(SAMLPeerEntityContext.class, true);
-		// info about the endpoint of the peer entity
-		final SAMLEndpointContext endpointContext = peerEntityContext.getSubcontext(SAMLEndpointContext.class, true);
-
-		endpointContext.setEndpoint(getIdentityProviderDestinationEndpoint(idpConfig));
-
-		this.setSignatureSigningParams(context, idpConfig);
-		this.doRedirect(context, response, authnRequest, idpConfig);
+		authenticationHandler.handle(request, response, idpConfig);
 	}
 
 	/**

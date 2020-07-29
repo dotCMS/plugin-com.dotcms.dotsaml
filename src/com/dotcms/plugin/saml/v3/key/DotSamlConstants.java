@@ -81,5 +81,9 @@ public class DotSamlConstants {
 	 * Default SAML User role
 	 */
 	public static final String DOTCMS_SAML_USER_ROLE = "SAML User";
+
+	// defines the method to do the authentication, redirect by default
+	public static final String DOTCMS_SAML_AUTHN_PROTOCOL_BINDING_REDIRECT = "Http-Redirect";
+	public static final String DOTCMS_SAML_AUTHN_PROTOCOL_BINDING_POST     = "Http-POST";
 	
 }

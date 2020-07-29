@@ -162,7 +162,13 @@ public enum DotsamlPropertyName {
 	 * authentication.
 	 */
 	DOTCMS_SAML_FORCE_AUTHN("force.authn"),
-	
+
+	/**
+	 * By default the authentication uses the Http-Redirect but you can set to Http-POST if needed
+	 *
+	 */
+	DOTCMS_SAML_AUTHN_PROTOCOL_BINDING("authn.protocol.binding"),
+
 	/**
 	 * In case you need a custom credentials for the ID Provider (DotCMS)
 	 * overrides the implementation class on the configuration properties.
