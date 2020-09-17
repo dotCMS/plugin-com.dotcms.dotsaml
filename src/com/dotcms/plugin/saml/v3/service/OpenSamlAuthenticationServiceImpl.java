@@ -452,6 +452,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 			Logger.debug(this, "\n\n" + toXMLObjectString(xmlObject));
 			Logger.debug(this, "Redirecting to IdP '" + idpConfig.getIdpName() + "'");
 
+			response.setHeader("Access-Control-Allow-Origin", "*");
 			encoder.encode();
 		} catch (ComponentInitializationException | MessageEncodingException e) {
 			final String errorMsg = "An error occurred when executing redirect to IdP '" + idpConfig.getIdpName() +
