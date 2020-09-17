@@ -9,6 +9,7 @@ import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
 import com.dotmarketing.util.json.JSONException;
+import com.dotmarketing.business.web.WebAPILocator;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -44,8 +45,8 @@ public class SiteIdpConfigResolver implements Serializable
 	 */
 	public IdpConfig resolveIdpConfig( final HttpServletRequest request ) throws DotDataException, IOException, JSONException
 	{
-		final String serverName = getHostId( request.getServerName() );
-		return this.resolveIdpConfig( serverName );
+		return this.resolveIdpConfig(WebAPILocator.getHostWebAPI()
+						.getCurrentHostNoThrow(request).getHostname());
 	}
 
 	/*
