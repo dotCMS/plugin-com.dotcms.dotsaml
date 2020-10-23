@@ -1,5 +1,5 @@
 
-# plugin-dotcms-openSAML3
+# plugin-dotcms-openSAML3 (Deprecated - has been incorporated into the dotCMS core as of 5.3.8)
 
 This plugin allows to modify the authentication process in DOTCMS
 using the Open SAML 3 (Security Assertion Markup Language) protocols for
