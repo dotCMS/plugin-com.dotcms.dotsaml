@@ -11,6 +11,7 @@ import com.dotmarketing.util.Config;
 import com.dotmarketing.util.Logger;
 import com.liferay.util.FileUtil;
 
+// todo: should migrated
 public class DotsamlDefaultPropertiesService {
 
 	public static final String INTEGER_PARSE_ERROR = "Unable to parse Integer value: ";
@@ -215,6 +216,9 @@ public class DotsamlDefaultPropertiesService {
 		case DOTCMS_SAML_LOGIN_UPDATE_EMAIL:
 			defaultParams.setDotcmsSamlLoginEmailUpdate(Boolean.parseBoolean(value));
 			break;
+		case DOT_SAML_ALLOW_USER_SYNCHRONIZATION:
+			defaultParams.setAllowUserSynchronization(Boolean.parseBoolean(value));
+			break;
 		default:
 			Logger.warn(DotsamlDefaultPropertiesService.class,
 					NOT_FOUND_ERROR + property.getPropertyName() + ":" + value);
@@ -317,6 +321,8 @@ public class DotsamlDefaultPropertiesService {
 			return defaultParams.isDotcmsSamlClearLocationQueryParams();
 		case DOTCMS_SAML_LOGIN_UPDATE_EMAIL:
 			return defaultParams.isDotcmsSamlLoginEmailUpdate();
+		case DOT_SAML_ALLOW_USER_SYNCHRONIZATION:
+			return defaultParams.isAllowUserSynchronization();
 		default:
 			break;
 		}

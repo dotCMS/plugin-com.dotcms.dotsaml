@@ -11,6 +11,7 @@ import org.opensaml.security.credential.Credential;
  * 
  * @author jsanca
  */
+// Migrated
 public interface CredentialProvider extends Serializable
 {
 	/**
@@ -20,4 +21,3 @@ public interface CredentialProvider extends Serializable
 	 */
 	Credential createCredential();
 }
-	

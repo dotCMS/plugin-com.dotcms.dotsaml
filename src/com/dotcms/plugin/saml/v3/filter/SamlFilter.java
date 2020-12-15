@@ -63,6 +63,7 @@ import com.liferay.portal.auth.PrincipalThreadLocal;
 import com.liferay.portal.model.User;
 import com.liferay.portal.servlet.PortletSessionPool;
 
+// todo: not migrated
 public class SamlFilter implements Filter {
 	protected static final String BY_PASS_KEY = "native";
 	protected static final String BY_PASS_VALUE = "true";
@@ -302,8 +303,6 @@ public class SamlFilter implements Filter {
 			final String log = new Date() + ": SAML login request for Site '" + host.getHostname() + "' with IdP ID: "
 					+ idpConfig.getId() + " (" + env + ") from " + request.getRemoteAddr();
 
-			// “$TIMEDATE: SAML login request for $host (frontend|backend)from
-			// $REQUEST_ADDR”
 			SecurityLogger.logInfo(SecurityLogger.class, SamlFilter.class + " - " + log);
 			Logger.debug(this, log);
 		} catch (Exception e) {
@@ -320,8 +319,6 @@ public class SamlFilter implements Filter {
 					"ID: " + idpConfig.getId() + " (" + env + ") from " + request.getRemoteAddr() + " for user: " +
 					user.getEmailAddress();
 
-			// “$TIMEDATE: SAML login success for $host (frontend|backend)from
-			// $REQUEST_ADDR for user $username”
 			SecurityLogger.logInfo(SecurityLogger.class, SamlFilter.class + " - " + log);
 			Logger.info(this, log);
 		} catch (Exception e) {
@@ -340,7 +337,7 @@ public class SamlFilter implements Filter {
 	 */
 	protected boolean isNotLogged(final HttpServletRequest request, final HttpSession session) {
 		boolean isNotLogged = true;
-		boolean isBackend = this.isBackEndAdmin(session, request.getRequestURI());
+		boolean isBackend = this.isBackEndAdmin(request, request.getRequestURI());
 		try {
 			isNotLogged = (isBackend) ? !this.userWebAPI.isLoggedToBackend(request)
 					: null == this.userWebAPI.getLoggedInFrontendUser(request);
@@ -476,10 +473,6 @@ public class SamlFilter implements Filter {
 	 * @return If the user or its URI can be associated to the dotCMS back-end login, returns {@code true}. Otherwise,
 	 * returns {@code false}.
 	 */
-	protected boolean isBackEndAdmin(final HttpSession session, final String uri) {
-		return PageMode.get(session).isAdmin || this.isBackEndLoginPage(uri);
-	}
-
 	protected boolean isBackEndAdmin(final HttpServletRequest request, final String uri) {
 		return PageMode.get(request).isAdmin || this.isBackEndLoginPage(uri);
 	}

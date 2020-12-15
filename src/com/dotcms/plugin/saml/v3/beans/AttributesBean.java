@@ -13,6 +13,7 @@ import org.opensaml.saml.saml2.core.NameID;
  * 
  * @author jsanca
  */
+// Migrated
 public class AttributesBean implements Serializable
 {
 	private static final long serialVersionUID = 1836313856887837731L;

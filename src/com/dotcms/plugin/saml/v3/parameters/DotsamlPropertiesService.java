@@ -12,6 +12,7 @@ import com.dotmarketing.util.Logger;
  * @version 4.3.2
  * @since 03-31-2018
  */
+// todo: partially migrated
 public class DotsamlPropertiesService {
 
 	/**

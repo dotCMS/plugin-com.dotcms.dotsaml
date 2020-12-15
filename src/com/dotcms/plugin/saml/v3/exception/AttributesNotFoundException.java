@@ -4,6 +4,7 @@ package com.dotcms.plugin.saml.v3.exception;
  * Runtime exception used to handle errors when attributes might not be
  * extracted from the Assertion object Created by nollymar on 3/15/17.
  */
+// migrated
 public class AttributesNotFoundException extends RuntimeException
 {
 	private static final long serialVersionUID = 4345557895408407837L;

@@ -5,6 +5,7 @@ package com.dotcms.plugin.saml.v3.exception;
  * 
  * @author jsanca
  */
+// migrated
 public class DotSamlException extends RuntimeException
 {
 	private static final long serialVersionUID = -3569526825729783600L;

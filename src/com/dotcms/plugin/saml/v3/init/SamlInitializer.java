@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author jsanca
  */
+// migrated
 public class SamlInitializer implements Initializer
 {
 

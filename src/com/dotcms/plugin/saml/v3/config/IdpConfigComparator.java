@@ -2,6 +2,7 @@ package com.dotcms.plugin.saml.v3.config;
 
 import java.util.Comparator;
 
+// todo: not migrated yet
 public class IdpConfigComparator implements Comparator<IdpConfig>
 {
 	@Override

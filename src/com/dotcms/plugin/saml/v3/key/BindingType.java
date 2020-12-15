@@ -5,6 +5,7 @@ package com.dotcms.plugin.saml.v3.key;
  * 
  * @author jsanca
  */
+// migrated
 public enum BindingType
 {
 	AUTHN_REQUEST( "urn:mace:shibboleth:1.0:profiles:AuthnRequest" ),

@@ -2,6 +2,7 @@ package com.dotcms.plugin.saml.v3.exception;
 
 import javax.servlet.http.HttpServletResponse;
 
+// migrated
 public class NotNullEmailAllowedException extends AttributesNotFoundException
 {
 	private static final long serialVersionUID = -3622432364873488814L;

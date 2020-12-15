@@ -54,7 +54,7 @@ import net.shibboleth.utilities.java.support.xml.ParserPool;
  * 
  * @author jsanca
  */
-
+// migrated
 public class DefaultMetaDescriptorServiceImpl implements MetaDescriptorService {
 	private static final long serialVersionUID = 7259833793217618045L;
 

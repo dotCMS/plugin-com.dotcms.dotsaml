@@ -8,6 +8,7 @@ import com.dotcms.plugin.saml.v3.key.BindingType;
 import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 import org.apache.commons.lang.StringUtils;
 
+// todo: partially migrated
 public class DotsamlProperties {
 
 	private String dotSamlAccessFilterValues = null;
@@ -48,6 +49,7 @@ public class DotsamlProperties {
 	private Boolean dotSamlVerifySignatureProfile = true;
 	private Boolean dotcmsSamlClearLocationQueryParams = true;
 	private Boolean dotcmsSamlLoginEmailUpdate = true;
+	private boolean allowUserSynchronization   = true;
 
 	public String getDotSamlAccessFilterValues() {
 		return dotSamlAccessFilterValues;
@@ -353,5 +355,13 @@ public class DotsamlProperties {
 
 	public void setDotcmsSamlLoginEmailUpdate(Boolean dotcmsSamlLoginEmailUpdate) {
 		this.dotcmsSamlLoginEmailUpdate = dotcmsSamlLoginEmailUpdate;
+	}
+
+	public boolean isAllowUserSynchronization() {
+		return allowUserSynchronization;
+	}
+
+	public void setAllowUserSynchronization(final Boolean allowUserSynchronization) {
+		this.allowUserSynchronization = allowUserSynchronization;
 	}
 }

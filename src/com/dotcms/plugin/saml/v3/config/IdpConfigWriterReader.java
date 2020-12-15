@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+// todo: not migrated
 public class IdpConfigWriterReader
 {
 	public static final String IDP_CONFIGS = "samlConfigs";

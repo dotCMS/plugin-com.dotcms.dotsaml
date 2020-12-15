@@ -5,6 +5,7 @@ import com.dotcms.plugin.saml.v3.key.DotSamlConstants;
 import com.dotcms.plugin.saml.v3.meta.DefaultMetaDescriptorServiceImpl;
 import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
 
+// migrated
 public enum DotsamlPropertyName {
 
 	//@formatter:off
@@ -161,7 +162,13 @@ public enum DotsamlPropertyName {
 	 * authentication.
 	 */
 	DOTCMS_SAML_FORCE_AUTHN("force.authn"),
-	
+
+	/**
+	 * By default the authentication uses the Http-Redirect but you can set to Http-POST if needed
+	 *
+	 */
+	DOTCMS_SAML_AUTHN_PROTOCOL_BINDING("authn.protocol.binding"),
+
 	/**
 	 * In case you need a custom credentials for the ID Provider (DotCMS)
 	 * overrides the implementation class on the configuration properties.
@@ -219,7 +226,15 @@ public enum DotsamlPropertyName {
 	 * SAML User
 	 */
 	DOTCMS_SAML_OPTIONAL_USER_ROLE("role.extra"),
-	
+
+	/**
+	 * By default dotcms will allows the user synchronization, this means if the user does not exists on their database the user will be added to their storage, roles, etc.
+	 * In case you do not want any synchronization set this to false.
+	 *
+	 */
+	DOT_SAML_ALLOW_USER_SYNCHRONIZATION("allow.user.synchronization"),
+
+
 	/**
 	 * If you want to allow to create an user that does not exists on the IdP,
 	 * set this to true, otherwise false. By default it is false, so won't allow

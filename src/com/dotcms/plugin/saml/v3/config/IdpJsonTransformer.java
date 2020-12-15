@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Properties;
 
+// todo: not migrated
 public class IdpJsonTransformer
 {
 	private static String getCanonicalPathIfExists( File file ) throws IOException

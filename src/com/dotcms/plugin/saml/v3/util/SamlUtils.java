@@ -203,6 +203,17 @@ public class SamlUtils {
 	 * @return AuthnRequest
 	 */
 	public static AuthnRequest buildAuthnRequest(final HttpServletRequest request, final IdpConfig idpConfig) {
+
+		return buildAuthnRequest(request, idpConfig,
+				DotsamlPropertiesService.getOptionString(idpConfig, DotsamlPropertyName.DOTCMS_SAML_PROTOCOL_BINDING));
+	}
+
+	/**
+	 * Build an authentication request.
+	 *
+	 * @return AuthnRequest
+	 */
+	public static AuthnRequest buildAuthnRequest(final HttpServletRequest request, final IdpConfig idpConfig, final String protocolBinding) {
 		final String ipDSSODestination = getIPDSSODestination(idpConfig);
 		final AuthnRequest authnRequest = buildSAMLObject(AuthnRequest.class);
 
@@ -222,8 +233,7 @@ public class SamlUtils {
 
 		// Get the protocol from the user, or use a default one:
 		// SAMLConstants.SAML2_ARTIFACT_BINDING_URI
-		authnRequest.setProtocolBinding(
-				DotsamlPropertiesService.getOptionString(idpConfig, DotsamlPropertyName.DOTCMS_SAML_PROTOCOL_BINDING));
+		authnRequest.setProtocolBinding(protocolBinding);
 
 		// this is the address that receives the SAML Assertion, after a
 		// successful authentication on the IdP.
@@ -339,10 +349,10 @@ public class SamlUtils {
 
 		// it supports several formats, such as Kerberos, email, Windows Domain
 		// Qualified Name, etc.
-		// “The transient identifier is a random identifier that does not have
+		// The transient identifier is a random identifier that does not have
 		// any connection to the user.
 		// A transient identifier will be different for every time the user
-		// signs in.”
+		// signs in.
 		nameIDPolicy.setFormat(DotsamlPropertiesService.getOptionString(idpConfig,
 				DotsamlPropertyName.DOTCMS_SAML_NAME_ID_POLICY_FORMAT));
 
