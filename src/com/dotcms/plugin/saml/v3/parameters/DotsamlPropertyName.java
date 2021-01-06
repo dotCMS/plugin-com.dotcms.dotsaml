@@ -8,7 +8,8 @@ import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
 public enum DotsamlPropertyName {
 
 	//@formatter:off
-	
+
+	DOTCMS_SAML_AUTHN_PROTOCOL_BINDING("authn.protocol.binding"),
 	/**
 	 * By default we do not filter anything, but if there is some special cases
 	 * (url's) you want to avoid the authentication check, add here the values
@@ -120,6 +121,11 @@ public enum DotsamlPropertyName {
 	 * http://[domain]/c in order to get back to the page.
 	 */
 	DOT_SAML_LOGOUT_SERVICE_ENDPOINT_URL("logout.service.endpoint.url"),
+
+	/**
+	 * Logout okta url
+	 */
+	DOT_SAML_LOGOUT_OKTA_URL("logout.okta.url"),
 	
 	/**
 	 * By default {@link DefaultMetaDescriptorServiceImpl} is what we use to
@@ -292,7 +298,12 @@ public enum DotsamlPropertyName {
 	 * By default after each login, and if the user already exists, we will try to update the name, lastname and email with the values from the assertion
 	 * If you want the code to ignore the email you should set this value to false.
 	 */
-	DOTCMS_SAML_LOGIN_UPDATE_EMAIL("login.email.update");
+	DOTCMS_SAML_LOGIN_UPDATE_EMAIL("login.email.update"),
+
+	/**
+	 * Logout protocol binding such as Redirect, Post etc
+	 */
+	DOT_SAML_LOGOUT_PROTOCOL_BINDING("logout.protocol.binding");
 
 	private String propertyName;
 

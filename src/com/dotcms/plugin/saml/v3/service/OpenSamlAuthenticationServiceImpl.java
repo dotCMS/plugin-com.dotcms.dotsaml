@@ -1,44 +1,5 @@
 package com.dotcms.plugin.saml.v3.service;
 
-import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_ALL_VALUE;
-import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_IDP_VALUE;
-import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_NONE_VALUE;
-import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_STATIC_ADD_VALUE;
-import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.SAML_USER_ID;
-import static com.dotcms.plugin.saml.v3.util.SamlUtils.buildAuthnRequest;
-import static com.dotcms.plugin.saml.v3.util.SamlUtils.buildLogoutRequest;
-import static com.dotcms.plugin.saml.v3.util.SamlUtils.getCredential;
-import static com.dotcms.plugin.saml.v3.util.SamlUtils.getIdentityProviderDestinationEndpoint;
-import static com.dotcms.plugin.saml.v3.util.SamlUtils.getIdentityProviderSLODestinationEndpoint;
-import static com.dotcms.plugin.saml.v3.util.SamlUtils.toXMLObjectString;
-import static com.dotmarketing.util.UtilMethods.isSet;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.Arrays;
-import java.util.Date;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
-import org.opensaml.core.xml.XMLObject;
-import org.opensaml.messaging.context.MessageContext;
-import org.opensaml.messaging.encoder.MessageEncodingException;
-import org.opensaml.saml.common.messaging.context.SAMLEndpointContext;
-import org.opensaml.saml.common.messaging.context.SAMLPeerEntityContext;
-import org.opensaml.saml.saml2.binding.encoding.impl.HTTPRedirectDeflateEncoder;
-import org.opensaml.saml.saml2.core.Assertion;
-import org.opensaml.saml.saml2.core.Attribute;
-import org.opensaml.saml.saml2.core.AttributeStatement;
-import org.opensaml.saml.saml2.core.AuthnRequest;
-import org.opensaml.saml.saml2.core.LogoutRequest;
-import org.opensaml.saml.saml2.core.NameID;
-import org.opensaml.xmlsec.SignatureSigningParameters;
-import org.opensaml.xmlsec.context.SecurityParametersContext;
-import org.opensaml.xmlsec.signature.support.SignatureConstants;
-
 import com.dotcms.plugin.saml.v3.beans.AttributesBean;
 import com.dotcms.plugin.saml.v3.config.IdpConfig;
 import com.dotcms.plugin.saml.v3.config.SamlSiteValidator;
@@ -53,11 +14,10 @@ import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
 import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
 import com.dotcms.plugin.saml.v3.util.SiteIdpConfigResolver;
 import com.dotcms.repackage.com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.lang.StringUtils;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.DotStateException;
-import com.dotmarketing.business.NoSuchUserException;
 import com.dotmarketing.business.DuplicateUserException;
+import com.dotmarketing.business.NoSuchUserException;
 import com.dotmarketing.business.Role;
 import com.dotmarketing.business.RoleAPI;
 import com.dotmarketing.business.UserAPI;
@@ -70,10 +30,45 @@ import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.RegEX;
 import com.dotmarketing.util.UUIDGenerator;
 import com.dotmarketing.util.UtilMethods;
+import com.dotmarketing.util.VelocityUtil;
 import com.dotmarketing.util.json.JSONException;
 import com.liferay.portal.model.User;
-
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
+import org.apache.commons.lang.StringUtils;
+import org.opensaml.core.xml.XMLObject;
+import org.opensaml.messaging.context.MessageContext;
+import org.opensaml.messaging.encoder.MessageEncodingException;
+import org.opensaml.saml.common.messaging.context.SAMLEndpointContext;
+import org.opensaml.saml.common.messaging.context.SAMLPeerEntityContext;
+import org.opensaml.saml.saml2.binding.encoding.impl.HTTPRedirectDeflateEncoder;
+import org.opensaml.saml.saml2.core.Assertion;
+import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.AttributeStatement;
+import org.opensaml.saml.saml2.core.AuthnRequest;
+import org.opensaml.saml.saml2.core.NameID;
+import org.opensaml.xmlsec.SignatureSigningParameters;
+import org.opensaml.xmlsec.context.SecurityParametersContext;
+import org.opensaml.xmlsec.signature.support.SignatureConstants;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.Arrays;
+import java.util.Date;
+
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_ALL_VALUE;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_IDP_VALUE;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_NONE_VALUE;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.DOTCMS_SAML_BUILD_ROLES_STATIC_ADD_VALUE;
+import static com.dotcms.plugin.saml.v3.key.DotSamlConstants.SAML_USER_ID;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.buildAuthnRequest;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.getCredential;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.getIdentityProviderDestinationEndpoint;
+import static com.dotcms.plugin.saml.v3.util.SamlUtils.toXMLObjectString;
+import static com.dotmarketing.util.UtilMethods.isSet;
 
 /**
  * Authentication with Open SAML
@@ -92,17 +87,26 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 	protected final UserAPI userAPI;
 	protected final RoleAPI roleAPI;
 	protected final AssertionResolverHandlerFactory assertionResolverHandlerFactory;
+	protected final AuthenticationResolverHandlerFactory authenticationResolverHandlerFactory;
+	protected final LogoutResolverHandlerFactory    logoutResolverHandlerFactory;
 
 	public OpenSamlAuthenticationServiceImpl() {
-		this(APILocator.getUserAPI(), APILocator.getRoleAPI(), new AssertionResolverHandlerFactory());
+		this(APILocator.getUserAPI(), APILocator.getRoleAPI(), new AssertionResolverHandlerFactory(),
+				new LogoutResolverHandlerFactory(VelocityUtil.getEngine()),
+				new AuthenticationResolverHandlerFactory(VelocityUtil.getEngine()));
 	}
 
 	@VisibleForTesting
 	protected OpenSamlAuthenticationServiceImpl(final UserAPI userAPI, final RoleAPI roleAPI,
-			final AssertionResolverHandlerFactory assertionResolverHandlerFactory) {
+			final AssertionResolverHandlerFactory assertionResolverHandlerFactory,
+			final LogoutResolverHandlerFactory    logoutResolverHandlerFactory,
+			final AuthenticationResolverHandlerFactory authenticationResolverHandlerFactory) {
+
 		this.userAPI = userAPI;
 		this.roleAPI = roleAPI;
 		this.assertionResolverHandlerFactory = assertionResolverHandlerFactory;
+		this.logoutResolverHandlerFactory    = logoutResolverHandlerFactory;
+		this.authenticationResolverHandlerFactory = authenticationResolverHandlerFactory;
 	}
 
 	private void addRole(final User user, final String roleKey, final boolean createRole, final boolean isSystem)
@@ -235,20 +239,7 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 	public void authentication(final HttpServletRequest request, final HttpServletResponse response)
 			throws DotDataException, IOException, JSONException {
 		final IdpConfig idpConfig = SiteIdpConfigResolver.getInstance().resolveIdpConfig(request);
-		final MessageContext context = new MessageContext(); // main context
-		final AuthnRequest authnRequest = buildAuthnRequest(request, idpConfig);
-
-		context.setMessage(authnRequest);
-
-		// peer entity (Idp to SP and viceversa)
-		final SAMLPeerEntityContext peerEntityContext = context.getSubcontext(SAMLPeerEntityContext.class, true);
-		// info about the endpoint of the peer entity
-		final SAMLEndpointContext endpointContext = peerEntityContext.getSubcontext(SAMLEndpointContext.class, true);
-
-		endpointContext.setEndpoint(getIdentityProviderDestinationEndpoint(idpConfig));
-
-		this.setSignatureSigningParams(context, idpConfig);
-		this.doRedirect(context, response, authnRequest, idpConfig);
+		this.authentication(request, response, idpConfig);
 	}
 
 	/**
@@ -267,20 +258,11 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 	@Override
 	public void authentication(final HttpServletRequest request, final HttpServletResponse response,
 			final IdpConfig idpConfig) throws DotDataException, IOException {
-		final MessageContext context = new MessageContext(); // main context
-		final AuthnRequest authnRequest = buildAuthnRequest(request, idpConfig);
 
-		context.setMessage(authnRequest);
+		final AuthenticationHandler authenticationHandler =
+				this.authenticationResolverHandlerFactory.getAuthenticationHandlerForSite(idpConfig);
 
-		// peer entity (Idp to SP and viceversa)
-		final SAMLPeerEntityContext peerEntityContext = context.getSubcontext(SAMLPeerEntityContext.class, true);
-		// info about the endpoint of the peer entity
-		final SAMLEndpointContext endpointContext = peerEntityContext.getSubcontext(SAMLEndpointContext.class, true);
-
-		endpointContext.setEndpoint(getIdentityProviderDestinationEndpoint(idpConfig));
-
-		this.setSignatureSigningParams(context, idpConfig);
-		this.doRedirect(context, response, authnRequest, idpConfig);
+		authenticationHandler.handle(request, response, idpConfig);
 	}
 
 	private String checkDefaultValue(final String lastNameForNullValue, final String logMessage,
@@ -588,20 +570,13 @@ public class OpenSamlAuthenticationServiceImpl implements SamlAuthenticationServ
 	public void logout(final HttpServletRequest request, final HttpServletResponse response, final NameID nameID,
 			final String sessionIndexValue, final IdpConfig idpConfig)
 			throws DotDataException, IOException, JSONException {
-		final MessageContext context = new MessageContext(); // main context
-		final LogoutRequest logoutRequest = buildLogoutRequest(idpConfig, nameID, sessionIndexValue);
 
-		context.setMessage(logoutRequest);
+		final LogoutHandler logoutHandler =
+				this.logoutResolverHandlerFactory.getLogoutHandlerForSite(idpConfig);
 
-		// peer entity (Idp to SP and viceversa)
-		final SAMLPeerEntityContext peerEntityContext = context.getSubcontext(SAMLPeerEntityContext.class, true);
-		// info about the endpoint of the peer entity
-		final SAMLEndpointContext endpointContext = peerEntityContext.getSubcontext(SAMLEndpointContext.class, true);
+		logoutHandler.handle(request, response, nameID, sessionIndexValue, idpConfig);
 
-		endpointContext.setEndpoint(getIdentityProviderSLODestinationEndpoint(idpConfig));
-
-		this.setSignatureSigningParams(context, idpConfig);
-		this.doRedirect(context, response, logoutRequest, idpConfig);
+		/**/
 	}
 
 	private boolean match(final String role, final String rolePattern) {

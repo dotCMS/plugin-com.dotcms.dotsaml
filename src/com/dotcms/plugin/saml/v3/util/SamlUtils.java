@@ -197,12 +197,17 @@ public class SamlUtils {
 		return sessionIndex;
 	}
 
+	public static AuthnRequest buildAuthnRequest(final HttpServletRequest request, final IdpConfig idpConfig) {
+
+		return buildAuthnRequest(request, idpConfig, DotsamlPropertiesService.getOptionString(idpConfig, DotsamlPropertyName.DOTCMS_SAML_PROTOCOL_BINDING));
+	}
 	/**
 	 * Build an authentication request.
 	 * 
 	 * @return AuthnRequest
 	 */
-	public static AuthnRequest buildAuthnRequest(final HttpServletRequest request, final IdpConfig idpConfig) {
+	public static AuthnRequest buildAuthnRequest(final HttpServletRequest request,
+												 final IdpConfig idpConfig, final String protocolBinding) {
 		final String ipDSSODestination = getIPDSSODestination(idpConfig);
 		final AuthnRequest authnRequest = buildSAMLObject(AuthnRequest.class);
 
@@ -222,8 +227,7 @@ public class SamlUtils {
 
 		// Get the protocol from the user, or use a default one:
 		// SAMLConstants.SAML2_ARTIFACT_BINDING_URI
-		authnRequest.setProtocolBinding(
-				DotsamlPropertiesService.getOptionString(idpConfig, DotsamlPropertyName.DOTCMS_SAML_PROTOCOL_BINDING));
+		authnRequest.setProtocolBinding(protocolBinding);
 
 		// this is the address that receives the SAML Assertion, after a
 		// successful authentication on the IdP.
