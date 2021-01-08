@@ -54,6 +54,44 @@ public class DotsamlPropertiesService {
 
 	/**
 	 * Get an optional property value from the idpConfig, if it does not exist
+	 * returns system defaultValue
+	 *
+	 * @param idpConfig
+	 *            IdpConfig
+	 * @param propertyName
+	 *            String
+	 * @return boolean
+	 */
+	public static Boolean getOptionBoolean(IdpConfig idpConfig, DotsamlPropertyName propertyName, final boolean defaultValue) {
+
+		Boolean value = null;
+
+		try {
+
+			if (idpConfig.getOptionalProperties().containsKey(propertyName.getPropertyName())) {
+
+				String property = (String) idpConfig.getOptionalProperties().get(propertyName.getPropertyName());
+				value = Boolean.parseBoolean(property);
+
+			} else {
+
+				value = defaultValue;
+			}
+
+			Logger.debug(DotsamlPropertiesService.class,
+					"Found " + propertyName.getPropertyName() + " : " + ((value == null) ? "null" : value));
+
+		} catch (Exception e) {
+
+			Logger.warn(DotsamlPropertiesService.class, "Cast exception on " + propertyName.getPropertyName()
+					+ " property. idpConfigId: " + idpConfig.getId());
+		}
+
+		return value;
+	}
+
+	/**
+	 * Get an optional property value from the idpConfig, if it does not exist
 	 * returns null
 	 * 
 	 * @param idpConfig

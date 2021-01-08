@@ -23,6 +23,8 @@ import javax.servlet.http.HttpSession;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertiesService;
+import com.dotcms.plugin.saml.v3.parameters.DotsamlPropertyName;
 import com.dotmarketing.util.PageMode;
 import org.opensaml.core.xml.io.MarshallingException;
 import org.opensaml.saml.saml2.core.NameID;
@@ -421,7 +423,9 @@ public class SamlFilter implements Filter {
 				    session.setAttribute(com.liferay.portal.util.WebKeys.USER, user);
    				    PrincipalThreadLocal.setName(user.getUserId());
 
-					renewSession = this.renewSession(request, session);
+					renewSession = DotsamlPropertiesService.getOptionBoolean(idpConfig,
+							DotsamlPropertyName.DOT_RENEW_SESSION, false)?
+							renewSession(request, session): session;
 
 					this.doAuthenticationLoginSecurityLog(request, idpConfig, user);
 				}

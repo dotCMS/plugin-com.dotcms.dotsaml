@@ -146,6 +146,17 @@ public class DotSamlRestService implements Serializable {
 
 	}
 
+	@GET
+	@Path("/logout/{idpConfigId}")
+	@NoCache
+	// Login configuration by id
+	public void logoutGet(@PathParam("idpConfigId") final String idpConfigId,
+					   @Context final HttpServletRequest httpServletRequest,
+					   @Context final HttpServletResponse httpServletResponse) {
+
+		this.logout(idpConfigId, httpServletRequest, httpServletResponse);
+	}
+
 	@POST
 	@Path("/logout/{idpConfigId}")
 	@NoCache

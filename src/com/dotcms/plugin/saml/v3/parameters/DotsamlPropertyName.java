@@ -7,6 +7,7 @@ import com.dotcms.plugin.saml.v3.meta.MetaDescriptorService;
 
 public enum DotsamlPropertyName {
 
+	DOT_RENEW_SESSION("renew.session"),
 	//@formatter:off
 
 	DOTCMS_SAML_AUTHN_PROTOCOL_BINDING("authn.protocol.binding"),
